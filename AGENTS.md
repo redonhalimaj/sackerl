@@ -4,7 +4,7 @@
 
 This repo uses a Scrum-style agent workflow for Sackerl, a mobile-first grocery stock management app for households. The app helps users scan or import receipts, review grocery items, place items into real storage locations, track expiry dates, receive reminders, and later use AI-assisted recipe and buying suggestions.
 
-The initial phase is planning and foundation. Design and implementation will follow once the first UI direction is available.
+The first foundation scaffold is now in place. Design-specific implementation will follow once the first UI direction and source files are available.
 
 ## Source Of Truth
 
@@ -12,19 +12,34 @@ The initial phase is planning and foundation. Design and implementation will fol
 - [features.md](features.md): feature index and feature-document rules.
 - [status.md](status.md): live Scrum ticket status.
 - [CLAUDE.md](CLAUDE.md): coding-agent guidance for working in this repo.
+- [README.md](README.md): repo setup, commands, and monorepo overview.
+- [docs/monorepo.md](docs/monorepo.md): workspace layout and cross-platform boundaries.
+- [docs/environment.md](docs/environment.md): environment template keys.
 - [docs/agents](docs/agents): detailed role briefs for the orchestrator and subagents.
+
+## Current Foundation Baseline
+
+- SCKRL-001 is completed locally.
+- The repo uses pnpm workspaces with Turborepo.
+- `apps/web` is a Next.js App Router scaffold.
+- `apps/mobile` is an Expo Router scaffold.
+- `packages/tokens`, `packages/ui`, and `packages/api-client` are placeholder shared packages for later tickets.
+- `.env.dev`, `.env.staging`, and `.env.prod` are checked-in templates only.
+- CI is defined in `.github/workflows/ci.yml` for install, format, lint, typecheck, and tests.
+
+Do not add product UI, design tokens, auth, database, OCR, notification, or AI provider implementation unless the relevant SCKRL ticket or explicit user request is active.
 
 ## Agent Roster
 
-| Agent | Model / Role | Primary Ownership |
-| --- | --- | --- |
-| Agent Orchestrator | GPT-5.5 / gpt.5.5 | Plans work, splits tickets, coordinates subagents, resolves conflicts, integrates results, updates repo knowledge after merge. |
-| Business Process Analyst | Subagent | Turns product goals into epics, features, user journeys, acceptance criteria, and SCKRL tickets. |
-| Frontend | Subagent | Implements mobile-first web/app UI, design system, accessibility, drag-and-drop and tap alternatives. |
-| Backend | Subagent | Implements domain models, APIs, receipt parsing workflows, notification logic, and AI-facing boundaries. |
-| Infrastructure | Subagent | Owns application architecture, data persistence, environment topology, storage, queues, and external services. |
-| DevOps | Subagent | Owns repo setup, CI/CD, build tooling, environment automation, release checks, and deployment mechanics. |
-| QA | Subagent | Validates acceptance criteria, regression risk, accessibility, cross-device behavior, and release readiness before merge. |
+| Agent                    | Model / Role      | Primary Ownership                                                                                                              |
+| ------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Agent Orchestrator       | GPT-5.5 / gpt.5.5 | Plans work, splits tickets, coordinates subagents, resolves conflicts, integrates results, updates repo knowledge after merge. |
+| Business Process Analyst | Subagent          | Turns product goals into epics, features, user journeys, acceptance criteria, and SCKRL tickets.                               |
+| Frontend                 | Subagent          | Implements mobile-first web/app UI, design system, accessibility, drag-and-drop and tap alternatives.                          |
+| Backend                  | Subagent          | Implements domain models, APIs, receipt parsing workflows, notification logic, and AI-facing boundaries.                       |
+| Infrastructure           | Subagent          | Owns application architecture, data persistence, environment topology, storage, queues, and external services.                 |
+| DevOps                   | Subagent          | Owns repo setup, CI/CD, build tooling, environment automation, release checks, and deployment mechanics.                       |
+| QA                       | Subagent          | Validates acceptance criteria, regression risk, accessibility, cross-device behavior, and release readiness before merge.      |
 
 ## Scrum Ticket Model
 
@@ -32,16 +47,16 @@ All implementation work should be tracked as `SCKRL-XXX`, for example `SCKRL-001
 
 Ticket states:
 
-| State | Meaning |
-| --- | --- |
-| Todo | Identified but not ready for implementation. |
-| Ready | Scope and acceptance criteria are clear. |
-| In Progress | Actively being worked on. |
-| Review | Implementation is ready for review. |
-| QA | QA validation is running or pending. |
-| Blocked | Work cannot continue without a decision or dependency. |
-| Done | Work is completed locally and validated. |
-| Merged | Work is merged into `main` and docs are updated. |
+| State       | Meaning                                                |
+| ----------- | ------------------------------------------------------ |
+| Todo        | Identified but not ready for implementation.           |
+| Ready       | Scope and acceptance criteria are clear.               |
+| In Progress | Actively being worked on.                              |
+| Review      | Implementation is ready for review.                    |
+| QA          | QA validation is running or pending.                   |
+| Blocked     | Work cannot continue without a decision or dependency. |
+| Done        | Work is completed locally and validated.               |
+| Merged      | Work is merged into `main` and docs are updated.       |
 
 ## Delivery Flow
 

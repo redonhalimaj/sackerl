@@ -14,7 +14,9 @@ The product should feel friendly, simple, accessible, and practical. It must not
 
 ## Current Stage
 
-The repo is in planning and foundation setup. Designs and the first implementation stack are still pending. Until a stack is selected, do not assume framework, database, API style, hosting provider, or package manager.
+The repo has the SCKRL-001 foundation scaffold in place. The selected baseline is pnpm workspaces + Turborepo, Next.js App Router for web, Expo Router for mobile, and shared packages for tokens, UI, and API-client boundaries.
+
+Designs are still pending. Do not start design-token extraction, component implementation, product screens, auth, persistence, OCR, notification, AI, or provider-specific backend work until the relevant SCKRL ticket is active.
 
 ## How To Work
 
@@ -24,6 +26,31 @@ The repo is in planning and foundation setup. Designs and the first implementati
 - Do not introduce unrelated refactors while the codebase is still forming.
 - Update `status.md` when ticket state changes.
 - Update durable repo guidance in this file only after decisions are stable or implementation has landed.
+
+## Repo Commands
+
+```bash
+corepack enable
+corepack prepare pnpm@9.15.4 --activate
+pnpm install
+
+pnpm dev:web
+pnpm dev:mobile
+pnpm format:check
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm --filter @sackerl/web build
+```
+
+## Current Structure
+
+- `apps/web`: Next.js App Router scaffold.
+- `apps/mobile`: Expo Router scaffold.
+- `packages/tokens`: placeholder package for SCKRL-002.
+- `packages/ui`: placeholder package for SCKRL-004.
+- `packages/api-client`: placeholder package for future API integration.
+- `.env.dev`, `.env.staging`, `.env.prod`: checked-in environment templates.
 
 ## Product Guardrails
 

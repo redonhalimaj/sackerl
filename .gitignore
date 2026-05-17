@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+build/
+.next/
+.expo/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# local env files
+.env
+.env.local
+.env.*.local
+
+# OS/editor
+.DS_Store
+*.swp
