@@ -1,3 +1,9 @@
-export type UiPackageStatus = typeof uiPackageStatus;
-
-export const uiPackageStatus = 'pending-design-handoff' as const;
+export {
+  Icon,
+  iconAliases,
+  iconDefinitions,
+  iconNames,
+  resolveIconName,
+  sourceIconNames,
+} from './icons';
+export type { IconName, IconProps, IconSourceName } from './icons';

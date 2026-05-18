@@ -1,17 +1,46 @@
-import { Text, View } from 'react-native';
+import { colors, nativeTypography, space } from '@sackerl/tokens';
+import { Platform, Text, View } from 'react-native';
+
+const typography =
+  Platform.OS === 'ios'
+    ? nativeTypography.ios
+    : Platform.OS === 'android'
+      ? nativeTypography.android
+      : nativeTypography.fallback;
 
 export default function IndexRoute() {
   return (
     <View
       style={{
         alignItems: 'center',
+        backgroundColor: colors.bg,
         flex: 1,
         justifyContent: 'center',
-        padding: 24,
+        padding: space[6],
       }}
     >
-      <Text>Sackerl</Text>
-      <Text>Framework scaffold ready. Product UI starts after the design handoff.</Text>
+      <Text
+        style={[
+          typography.title,
+          {
+            color: colors.ink,
+          },
+        ]}
+      >
+        Sackerl
+      </Text>
+      <Text
+        style={[
+          typography.body,
+          {
+            color: colors.mute,
+            marginTop: space[2],
+            textAlign: 'center',
+          },
+        ]}
+      >
+        Framework scaffold ready. Product UI starts after the design handoff.
+      </Text>
     </View>
   );
 }
