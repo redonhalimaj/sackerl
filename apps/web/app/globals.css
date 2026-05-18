@@ -1,4 +1,5 @@
 @import '@sackerl/tokens/css-vars.css';
+@import '@sackerl/ui/primitives.css';
 
 :root {
   color-scheme: light;

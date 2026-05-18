@@ -72,7 +72,7 @@ The HTML hi-fi designs (`index.html`) are the visual source of truth once they a
 - `Chip` variants: default, sage, amber, ghost. Right-aligned text count supported.
 - `Card`, `CardFlat`, `CardKraft`. Kraft card uses the CSS fibre texture on web or a layered Image+Tint approach in React Native.
 - All match HTML hi-fi pixel-for-pixel at 1x.
-- Each component has a Storybook web entry or RN demo mobile entry with prop knobs.
+- Each component has a Storybook web entry, web demo route with representative states, or RN demo mobile entry with prop knobs.
 
 **Depends on.** SCKRL-002, SCKRL-003
 

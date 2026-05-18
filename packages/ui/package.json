@@ -9,7 +9,8 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
-    }
+    },
+    "./primitives.css": "./src/primitives.css"
   },
   "peerDependencies": {
     "react": ">=18.3.0"

@@ -21,7 +21,8 @@ Immediate next step while initial designs are available:
 1. QA SCKRL-002 against `docs/design/initial-design-overview/styles.css`, `design-system.md`, and the `/design-tokens` web route.
 2. QA SCKRL-005 against `docs/design/initial-design-overview/sk-atoms.jsx` and the `/design-icons` web route.
 3. QA SCKRL-003 against `docs/design/initial-design-overview/design-system.md` and the `/design-typography` web route.
-4. Keep screen/product implementation scoped to active tickets; do not build beyond design-system primitives until the ticket is started.
+4. QA SCKRL-004 against `docs/design/initial-design-overview/design-system.md`, `styles.css`, `sk-atoms.jsx`, and the `/design-components` web route.
+5. Keep screen/product implementation scoped to active tickets; do not build beyond design-system primitives until the ticket is started.
 
 Immediate next step while final detailed designs are still pending:
 
@@ -55,7 +56,7 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | SCKRL-001 | Done    | DevOps   | Repo, CI, environments.                          | pnpm/turbo, Expo Router, Next.js App Router, shared packages, env templates, lockfile, and PR CI are scaffolded and locally validated. |
 | SCKRL-002 | Review  | Frontend | Design tokens package.                           | Typed tokens, CSS-vars export, `/design-tokens` demo route, and token drift test are implemented and locally validated.                |
 | SCKRL-003 | Review  | Frontend | Typography setup.                                | App text scale, web/native font stacks, mobile scaffold usage, tests, and `/design-typography` review route are locally validated.     |
-| SCKRL-004 | Blocked | Frontend | Core component library.                          | Depends on SCKRL-002 and SCKRL-003.                                                                                                    |
+| SCKRL-004 | Review  | Frontend | Core component library.                          | `@sackerl/ui` exports core stateless primitives, package CSS, metadata tests, and `/design-components` review route.                   |
 | SCKRL-005 | Review  | Frontend | Icon set.                                        | `@sackerl/ui` exports the typed icon registry, aliases, `Icon` component, tests, and `/design-icons` review route.                     |
 | SCKRL-006 | Blocked | Frontend | Animated paper bag component.                    | Depends on SCKRL-002, SCKRL-005, and `sk-atoms.jsx`.                                                                                   |
 | SCKRL-007 | Blocked | Frontend | App navigation shell (mobile).                   | Depends on SCKRL-004; tab/FAB reference is available in `sk-atoms.jsx`.                                                                |
@@ -73,6 +74,7 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | 2026-05-18 | SCKRL-002 implementation moved to review after lint, typecheck, tests, format check, and web production build passed.   | Frontend           |
 | 2026-05-18 | SCKRL-005 implementation moved to review after lint, typecheck, tests, format check, web build, and route check passed. | Frontend           |
 | 2026-05-18 | SCKRL-003 implementation moved to review after lint, typecheck, tests, format check, web build, and route check passed. | Frontend           |
+| 2026-05-18 | SCKRL-004 implementation moved to review after lint, typecheck, tests, format check, web build, and route check passed. | Frontend           |
 
 ## Decision Log
 
