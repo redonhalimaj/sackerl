@@ -8,6 +8,8 @@ Sackerl helps households know what groceries they already have, where those groc
 
 The full ticket-level backlog lives in [features.md](features.md). This file is the high-level epic map for Obsidian navigation and delivery planning.
 
+The active product-screen design source is the Phase 2 handoff at `Design/Phase 2/sackerl phase 2`. Its visual source of truth is `index.html`; its implementation details are in `handoff/features.md`, `handoff/screens.md`, and `handoff/design-system.md`.
+
 ## Epic Map
 
 | Epic | Status | Goal | Ticket Range |
@@ -27,14 +29,12 @@ The full ticket-level backlog lives in [features.md](features.md). This file is 
 
 The first implementation sequence should start with EPIC-1, because the rest of the backlog depends on repo setup, tokens, component primitives, auth, and shared models.
 
-After foundation, prioritize the smallest useful vertical slice:
+After foundation, prioritize Slice 1 from the Phase 2 handoff:
 
-- Onboarding shell.
-- Household and zone setup.
-- Manual item entry.
-- Stock dashboard.
-- Storage detail.
-- Expiring-soon list.
+- SCKRL-008 and SCKRL-009 for auth, profile, and household.
+- SCKRL-101 through SCKRL-103 for welcome, storage-zone setup, and locale.
+- SCKRL-201 and SCKRL-202 for item model and item CRUD.
+- SCKRL-203 through SCKRL-205 for the read-only dashboard hero, expiring card, and storage grid.
 
 Receipt scanning is core to the product identity, but it depends on camera/upload, storage, OCR provider abstraction, review UI, and batch item creation. It should be planned as a vertical slice after the stock core is stable enough to receive parsed items.
 
@@ -47,4 +47,3 @@ Receipt scanning is core to the product identity, but it depends on camera/uploa
 - Voice add.
 - Apple Watch / wearable companion.
 - Community recipe sharing.
-

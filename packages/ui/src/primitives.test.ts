@@ -7,12 +7,18 @@ import {
   cardVariants,
   categoryMeta,
   chipVariants,
+  defaultPaperBagItems,
   kraftTexture,
+  markViewBox,
+  paperBagDefaults,
+  resolveNativePaperBagColor,
+  resolvePaperBagItem,
   roundIconButtonVariants,
   tileCategories,
+  wordmarkTracking,
   zoneKinds,
   zoneMeta,
-} from './primitives';
+} from './index';
 
 describe('primitives', () => {
   it('exports SCKRL-004 button and chip variants', () => {
@@ -42,5 +48,22 @@ describe('primitives', () => {
     expect(zoneMeta.fridge.short).toBe('FR');
     expect(zoneMeta.basement.short).toBe('BS');
     expect(roundIconButtonVariants).toEqual(['default', 'dark']);
+  });
+
+  it('exports the SCKRL-006 paper bag defaults', () => {
+    expect(paperBagDefaults).toMatchObject({ animationDuration: 4.4, height: 300, width: 280 });
+    expect(defaultPaperBagItems).toHaveLength(4);
+    expect(resolvePaperBagItem(defaultPaperBagItems[1])).toMatchObject({
+      dx: -12,
+      height: 34,
+      kind: 'rect',
+      width: 16,
+    });
+    expect(resolveNativePaperBagColor('var(--amber)')).toBe('#F2C014');
+  });
+
+  it('exports the Sackerl brand mark constants', () => {
+    expect(markViewBox).toBe('0 0 24 26');
+    expect(wordmarkTracking).toBe(0);
   });
 });

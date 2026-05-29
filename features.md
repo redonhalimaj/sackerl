@@ -10,7 +10,9 @@ Per-ticket spec for the SCKRL backlog. Each ticket is sized to fit one small-to-
 - **Depends on**: upstream tickets that must merge first.
 - **Notes**: implementation hints, gotchas, links to design references.
 
-The HTML hi-fi designs (`index.html`) are the visual source of truth once they are added to the repo. Match spacing, colour tokens (`styles.css`), and copy unless explicitly noted.
+The active Phase 2 handoff in `Design/Phase 2/sackerl phase 2` is the current product-screen source of truth. Use `index.html` for visual reference, `handoff/screens.md` for screen anatomy, and `handoff/design-system.md` for component, motion, voice, and accessibility details.
+
+Keep the local SCKRL-003 decision that app text letter spacing is `0` across web/native implementation, even when the design handoff uses negative editorial tracking.
 
 ---
 
@@ -25,7 +27,7 @@ The HTML hi-fi designs (`index.html`) are the visual source of truth once they a
 - Monorepo (pnpm/turbo) with `apps/mobile`, `apps/web`, `packages/ui`, `packages/api-client`, `packages/tokens`.
 - ESLint + Prettier + TypeScript strict mode, all CI-checked.
 - GitHub Actions: install, lint, typecheck, test on every PR.
-- Three `.env` templates (`.env.dev`, `.env.staging`, `.env.prod`) with documented keys.
+- Documented environment keys for `dev`, `staging`, and `prod`; real `.env*` files are ignored by Git.
 
 **Depends on.** -
 
@@ -130,7 +132,7 @@ The HTML hi-fi designs (`index.html`) are the visual source of truth once they a
 
 **Depends on.** SCKRL-001
 
-**Notes.** Use Supabase Auth or Clerk. Do not roll your own.
+**Notes.** Default implementation choice is Supabase Auth paired with Supabase Postgres unless the product owner overrides it before implementation. Do not roll your own auth.
 
 ## SCKRL-009 - User profile and household model
 
@@ -143,6 +145,8 @@ The HTML hi-fi designs (`index.html`) are the visual source of truth once they a
 - `locale` defaults to device locale, falls back to `de`.
 
 **Depends on.** SCKRL-008
+
+**Notes.** V1 scope is one user and one household. Use Supabase/Postgres tables and row-level security as the default implementation path unless the provider decision changes.
 
 ## SCKRL-010 - Logging, error reporting, analytics scaffolding
 
@@ -159,6 +163,21 @@ The HTML hi-fi designs (`index.html`) are the visual source of truth once they a
 ---
 
 # EPIC-2 - Onboarding
+
+## SCKRL-100 - Local onboarding preview setup
+
+**Summary.** Help the product owner run the Sackerl onboarding flow locally on a laptop browser and on a physical phone through Expo Go before continuing product-screen work.
+
+**Acceptance criteria**
+
+- Laptop browser instructions include the repo root command `pnpm --filter @sackerl/mobile web -- --port 8082` and the URL `http://localhost:8082/onboarding`.
+- Expo Go instructions include installing Expo Go, keeping laptop and phone on the same Wi-Fi, running `pnpm --filter @sackerl/mobile dev -- --host lan`, and scanning the QR code.
+- Troubleshooting notes cover using `pnpm --filter @sackerl/mobile dev -- --tunnel` if LAN QR connection fails, checking `apps/mobile/.env.local` for public Supabase keys, and stopping the dev server with `Ctrl+C`.
+- The user can see the SCKRL-101 onboarding screen in both browser preview and Expo Go, or the remaining blocker is clearly recorded.
+
+**Depends on.** SCKRL-008, SCKRL-101
+
+**Notes.** This is a guided local setup/QA task, not product implementation. Do not commit local env values or expose Supabase service-role credentials.
 
 ## SCKRL-101 - Welcome screen
 
@@ -185,6 +204,8 @@ The HTML hi-fi designs (`index.html`) are the visual source of truth once they a
 - Skipping is not allowed.
 
 **Depends on.** SCKRL-009
+
+**Notes.** Use Supabase/Postgres migrations as the default implementation path. Categories are global seed data; zones are household-scoped records seeded from SCKRL-102.
 
 ## SCKRL-103 - Locale picker
 

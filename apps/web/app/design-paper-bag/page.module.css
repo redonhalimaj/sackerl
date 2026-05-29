@@ -1,0 +1,116 @@
+.page {
+  align-content: start;
+  display: grid;
+  gap: 34px;
+  justify-content: stretch;
+  min-height: 100vh;
+  padding: 40px;
+  width: 100%;
+}
+
+.header {
+  display: grid;
+  gap: 10px;
+  max-width: 780px;
+}
+
+.eyebrow {
+  color: var(--mute);
+  font-family: var(--font-mono);
+  font-size: var(--type-eyebrow-size);
+  font-weight: var(--type-eyebrow-weight);
+  letter-spacing: 0;
+  line-height: var(--type-eyebrow-line);
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: var(--type-headline-size);
+  font-weight: var(--type-headline-weight);
+  letter-spacing: 0;
+  line-height: var(--type-headline-line);
+  margin: 0;
+}
+
+.copy {
+  color: var(--ink-soft);
+  font-size: var(--type-body-size);
+  font-weight: var(--type-body-weight);
+  letter-spacing: 0;
+  line-height: var(--type-body-line);
+  margin: 0;
+  max-width: 760px;
+}
+
+.stage {
+  align-items: center;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(79, 157, 58, 0.11), transparent 36%), var(--bg-warm);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  display: grid;
+  gap: 24px;
+  justify-items: center;
+  max-width: 720px;
+  min-height: 460px;
+  overflow: hidden;
+  padding: 32px;
+}
+
+.hero {
+  display: grid;
+  min-height: 320px;
+  place-items: center;
+}
+
+.meta,
+.variants {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.variants {
+  justify-content: flex-start;
+  max-width: 720px;
+}
+
+.variants article {
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  min-width: 220px;
+  padding: 22px;
+}
+
+.variants span {
+  color: var(--mute);
+  font-family: var(--font-mono);
+  font-size: var(--type-caption-size);
+  letter-spacing: 0;
+  line-height: var(--type-caption-line);
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .page {
+    gap: 28px;
+    padding: 24px 18px;
+  }
+
+  .stage {
+    min-height: 420px;
+    padding: 24px 16px;
+  }
+
+  .variants {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

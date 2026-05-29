@@ -7,6 +7,8 @@ import {
   Chip,
   Eyebrow,
   ListRow,
+  Logo,
+  Mark,
   RoundIconButton,
   Tile,
   Zone,
@@ -164,6 +166,8 @@ export default function DesignComponentsPage(): React.ReactElement {
             </div>
           </div>
           <div className={styles.controlCluster}>
+            <Logo />
+            <Mark />
             <Avatar label="Household member" name="Mira Huber" />
             <Avatar label="Household member" name="Redon Halimaj" size="lg" />
             <RoundIconButton icon="settings" label="Settings" />

@@ -311,3 +311,103 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
+
+.sk-paper-bag {
+  align-items: flex-end;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.sk-paper-bag__item {
+  box-shadow:
+    0 1.5px 0 rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  left: 50%;
+  opacity: 1;
+  position: absolute;
+  top: 34%;
+  transform: translate(var(--sk-x, 0), 6px) rotate(var(--sk-r1, 0deg));
+}
+
+.sk-paper-bag__item[data-animated='true'] {
+  animation: sk-bag-drop 4.4s var(--sk-delay, 0s) infinite cubic-bezier(0.55, 0.05, 0.7, 0.55);
+}
+
+.sk-paper-bag__body {
+  transform-origin: 50% 80%;
+}
+
+.sk-paper-bag__body[data-animated='true'] {
+  animation: sk-bag-breathe 5.2s ease-in-out infinite;
+}
+
+@keyframes sk-bag-drop {
+  0% {
+    opacity: 0;
+    transform: translate(var(--sk-x, 0), -90px) rotate(var(--sk-r0, 0deg));
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  55% {
+    opacity: 1;
+    transform: translate(var(--sk-x, 0), 6px) rotate(var(--sk-r1, 0deg));
+  }
+
+  68% {
+    opacity: 0;
+    transform: translate(var(--sk-x, 0), 22px) scale(0.78) rotate(var(--sk-r1, 0deg));
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(var(--sk-x, 0), 22px) scale(0.78) rotate(var(--sk-r1, 0deg));
+  }
+}
+
+@keyframes sk-bag-breathe {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.3deg);
+  }
+
+  50% {
+    transform: translateY(-1.5px) rotate(0.3deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-paper-bag__body,
+  .sk-paper-bag__item {
+    animation: none !important;
+  }
+
+  .sk-paper-bag__body {
+    transform: none;
+  }
+
+  .sk-paper-bag__item {
+    opacity: 1;
+    transform: translate(var(--sk-x, 0), 6px) rotate(var(--sk-r1, 0deg));
+  }
+}
+
+.sk-logo {
+  align-items: center;
+  color: var(--sk-logo-color);
+  display: inline-flex;
+  gap: var(--sk-logo-gap);
+  line-height: 1;
+}
+
+.sk-logo__wordmark {
+  font-family: var(--font-sans);
+  font-feature-settings: 'ss01';
+  font-size: var(--sk-logo-size);
+  font-weight: 700;
+  letter-spacing: var(--sk-logo-tracking);
+  line-height: 1;
+}
