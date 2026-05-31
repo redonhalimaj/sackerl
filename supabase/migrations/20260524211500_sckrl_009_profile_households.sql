@@ -11,7 +11,7 @@ create table if not exists public.users (
 create table if not exists public.households (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references public.users (id) on delete cascade,
-  name text not null,or you
+  name text not null,
   created_at timestamptz not null default now(),
   constraint households_owner_id_key unique (owner_id),
   constraint households_name_check check (char_length(trim(name)) between 1 and 80)
