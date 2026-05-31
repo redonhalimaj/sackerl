@@ -20,6 +20,25 @@ export type {
   SupabaseConfigValidation,
 } from './auth';
 export {
+  isItemCategoryId,
+  isItemQuantityUnit,
+  isItemSource,
+  itemCategories,
+  itemCategoryIds,
+  itemQuantityUnits,
+  itemSources,
+  mapStockItemRow,
+} from './items';
+export type {
+  DatabaseStockItemRow,
+  ItemCategory,
+  ItemCategoryId,
+  ItemQuantityUnit,
+  ItemSource,
+  StockItem,
+  StorageZone,
+} from './items';
+export {
   ApiRequestError,
   SackerlProfileClient,
   createSackerlProfileClient,
