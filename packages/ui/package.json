@@ -9,10 +9,17 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
-    }
+    },
+    "./primitives.css": "./src/primitives.css"
   },
   "peerDependencies": {
     "react": ">=18.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.17",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-svg": "15.12.1"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

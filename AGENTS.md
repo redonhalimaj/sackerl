@@ -4,7 +4,7 @@
 
 This repo uses a Scrum-style agent workflow for Sackerl, a mobile-first grocery stock management app for households. The app helps users scan or import receipts, review grocery items, place items into real storage locations, track expiry dates, receive reminders, and later use AI-assisted recipe and buying suggestions.
 
-The first foundation scaffold is now in place. Design-specific implementation will follow once the first UI direction and source files are available.
+The foundation scaffold and Phase 1 design-system implementation are now in place. Phase 2 product-screen implementation should follow the active handoff in `Design/Phase 2/sackerl phase 2`.
 
 ## Source Of Truth
 
@@ -14,7 +14,8 @@ The first foundation scaffold is now in place. Design-specific implementation wi
 - [CLAUDE.md](CLAUDE.md): coding-agent guidance for working in this repo.
 - [README.md](README.md): repo setup, commands, and monorepo overview.
 - [docs/monorepo.md](docs/monorepo.md): workspace layout and cross-platform boundaries.
-- [docs/environment.md](docs/environment.md): environment template keys.
+- [docs/environment.md](docs/environment.md): environment keys and ignored local env-file rules.
+- [docs/design](docs/design): design source pointers and Phase 2 handoff summary.
 - [docs/agents](docs/agents): detailed role briefs for the orchestrator and subagents.
 
 ## Current Foundation Baseline
@@ -22,12 +23,16 @@ The first foundation scaffold is now in place. Design-specific implementation wi
 - SCKRL-001 is completed locally.
 - The repo uses pnpm workspaces with Turborepo.
 - `apps/web` is a Next.js App Router scaffold.
-- `apps/mobile` is an Expo Router scaffold.
-- `packages/tokens`, `packages/ui`, and `packages/api-client` are placeholder shared packages for later tickets.
-- `.env.dev`, `.env.staging`, and `.env.prod` are checked-in templates only.
+- `apps/mobile` is an Expo SDK 54 + Expo Router scaffold with the Phase 1 tab shell.
+- `packages/tokens` and `packages/ui` contain the Phase 1 design-system foundation.
+- `packages/api-client` is a placeholder shared package for later API integration.
+- `.env*` files are ignored local files and must not be tracked in Git.
 - CI is defined in `.github/workflows/ci.yml` for install, format, lint, typecheck, and tests.
+- Phase 2 product handoff is available at `Design/Phase 2/sackerl phase 2` and is the active source for Slice 1 product-screen work.
 
-Do not add product UI, design tokens, auth, database, OCR, notification, or AI provider implementation unless the relevant SCKRL ticket or explicit user request is active.
+Do not add product UI, auth, database, OCR, notification, or AI provider implementation unless the relevant SCKRL ticket or explicit user request is active.
+
+Default Slice 1 provider recommendation: Supabase Auth plus Supabase/Postgres unless the user explicitly overrides it.
 
 ## Agent Roster
 

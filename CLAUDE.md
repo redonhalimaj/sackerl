@@ -14,9 +14,11 @@ The product should feel friendly, simple, accessible, and practical. It must not
 
 ## Current Stage
 
-The repo has the SCKRL-001 foundation scaffold in place. The selected baseline is pnpm workspaces + Turborepo, Next.js App Router for web, Expo Router for mobile, and shared packages for tokens, UI, and API-client boundaries.
+The repo has the SCKRL-001 foundation scaffold in place. The selected baseline is pnpm workspaces + Turborepo, Next.js App Router for web, Expo SDK 54 with Expo Router for mobile, and shared packages for tokens, UI, and API-client boundaries.
 
-Designs are still pending. Do not start design-token extraction, component implementation, product screens, auth, persistence, OCR, notification, AI, or provider-specific backend work until the relevant SCKRL ticket is active.
+The Phase 1 design-system foundation is implemented locally from the initial design handoff: shared tokens, typography, core primitives, icon registry, animated paper bag, brand mark/logo utilities, and the mobile tab shell. Product screens, auth, persistence, OCR, notification, AI, and provider-specific backend work remain deferred until the relevant SCKRL ticket or explicit user request is active.
+
+The active product-screen handoff is now `Design/Phase 2/sackerl phase 2`. Use its `index.html` as visual source of truth and its `handoff` docs for epics, features, screens, and design-system details. Phase 2 extends the Phase 1 foundation; it does not replace the completed design-system work.
 
 ## How To Work
 
@@ -26,6 +28,7 @@ Designs are still pending. Do not start design-token extraction, component imple
 - Do not introduce unrelated refactors while the codebase is still forming.
 - Update `status.md` when ticket state changes.
 - Update durable repo guidance in this file only after decisions are stable or implementation has landed.
+- Use Supabase Auth plus Supabase/Postgres as the default Slice 1 provider path unless the user explicitly changes the decision.
 
 ## Repo Commands
 
@@ -46,11 +49,18 @@ pnpm --filter @sackerl/web build
 ## Current Structure
 
 - `apps/web`: Next.js App Router scaffold.
-- `apps/mobile`: Expo Router scaffold.
-- `packages/tokens`: placeholder package for SCKRL-002.
-- `packages/ui`: placeholder package for SCKRL-004.
+- `apps/mobile`: Expo SDK 54 + Expo Router scaffold with a Phase 1 tab shell.
+- `packages/tokens`: shared design token package.
+- `packages/ui`: shared primitives, icons, logo utilities, and animated paper bag.
 - `packages/api-client`: placeholder package for future API integration.
-- `.env.dev`, `.env.staging`, `.env.prod`: checked-in environment templates.
+- `.env*`: ignored local environment files; keep real values out of Git.
+
+## Current Design Source
+
+- Phase 2 product handoff: `Design/Phase 2/sackerl phase 2`.
+- Phase 2 visual source: `Design/Phase 2/sackerl phase 2/index.html`.
+- Phase 2 engineering docs: `Design/Phase 2/sackerl phase 2/handoff`.
+- Phase 1 history: `docs/design/initial-design-overview`.
 
 ## Product Guardrails
 

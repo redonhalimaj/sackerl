@@ -1,3 +1,3 @@
 /// <reference types="expo/types" />
 
-// This file wires Expo types into the mobile TypeScript project.
+// NOTE: This file should not be edited and should be in your git ignore

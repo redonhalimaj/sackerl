@@ -1,0 +1,171 @@
+.page {
+  align-content: start;
+  display: grid;
+  gap: 34px;
+  justify-content: stretch;
+  min-height: 100vh;
+  padding: 40px;
+  width: 100%;
+}
+
+.header {
+  display: grid;
+  gap: 10px;
+  max-width: 780px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.copy {
+  color: var(--ink-soft);
+  font-size: 16px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.section {
+  display: grid;
+  gap: 18px;
+  max-width: 1120px;
+  width: 100%;
+}
+
+.sectionHeader {
+  display: grid;
+  gap: 6px;
+}
+
+.sectionHeader h2,
+.atomBlock h3,
+.demoCard h3 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.buttonMatrix {
+  display: grid;
+  gap: 12px;
+}
+
+.buttonRow {
+  align-items: center;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 90px repeat(2, max-content);
+}
+
+.rowLabel {
+  color: var(--mute);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.inlineGroup,
+.controlCluster {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cardGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.demoCard {
+  align-content: start;
+  display: grid;
+  gap: 10px;
+  min-height: 180px;
+  padding: 20px;
+}
+
+.demoCard p {
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.atomGrid {
+  display: grid;
+  gap: 20px;
+}
+
+.atomBlock {
+  display: grid;
+  gap: 14px;
+}
+
+.tileGrid,
+.zoneGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.tileGrid {
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+}
+
+.zoneGrid {
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+}
+
+.namedAtom {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.namedAtom span:last-child {
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.listFrame {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  max-width: 680px;
+  overflow: hidden;
+}
+
+.listFrame > :last-child {
+  border-bottom: 0;
+}
+
+@media (max-width: 760px) {
+  .page {
+    gap: 28px;
+    padding: 24px 18px;
+  }
+
+  .buttonRow {
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+}
