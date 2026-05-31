@@ -1,5 +1,5 @@
 import type { SackerlAuthClient } from '@sackerl/api-client';
-import { useRouter, useSegments } from 'expo-router';
+import { useLocalSearchParams, useRouter, useSegments } from 'expo-router';
 import {
   createContext,
   useContext,
@@ -128,6 +128,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren): React.Reac
 }
 
 export function AuthRouteGate(): null {
+  const params = useLocalSearchParams<{ returnTo?: string }>();
   const router = useRouter();
   const segments = useSegments();
   const { session, status } = useAuthSession();
@@ -136,6 +137,7 @@ export function AuthRouteGate(): null {
   const isStorageZonesRoute = segments[0] === 'storage-zones';
   const isLoggedOutRoute = isAuthRoute || isOnboardingRoute || isStorageZonesRoute;
   const isSignedIn = Boolean(session?.user);
+  const returnToStorageZones = params.returnTo === '/storage-zones';
 
   useEffect(() => {
     if (status === 'loading') {
@@ -148,9 +150,17 @@ export function AuthRouteGate(): null {
     }
 
     if (isSignedIn && (isAuthRoute || isOnboardingRoute)) {
-      router.replace('/');
+      router.replace(isAuthRoute && returnToStorageZones ? '/storage-zones' : '/');
     }
-  }, [isAuthRoute, isLoggedOutRoute, isOnboardingRoute, isSignedIn, router, status]);
+  }, [
+    isAuthRoute,
+    isLoggedOutRoute,
+    isOnboardingRoute,
+    isSignedIn,
+    returnToStorageZones,
+    router,
+    status,
+  ]);
 
   return null;
 }

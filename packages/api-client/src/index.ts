@@ -31,8 +31,10 @@ export type {
   EnsureUserProfileInput,
   Household,
   HouseholdRole,
+  HouseholdZoneId,
   ProfileClientOptions,
   UpdateHouseholdInput,
+  UpdateHouseholdZonesInput,
   UpdateUserProfileInput,
   UserProfile,
 } from './profile';

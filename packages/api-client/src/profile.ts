@@ -9,12 +9,15 @@ export type UserProfile = {
 
 export type HouseholdRole = 'member' | 'owner';
 
+export type HouseholdZoneId = string;
+
 export type Household = {
   readonly createdAt: string;
   readonly id: string;
   readonly name: string;
   readonly ownerId: string;
   readonly role: HouseholdRole;
+  readonly zones: readonly HouseholdZoneId[];
 };
 
 export type AuthenticatedUserContext = {
@@ -41,6 +44,10 @@ export type UpdateHouseholdInput = {
   readonly name: string;
 };
 
+export type UpdateHouseholdZonesInput = {
+  readonly zones: readonly HouseholdZoneId[];
+};
+
 export type EnsureHouseholdInput = {
   readonly name?: string | undefined;
 };
@@ -57,6 +64,7 @@ type DatabaseHousehold = {
   readonly id: string;
   readonly name: string;
   readonly owner_id: string;
+  readonly zones?: readonly string[] | null | undefined;
 };
 
 type DatabaseHouseholdMember = {
@@ -68,7 +76,7 @@ type DatabaseHouseholdMember = {
 type QueryValue = boolean | number | string;
 
 const userProfileSelect = 'id,email,locale,created_at';
-const householdSelect = 'id,owner_id,name,created_at';
+const householdSelect = 'id,owner_id,name,zones,created_at';
 const householdMemberSelect = 'household_id,user_id,role';
 
 export class ApiRequestError extends Error {
@@ -140,7 +148,26 @@ function mapHousehold(row: DatabaseHousehold, role: HouseholdRole = 'owner'): Ho
     name: row.name,
     ownerId: row.owner_id,
     role,
+    zones: row.zones ?? [],
   };
+}
+
+function normaliseHouseholdZones(zones: readonly HouseholdZoneId[]): readonly HouseholdZoneId[] {
+  const seen = new Set<string>();
+  const normalised: string[] = [];
+
+  for (const zone of zones) {
+    const value = zone.trim().toLowerCase();
+
+    if (!value || !/^[a-z][a-z0-9-]{1,31}$/.test(value) || seen.has(value)) {
+      continue;
+    }
+
+    seen.add(value);
+    normalised.push(value);
+  }
+
+  return normalised;
 }
 
 export class SackerlProfileClient {
@@ -305,6 +332,36 @@ export class SackerlProfileClient {
       { owner_id: `eq.${context.user.id}`, select: householdSelect },
       {
         body: { name },
+        method: 'PATCH',
+        prefer: 'return=representation',
+      },
+    );
+
+    const row = firstRow(rows);
+
+    if (!row) {
+      throw new ApiRequestError('Household not found.', 404);
+    }
+
+    return mapHousehold(row);
+  }
+
+  async updateHouseholdZones(
+    context: AuthenticatedUserContext,
+    input: UpdateHouseholdZonesInput,
+  ): Promise<Household> {
+    const zones = normaliseHouseholdZones(input.zones);
+
+    if (zones.length < 1) {
+      throw new ApiRequestError('At least one storage zone is required.', 400);
+    }
+
+    const rows = await this.requestRows<DatabaseHousehold>(
+      'households',
+      context,
+      { owner_id: `eq.${context.user.id}`, select: householdSelect },
+      {
+        body: { zones },
         method: 'PATCH',
         prefer: 'return=representation',
       },

@@ -1,20 +1,10 @@
-import { useEffect, useState, type JSX } from 'react';
-import { AccessibilityInfo, StyleSheet, View } from 'react-native';
-import Animated, {
-  Easing,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
+import { useEffect, useRef, useState, type JSX } from 'react';
+import { AccessibilityInfo, Animated, Easing, StyleSheet, View } from 'react-native';
 import Svg, {
   Circle,
   Defs,
   Ellipse,
   G,
-  Line,
   LinearGradient,
   Path,
   Pattern,
@@ -45,46 +35,60 @@ function degrees(value: string): number {
 
 function NativePaperBagItem({ animated, item }: NativePaperBagItemProps): JSX.Element {
   const resolvedItem = resolvePaperBagItem(item);
-  const progress = useSharedValue(0);
+  const progress = useRef(new Animated.Value(0)).current;
   const delayMs = resolvedItem.delay * 1000;
   const r0 = degrees(resolvedItem.r0);
   const r1 = degrees(resolvedItem.r1);
 
   useEffect(() => {
+    progress.stopAnimation();
+
     if (!animated) {
-      progress.value = 0.55;
+      progress.setValue(0.55);
       return;
     }
 
-    progress.value = 0;
-    progress.value = withDelay(
-      delayMs,
-      withRepeat(
-        withTiming(1, {
+    progress.setValue(0);
+
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delayMs),
+        Animated.timing(progress, {
+          toValue: 1,
           duration: paperBagDefaults.animationDuration * 1000,
           easing: Easing.bezier(0.55, 0.05, 0.7, 0.55),
+          useNativeDriver: true,
         }),
-        -1,
-        false,
-      ),
+        Animated.timing(progress, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ]),
     );
+
+    loop.start();
+
+    return () => {
+      loop.stop();
+    };
   }, [animated, delayMs, progress]);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    const y = interpolate(progress.value, [0, 0.55, 0.68, 1], [-90, 6, 22, 22]);
-    const scale = interpolate(progress.value, [0, 0.55, 0.68, 1], [1, 1, 0.78, 0.78]);
-    const opacity = interpolate(progress.value, [0, 0.12, 0.55, 0.68, 1], [0, 1, 1, 0, 0]);
-    const rotate = interpolate(progress.value, [0, 0.55, 1], [r0, r1, r1]);
-
-    return {
-      opacity: animated ? opacity : 1,
-      transform: [
-        { translateX: resolvedItem.dx },
-        { translateY: animated ? y : 6 },
-        { scale: animated ? scale : 1 },
-        { rotate: `${animated ? rotate : r1}deg` },
-      ],
-    };
+  const y = progress.interpolate({
+    inputRange: [0, 0.55, 0.68, 1],
+    outputRange: [-90, 6, 22, 22],
+  });
+  const scale = progress.interpolate({
+    inputRange: [0, 0.55, 0.68, 1],
+    outputRange: [1, 1, 0.78, 0.78],
+  });
+  const opacity = progress.interpolate({
+    inputRange: [0, 0.12, 0.55, 0.68, 1],
+    outputRange: [0, 1, 1, 0, 0],
+  });
+  const rotate = progress.interpolate({
+    inputRange: [0, 0.55, 1],
+    outputRange: [`${r0}deg`, `${r1}deg`, `${r1}deg`],
   });
 
   return (
@@ -100,7 +104,15 @@ function NativePaperBagItem({ animated, item }: NativePaperBagItemProps): JSX.El
           marginTop: resolvedItem.height / -2,
           width: resolvedItem.width,
         },
-        animatedStyle,
+        {
+          opacity: animated ? opacity : 1,
+          transform: [
+            { translateX: resolvedItem.dx },
+            { translateY: animated ? y : 6 },
+            { scale: animated ? scale : 1 },
+            { rotate: animated ? rotate : `${r1}deg` },
+          ],
+        },
       ]}
     />
   );
@@ -114,7 +126,7 @@ export function PaperBag({
   width = paperBagDefaults.width,
 }: PaperBagProps): JSX.Element {
   const [reduceMotion, setReduceMotion] = useState(false);
-  const breathe = useSharedValue(0);
+  const breathe = useRef(new Animated.Value(0)).current;
   const shouldAnimate = animated && !reduceMotion;
 
   useEffect(() => {
@@ -132,32 +144,59 @@ export function PaperBag({
   }, []);
 
   useEffect(() => {
+    breathe.stopAnimation();
+
     if (!shouldAnimate) {
-      breathe.value = 0;
+      breathe.setValue(0);
       return;
     }
 
-    breathe.value = withRepeat(
-      withTiming(1, {
-        duration: 5200,
-        easing: Easing.inOut(Easing.ease),
-      }),
-      -1,
-      true,
+    breathe.setValue(0);
+
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breathe, {
+          toValue: 1,
+          duration: 2600,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(breathe, {
+          toValue: 0,
+          duration: 2600,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
     );
+
+    loop.start();
+
+    return () => {
+      loop.stop();
+    };
   }, [breathe, shouldAnimate]);
 
-  const bagStyle = useAnimatedStyle(() => {
-    const y = interpolate(breathe.value, [0, 1], [0, -1.5]);
-    const rotate = interpolate(breathe.value, [0, 1], [-0.3, 0.3]);
-
-    return {
-      transform: [
-        { translateY: shouldAnimate ? y : 0 },
-        { rotate: `${shouldAnimate ? rotate : 0}deg` },
-      ],
-    };
-  });
+  const bagStyle = {
+    transform: [
+      {
+        translateY: shouldAnimate
+          ? breathe.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, -1.5],
+            })
+          : 0,
+      },
+      {
+        rotate: shouldAnimate
+          ? breathe.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['-0.3deg', '0.3deg'],
+            })
+          : '0deg',
+      },
+    ],
+  };
 
   return (
     <View style={[styles.root, { height, width }]}>
@@ -251,18 +290,6 @@ export function PaperBag({
               y="-4"
             >
               {label}
-            </Text>
-            <Line stroke="#6E4D26" strokeWidth="0.5" x1="-28" x2="28" y1="2" y2="2" />
-            <Text
-              fill="#6E4D26"
-              fontFamily="ui-monospace"
-              fontSize="6"
-              letterSpacing="0"
-              textAnchor="middle"
-              x="0"
-              y="14"
-            >
-              EST · WIEN · 2026
             </Text>
           </G>
         </Svg>

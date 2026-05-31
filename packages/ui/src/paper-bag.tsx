@@ -1,4 +1,4 @@
-import { useId, type CSSProperties, type JSX } from 'react';
+import type { CSSProperties, JSX } from 'react';
 
 import {
   defaultPaperBagItems,
@@ -13,6 +13,8 @@ function svgId(idPrefix: string, id: string): string {
   return `${idPrefix}-${id}`;
 }
 
+const paperBagIdPrefix = 'sk-paper-bag';
+
 export function PaperBag({
   animated = true,
   height = paperBagDefaults.height,
@@ -20,10 +22,9 @@ export function PaperBag({
   label = paperBagDefaults.label,
   width = paperBagDefaults.width,
 }: PaperBagProps): JSX.Element {
-  const idPrefix = `sk-paper-bag-${useId().replace(/:/g, '')}`;
-  const gradId = svgId(idPrefix, 'kraft-grad');
-  const backId = svgId(idPrefix, 'kraft-back');
-  const fibersId = svgId(idPrefix, 'kraft-fibers');
+  const gradId = svgId(paperBagIdPrefix, 'kraft-grad');
+  const backId = svgId(paperBagIdPrefix, 'kraft-back');
+  const fibersId = svgId(paperBagIdPrefix, 'kraft-fibers');
 
   return (
     <div className="sk-paper-bag" style={{ height, width }}>
@@ -134,18 +135,6 @@ export function PaperBag({
             y="-4"
           >
             {label}
-          </text>
-          <line stroke="#6E4D26" strokeWidth="0.5" x1="-28" x2="28" y1="2" y2="2" />
-          <text
-            fill="#6E4D26"
-            fontFamily="ui-monospace, SF Mono, Menlo, monospace"
-            fontSize="6"
-            letterSpacing="0"
-            textAnchor="middle"
-            x="0"
-            y="14"
-          >
-            EST · WIEN · 2026
           </text>
         </g>
       </svg>

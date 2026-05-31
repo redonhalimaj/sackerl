@@ -126,6 +126,7 @@ describe('profile API client', () => {
             id: 'household-123',
             name: 'Kitchen',
             owner_id: 'user-123',
+            zones: ['fridge', 'pantry', 'basement', 'freezer'],
           },
         ]),
       )
@@ -146,11 +147,12 @@ describe('profile API client', () => {
       name: 'Kitchen',
       ownerId: 'user-123',
       role: 'owner',
+      zones: ['fridge', 'pantry', 'basement', 'freezer'],
     });
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       4,
-      'https://sackerl.supabase.co/rest/v1/households?select=id%2Cowner_id%2Cname%2Ccreated_at',
+      'https://sackerl.supabase.co/rest/v1/households?select=id%2Cowner_id%2Cname%2Czones%2Ccreated_at',
       expect.objectContaining({
         body: JSON.stringify({ name: 'Kitchen', owner_id: 'user-123' }),
         method: 'POST',
@@ -168,6 +170,48 @@ describe('profile API client', () => {
         method: 'POST',
       }),
     );
+  });
+
+  it('updates household zones with normalized non-empty values', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse([
+        {
+          created_at: '2026-05-24T20:01:00Z',
+          id: 'household-123',
+          name: 'Kitchen',
+          owner_id: 'user-123',
+          zones: ['fridge', 'pantry', 'cabinet'],
+        },
+      ]),
+    );
+    const client = createSackerlProfileClient(config, { fetch: fetchMock });
+
+    await expect(
+      client.updateHouseholdZones(context, {
+        zones: ['Fridge', ' pantry ', 'fridge', 'Cabinet', 'bad value'],
+      }),
+    ).resolves.toMatchObject({
+      zones: ['fridge', 'pantry', 'cabinet'],
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://sackerl.supabase.co/rest/v1/households?owner_id=eq.user-123&select=id%2Cowner_id%2Cname%2Czones%2Ccreated_at',
+      expect.objectContaining({
+        body: JSON.stringify({ zones: ['fridge', 'pantry', 'cabinet'] }),
+        method: 'PATCH',
+      }),
+    );
+  });
+
+  it('rejects empty household zones', async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    const client = createSackerlProfileClient(config, { fetch: fetchMock });
+
+    await expect(client.updateHouseholdZones(context, { zones: [] })).rejects.toMatchObject({
+      message: 'At least one storage zone is required.',
+      status: 400,
+    } satisfies Partial<ApiRequestError>);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('surfaces API errors with status codes', async () => {
