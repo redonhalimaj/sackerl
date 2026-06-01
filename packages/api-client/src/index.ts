@@ -20,6 +20,8 @@ export type {
   SupabaseConfigValidation,
 } from './auth';
 export {
+  SackerlItemsClient,
+  createSackerlItemsClient,
   isItemCategoryId,
   isItemQuantityUnit,
   isItemSource,
@@ -27,16 +29,26 @@ export {
   itemCategoryIds,
   itemQuantityUnits,
   itemSources,
+  mapStorageZoneRow,
   mapStockItemRow,
 } from './items';
 export type {
+  CreateStockItemInput,
+  CreateStockItemsBatchInput,
+  DatabaseStorageZoneRow,
   DatabaseStockItemRow,
+  DeleteStockItemInput,
   ItemCategory,
   ItemCategoryId,
+  ItemPagination,
   ItemQuantityUnit,
   ItemSource,
+  ItemsClientOptions,
+  ListItemsInput,
+  ListItemsResult,
   StockItem,
   StorageZone,
+  UpdateStockItemInput,
 } from './items';
 export {
   ApiRequestError,
