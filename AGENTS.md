@@ -4,7 +4,7 @@
 
 This repo uses a Scrum-style agent workflow for Sackerl, a mobile-first grocery stock management app for households. The app helps users scan or import receipts, review grocery items, place items into real storage locations, track expiry dates, receive reminders, and later use AI-assisted recipe and buying suggestions.
 
-The foundation scaffold and Phase 1 design-system implementation are now in place. Phase 2 product-screen implementation should follow the active handoff in `Design/Phase 2/sackerl phase 2`.
+The foundation scaffold, Phase 1 design-system implementation, Slice 1 auth/profile/household setup, onboarding start, storage-zone setup, item data model, and item API are now in place on `dev`. Phase 2 product-screen implementation should follow the active handoff in `Design/Phase 2/sackerl phase 2`.
 
 ## Source Of Truth
 
@@ -23,14 +23,18 @@ The foundation scaffold and Phase 1 design-system implementation are now in plac
 - SCKRL-001 is completed locally.
 - The repo uses pnpm workspaces with Turborepo.
 - `apps/web` is a Next.js App Router scaffold.
-- `apps/mobile` is an Expo SDK 54 + Expo Router scaffold with the Phase 1 tab shell.
-- `packages/tokens` and `packages/ui` contain the Phase 1 design-system foundation.
-- `packages/api-client` is a placeholder shared package for later API integration.
+- `apps/web` exposes authenticated API route handlers for profile, household, and stock item CRUD.
+- `apps/mobile` is an Expo SDK 54 + Expo Router app with auth-gated onboarding, storage-zone setup, and the Phase 1 tab shell.
+- `packages/tokens` and `packages/ui` contain the Phase 1 design-system foundation, including the animated paper bag and tab-shell UI assets.
+- `packages/api-client` contains shared Supabase-backed auth, profile/household, and item clients.
 - `.env*` files are ignored local files and must not be tracked in Git.
 - CI is defined in `.github/workflows/ci.yml` for install, format, lint, typecheck, and tests.
 - Phase 2 product handoff is available at `Design/Phase 2/sackerl phase 2` and is the active source for Slice 1 product-screen work.
+- SCKRL-006 through SCKRL-009, SCKRL-100 through SCKRL-102, and SCKRL-201/SCKRL-202 are Done on `dev`.
+- SCKRL-203, SCKRL-204, and SCKRL-205 are Ready and are the next unblocked Slice 1 dashboard work.
+- The dev Supabase API secret exposed during runtime QA was deleted and replaced on 2026-06-02. Do not paste the new secret into chat; add it only to ignored local env files if needed.
 
-Do not add product UI, auth, database, OCR, notification, or AI provider implementation unless the relevant SCKRL ticket or explicit user request is active.
+Do not add unrelated product UI, OCR, notification, or AI provider implementation unless the relevant SCKRL ticket or explicit user request is active.
 
 Default Slice 1 provider recommendation: Supabase Auth plus Supabase/Postgres unless the user explicitly overrides it.
 

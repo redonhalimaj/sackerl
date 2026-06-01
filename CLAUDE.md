@@ -16,7 +16,9 @@ The product should feel friendly, simple, accessible, and practical. It must not
 
 The repo has the SCKRL-001 foundation scaffold in place. The selected baseline is pnpm workspaces + Turborepo, Next.js App Router for web, Expo SDK 54 with Expo Router for mobile, and shared packages for tokens, UI, and API-client boundaries.
 
-The Phase 1 design-system foundation is implemented locally from the initial design handoff: shared tokens, typography, core primitives, icon registry, animated paper bag, brand mark/logo utilities, and the mobile tab shell. Product screens, auth, persistence, OCR, notification, AI, and provider-specific backend work remain deferred until the relevant SCKRL ticket or explicit user request is active.
+The Phase 1 design-system foundation is implemented locally from the initial design handoff: shared tokens, typography, core primitives, icon registry, animated paper bag, brand mark/logo utilities, and the mobile tab shell. SCKRL-006 and SCKRL-007 are Done after screenshot-based visual QA.
+
+Slice 1 now has Supabase Auth, profile/household persistence, storage-zone onboarding, the normalized item data model, and item CRUD API routes implemented on `dev`. SCKRL-008, SCKRL-009, SCKRL-100 through SCKRL-102, and SCKRL-201/SCKRL-202 are Done. SCKRL-203, SCKRL-204, and SCKRL-205 are Ready and are the next unblocked dashboard work.
 
 The active product-screen handoff is now `Design/Phase 2/sackerl phase 2`. Use its `index.html` as visual source of truth and its `handoff` docs for epics, features, screens, and design-system details. Phase 2 extends the Phase 1 foundation; it does not replace the completed design-system work.
 
@@ -29,6 +31,7 @@ The active product-screen handoff is now `Design/Phase 2/sackerl phase 2`. Use i
 - Update `status.md` when ticket state changes.
 - Update durable repo guidance in this file only after decisions are stable or implementation has landed.
 - Use Supabase Auth plus Supabase/Postgres as the default Slice 1 provider path unless the user explicitly changes the decision.
+- Keep server-only Supabase secrets out of chat and Git. If runtime QA needs a service role key or database URL, put it only in ignored local `.env*` files.
 
 ## Repo Commands
 
@@ -48,11 +51,11 @@ pnpm --filter @sackerl/web build
 
 ## Current Structure
 
-- `apps/web`: Next.js App Router scaffold.
-- `apps/mobile`: Expo SDK 54 + Expo Router scaffold with a Phase 1 tab shell.
+- `apps/web`: Next.js App Router scaffold with profile, household, and item API routes.
+- `apps/mobile`: Expo SDK 54 + Expo Router app with auth-gated onboarding, storage-zone setup, and the Phase 1 tab shell.
 - `packages/tokens`: shared design token package.
 - `packages/ui`: shared primitives, icons, logo utilities, and animated paper bag.
-- `packages/api-client`: placeholder package for future API integration.
+- `packages/api-client`: shared Supabase-backed auth, profile/household, and item clients.
 - `.env*`: ignored local environment files; keep real values out of Git.
 
 ## Current Design Source

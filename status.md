@@ -2,7 +2,7 @@
 
 ## Session Handoff
 
-Last updated: 2026-06-01
+Last updated: 2026-06-02
 
 SCKRL-001 has been completed locally. The repo now has a pnpm/Turborepo monorepo scaffold with web, mobile, shared packages, environment documentation, ignored local env-file rules, lockfile, and CI.
 
@@ -31,7 +31,7 @@ Pause handoff for next session:
 - SCKRL-006 and SCKRL-007 are Done after screenshot-based visual QA passed with local Chrome rendering on 2026-06-01. SCKRL-006 received a small design-route CSS fix to prevent mobile viewport overflow on `/design-paper-bag`; SCKRL-007 was validated against the existing Expo web export with a fake local-only session.
 - Work paused on 2026-05-30 after env-file cleanup. `.env.dev`, `.env.staging`, and `.env.prod` were removed from Git tracking while local copies remain on disk.
 - `.env*` files are ignored local files. Do not re-add or commit them; use CI, host-managed secrets, or local ignored files for real values.
-- If the env cleanup commit has not been pushed yet, push that first before continuing product work.
+- The exposed dev Supabase API secret used for SCKRL-202 runtime QA was deleted by the user and replaced on 2026-06-02. Do not paste the new secret into chat; add it only to ignored local env files if needed.
 - Work paused on 2026-05-24 after SCKRL-008 and SCKRL-009 completed runtime QA, and after SCKRL-101 was implemented and moved to QA.
 - SCKRL-100 has been run with the user for laptop browser and Expo Go preview.
 - Do not rework Supabase Auth, Mailtrap SMTP, profile, or household setup unless a regression appears; those flows are recorded as passed.
@@ -129,6 +129,7 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | 2026-06-01 | SCKRL-204 and SCKRL-205 moved to Ready because their SCKRL-202 item API dependency is merged into `dev`; SCKRL-203 remains Blocked until SCKRL-006 screenshot-based visual QA is complete or explicitly waived.                                                                                                                                                                                                                   | Agent Orchestrator |
 | 2026-06-01 | SCKRL-006 screenshot-based visual QA passed with local Chrome mobile and desktop captures after fixing `/design-paper-bag` mobile overflow; format check, web lint, web typecheck, and web production build passed.                                                                                                                                                                                                               | QA                 |
 | 2026-06-01 | SCKRL-007 screenshot-based visual QA passed with a local Chrome capture of the Expo web export using a fake local-only session; layout measurements confirmed all five tab buttons fit in a 390px viewport. SCKRL-203 moved to Ready because SCKRL-006 and SCKRL-202 are now Done.                                                                                                                                                | QA                 |
+| 2026-06-02 | Nightly handoff documentation pass updated `status.md`, `AGENTS.md`, `CLAUDE.md`, `README.md`, `docs/monorepo.md`, and `docs/design/phase-2-summary.md` to reflect the current `dev` state: SCKRL-006 through SCKRL-009, SCKRL-100 through SCKRL-102, and SCKRL-201/SCKRL-202 are Done; SCKRL-203 through SCKRL-205 are Ready.                                                                                                    | Agent Orchestrator |
 
 ## Decision Log
 
@@ -149,6 +150,6 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 
 ## Open Decisions
 
-- Provide staging/prod Supabase values when those environments are created; provide server-only service role key and database URL when backend data work starts.
+- Provide staging/prod Supabase values when those environments are created; add the rotated server-only service role key or database URL only to ignored local env files when future runtime QA requires it.
 - Choose OCR provider abstraction and first provider.
 - Confirm GitHub branch protection and required checks after CI lands on the remote.

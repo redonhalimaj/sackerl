@@ -4,13 +4,13 @@ Sackerl uses pnpm workspaces with Turborepo task orchestration.
 
 ## Workspaces
 
-| Workspace             | Package               | Purpose                                                  |
-| --------------------- | --------------------- | -------------------------------------------------------- |
-| `apps/web`            | `@sackerl/web`        | Next.js App Router shell for the web companion.          |
-| `apps/mobile`         | `@sackerl/mobile`     | Expo Router shell for iOS and Android.                   |
-| `packages/tokens`     | `@sackerl/tokens`     | Design token package placeholder for SCKRL-002.          |
-| `packages/ui`         | `@sackerl/ui`         | Shared UI package placeholder for SCKRL-004.             |
-| `packages/api-client` | `@sackerl/api-client` | API boundary placeholder for future backend integration. |
+| Workspace             | Package               | Purpose                                                                   |
+| --------------------- | --------------------- | ------------------------------------------------------------------------- |
+| `apps/web`            | `@sackerl/web`        | Next.js App Router shell plus profile, household, and item API routes.    |
+| `apps/mobile`         | `@sackerl/mobile`     | Expo Router app with auth, onboarding, storage-zone setup, and tab shell. |
+| `packages/tokens`     | `@sackerl/tokens`     | Shared design token package.                                              |
+| `packages/ui`         | `@sackerl/ui`         | Shared UI primitives, icons, logo utilities, and paper bag.               |
+| `packages/api-client` | `@sackerl/api-client` | Shared Supabase-backed auth, profile/household, and item clients.         |
 
 ## Commands
 
@@ -36,5 +36,6 @@ pnpm --filter @sackerl/tokens build
 
 - Keep app-specific routing and platform setup inside `apps/*`.
 - Put reusable cross-platform contracts in `packages/*`.
-- Do not add visual token values or component styling until the design handoff is available.
-- Do not choose auth, database, OCR, notification, or AI providers in this scaffold ticket.
+- Phase 2 product-screen implementation follows `Design/Phase 2/sackerl phase 2`.
+- Supabase Auth plus Supabase/Postgres is the selected Slice 1 provider path unless explicitly changed.
+- Keep server-only secrets out of Git and chat; use ignored local `.env*` files, CI secrets, or host-managed secrets.

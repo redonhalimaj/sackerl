@@ -35,9 +35,9 @@ For mobile:
 pnpm dev:mobile
 ```
 
-Product screens, auth, persistence, receipt parsing, and backend services are intentionally deferred to their SCKRL tickets. The Phase 1 design-system foundation is present locally through tokens, shared UI primitives, icon assets, the animated paper bag, brand logo utilities, and the mobile tab shell.
+The Phase 1 design-system foundation is present locally through tokens, shared UI primitives, icon assets, the animated paper bag, brand logo utilities, and the mobile tab shell. Slice 1 now also includes Supabase Auth, profile/household persistence, storage-zone onboarding, the normalized item data model, and item CRUD API routes.
 
-The active Phase 2 product handoff is in `Design/Phase 2/sackerl phase 2`. It is the source for onboarding, stock, receipt, expiry, suggestions, premium, and web companion screens. Slice 1 should start with Supabase Auth/Postgres scaffolding, onboarding, the item model/API, and the read-only dashboard modules.
+The active Phase 2 product handoff is in `Design/Phase 2/sackerl phase 2`. It is the source for onboarding, stock, receipt, expiry, suggestions, premium, and web companion screens. The next unblocked Slice 1 work is the read-only dashboard modules: SCKRL-203, SCKRL-204, and SCKRL-205.
 
 ## Monorepo Layout
 
@@ -47,7 +47,7 @@ sackerl/
 │   ├── web/                 @sackerl/web - Next.js App Router
 │   └── mobile/              @sackerl/mobile - Expo Router
 ├── packages/
-│   ├── api-client/          @sackerl/api-client - API boundary placeholder
+│   ├── api-client/          @sackerl/api-client - shared Supabase-backed clients
 │   ├── tokens/              @sackerl/tokens - shared design tokens
 │   └── ui/                  @sackerl/ui - shared primitives, icons, logo, and paper bag
 ├── docs/                    agent docs, environment, monorepo notes
@@ -73,7 +73,7 @@ pnpm --filter @sackerl/mobile build
 - **Monorepo**: pnpm workspaces + Turborepo
 - **Web**: Next.js App Router + React + TypeScript
 - **Mobile**: Expo SDK 54 + Expo Router + React Native + TypeScript
-- **Shared packages**: tokens, UI, and API client placeholders
+- **Shared packages**: tokens, UI, and Supabase-backed API client boundaries
 - **Default Slice 1 providers**: Supabase Auth + Supabase Postgres, unless explicitly changed
 - **Quality gates**: ESLint, Prettier, TypeScript strict mode, Vitest
 - **Environments**: `dev`, `staging`, `prod` via ignored local `.env*` files
