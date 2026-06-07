@@ -1,3 +1,5 @@
+import type { ItemRemovalReason } from '@sackerl/api-client';
+
 import { getRequestAuthContext, jsonResponse } from '../../../lib/api-auth';
 import { readUpdateItemBody } from '../../../lib/item-payload';
 import { getRequestHousehold, getWebItemsClient, itemApiErrorResponse } from '../../../lib/items';
@@ -50,9 +52,11 @@ export async function DELETE(_request: Request, context: ItemRouteContext): Prom
 
   try {
     const { id } = await context.params;
+    const removalReason = new URL(_request.url).searchParams.get('removal_reason');
     const item = await getWebItemsClient().deleteItem(authContext, {
       householdId: household.id,
       id,
+      ...(removalReason ? { removalReason: removalReason as ItemRemovalReason } : {}),
     });
 
     return jsonResponse({ item });

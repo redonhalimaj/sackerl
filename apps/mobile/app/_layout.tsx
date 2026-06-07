@@ -10,6 +10,7 @@ export default function RootLayout() {
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="auth" />
         <Stack.Screen name="storage-zones" />
+        <Stack.Screen name="add-item" />
         <Stack.Screen name="(tabs)" />
       </Stack>
       <StatusBar style="auto" />

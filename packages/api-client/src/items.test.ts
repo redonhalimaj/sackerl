@@ -2,12 +2,18 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   createSackerlItemsClient,
+  estimateExpiryDate,
+  estimateExpiryDays,
+  expiryEstimateDaysByCategoryZone,
+  expiryEstimateZoneKeys,
   isItemCategoryId,
   isItemQuantityUnit,
+  isItemRemovalReason,
   isItemSource,
   itemCategories,
   itemCategoryIds,
   itemQuantityUnits,
+  itemRemovalReasons,
   itemSources,
   mapStockItemRow,
 } from './items';
@@ -56,6 +62,7 @@ describe('item data model metadata', () => {
   it('exposes the accepted quantity units and item sources', () => {
     expect(itemQuantityUnits).toEqual(['g', 'kg', 'ml', 'l', 'pcs']);
     expect(itemSources).toEqual(['manual', 'receipt', 'imported']);
+    expect(itemRemovalReasons).toEqual(['used', 'composted']);
   });
 
   it('guards accepted enum values', () => {
@@ -63,6 +70,8 @@ describe('item data model metadata', () => {
     expect(isItemQuantityUnit('oz')).toBe(false);
     expect(isItemSource('receipt')).toBe(true);
     expect(isItemSource('scan')).toBe(false);
+    expect(isItemRemovalReason('used')).toBe(true);
+    expect(isItemRemovalReason('trash')).toBe(false);
     expect(isItemCategoryId('produce')).toBe(true);
     expect(isItemCategoryId('unknown')).toBe(false);
   });
@@ -78,6 +87,7 @@ describe('item data model metadata', () => {
         name: 'Tomatoes',
         qty_unit: 'g',
         qty_value: '500.000',
+        removal_reason: null,
         removed_on: null,
         source: 'manual',
         zone_id: 'zone-123',
@@ -91,10 +101,69 @@ describe('item data model metadata', () => {
       name: 'Tomatoes',
       qtyUnit: 'g',
       qtyValue: 500,
+      removalReason: null,
       removedOn: null,
       source: 'manual',
       zoneId: 'zone-123',
     });
+  });
+});
+
+describe('expiry estimation', () => {
+  it('keeps every category covered for the supported storage zones', () => {
+    for (const categoryId of itemCategoryIds) {
+      expect(Object.keys(expiryEstimateDaysByCategoryZone[categoryId]).sort()).toEqual(
+        [...expiryEstimateZoneKeys].sort(),
+      );
+
+      for (const zoneKey of expiryEstimateZoneKeys) {
+        expect(expiryEstimateDaysByCategoryZone[categoryId][zoneKey]).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('estimates days from category and zone rules', () => {
+    expect(estimateExpiryDays({ categoryId: 'dairy', zoneKey: 'fridge' })).toBe(7);
+    expect(estimateExpiryDays({ categoryId: 'dairy', zoneKey: 'freezer' })).toBe(60);
+    expect(estimateExpiryDays({ categoryId: 'meat', zoneKey: 'fridge' })).toBe(3);
+    expect(estimateExpiryDays({ categoryId: 'frozen', zoneKey: 'freezer' })).toBe(180);
+    expect(estimateExpiryDays({ categoryId: 'pantry', zoneKey: 'basement' })).toBe(120);
+  });
+
+  it('falls back to the pantry rule for custom zones', () => {
+    expect(estimateExpiryDays({ categoryId: 'produce', zoneKey: 'cellar' })).toBe(
+      expiryEstimateDaysByCategoryZone.produce.pantry,
+    );
+  });
+
+  it('returns an ISO date from a deterministic base date', () => {
+    expect(
+      estimateExpiryDate({
+        baseDate: '2026-06-05',
+        categoryId: 'dairy',
+        zoneKey: 'freezer',
+      }),
+    ).toBe('2026-08-04');
+    expect(
+      estimateExpiryDate({
+        baseDate: '2026-06-05',
+        categoryId: 'produce',
+        zoneKey: 'fridge',
+      }),
+    ).toBe('2026-06-11');
+  });
+
+  it('rejects invalid estimate inputs', () => {
+    expect(() => estimateExpiryDays({ categoryId: 'produce', zoneKey: 'bad zone' })).toThrow(
+      'Storage zone is invalid.',
+    );
+    expect(() =>
+      estimateExpiryDate({
+        baseDate: 'June 5',
+        categoryId: 'produce',
+        zoneKey: 'fridge',
+      }),
+    ).toThrow('baseDate must be an ISO date.');
   });
 });
 
@@ -126,6 +195,7 @@ describe('items API client', () => {
               name: 'Tomatoes',
               qty_unit: 'g',
               qty_value: '500.000',
+              removal_reason: null,
               removed_on: null,
               source: 'manual',
               zone_id: 'zone-123',
@@ -155,6 +225,7 @@ describe('items API client', () => {
           name: 'Tomatoes',
           qtyUnit: 'g',
           qtyValue: 500,
+          removalReason: null,
           removedOn: null,
           source: 'manual',
           zoneId: 'zone-123',
@@ -169,7 +240,7 @@ describe('items API client', () => {
       expect.objectContaining({ method: 'GET' }),
     );
     expect(fetchMock.mock.calls[1]?.[0]).toBe(
-      'https://sackerl.supabase.co/rest/v1/items?category_id=eq.produce&household_id=eq.household-123&order=expires_on.asc.nullslast%2Cadded_on.desc%2Cid.asc&removed_on=is.null&select=id%2Chousehold_id%2Cname%2Cqty_value%2Cqty_unit%2Ccategory_id%2Czone_id%2Cexpires_on%2Cadded_on%2Cremoved_on%2Csource&zone_id=eq.zone-123',
+      'https://sackerl.supabase.co/rest/v1/items?category_id=eq.produce&household_id=eq.household-123&order=expires_on.asc.nullslast%2Cadded_on.desc%2Cid.asc&removed_on=is.null&select=id%2Chousehold_id%2Cname%2Cqty_value%2Cqty_unit%2Ccategory_id%2Czone_id%2Cexpires_on%2Cadded_on%2Cremoved_on%2Cremoval_reason%2Csource&zone_id=eq.zone-123',
     );
     expect(fetchMock.mock.calls[1]?.[1]?.method).toBe('GET');
     expect(fetchMock.mock.calls[1]?.[1]?.headers).toMatchObject({
@@ -204,6 +275,7 @@ describe('items API client', () => {
             name: 'Rice',
             qty_unit: 'kg',
             qty_value: 1,
+            removal_reason: null,
             removed_on: null,
             source: 'manual',
             zone_id: 'zone-123',
@@ -224,7 +296,7 @@ describe('items API client', () => {
     ).resolves.toMatchObject({ id: 'item-123', name: 'Rice' });
 
     expect(fetchMock.mock.calls[1]?.[0]).toBe(
-      'https://sackerl.supabase.co/rest/v1/items?select=id%2Chousehold_id%2Cname%2Cqty_value%2Cqty_unit%2Ccategory_id%2Czone_id%2Cexpires_on%2Cadded_on%2Cremoved_on%2Csource',
+      'https://sackerl.supabase.co/rest/v1/items?select=id%2Chousehold_id%2Cname%2Cqty_value%2Cqty_unit%2Ccategory_id%2Czone_id%2Cexpires_on%2Cadded_on%2Cremoved_on%2Cremoval_reason%2Csource',
     );
     expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({
       body: JSON.stringify({
@@ -252,6 +324,7 @@ describe('items API client', () => {
           name: 'Milk',
           qty_unit: 'l',
           qty_value: 1,
+          removal_reason: null,
           removed_on: null,
           source: 'receipt',
           zone_id: 'zone-123',
@@ -278,7 +351,7 @@ describe('items API client', () => {
     ).resolves.toHaveLength(1);
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
-      'https://sackerl.supabase.co/rest/v1/items?select=id%2Chousehold_id%2Cname%2Cqty_value%2Cqty_unit%2Ccategory_id%2Czone_id%2Cexpires_on%2Cadded_on%2Cremoved_on%2Csource',
+      'https://sackerl.supabase.co/rest/v1/items?select=id%2Chousehold_id%2Cname%2Cqty_value%2Cqty_unit%2Ccategory_id%2Czone_id%2Cexpires_on%2Cadded_on%2Cremoved_on%2Cremoval_reason%2Csource',
     );
     const batchBody = fetchMock.mock.calls[0]?.[1]?.body;
 
@@ -312,6 +385,7 @@ describe('items API client', () => {
             name: 'Cherry tomatoes',
             qty_unit: 'g',
             qty_value: 250,
+            removal_reason: null,
             removed_on: null,
             source: 'manual',
             zone_id: 'zone-123',
@@ -329,6 +403,7 @@ describe('items API client', () => {
             name: 'Cherry tomatoes',
             qty_unit: 'g',
             qty_value: 250,
+            removal_reason: 'used',
             removed_on: '2026-06-01',
             source: 'manual',
             zone_id: 'zone-123',
@@ -348,9 +423,10 @@ describe('items API client', () => {
       client.deleteItem(context, {
         householdId: 'household-123',
         id: 'item-123',
+        removalReason: 'used',
         removedOn: '2026-06-01',
       }),
-    ).resolves.toMatchObject({ removedOn: '2026-06-01' });
+    ).resolves.toMatchObject({ removalReason: 'used', removedOn: '2026-06-01' });
 
     expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({
       body: JSON.stringify({
@@ -361,9 +437,53 @@ describe('items API client', () => {
       method: 'PATCH',
     });
     expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({
-      body: JSON.stringify({ removed_on: '2026-06-01' }),
+      body: JSON.stringify({ removed_on: '2026-06-01', removal_reason: 'used' }),
       method: 'PATCH',
     });
+  });
+
+  it('aggregates used and composted removals by current and previous month', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse([
+        { removal_reason: 'used', removed_on: '2026-06-05' },
+        { removal_reason: 'used', removed_on: '2026-06-15' },
+        { removal_reason: 'composted', removed_on: '2026-06-20' },
+        { removal_reason: 'used', removed_on: '2026-05-08' },
+        { removal_reason: 'composted', removed_on: '2026-05-12' },
+      ]),
+    );
+    const client = createSackerlItemsClient(config, { fetch: fetchMock });
+
+    await expect(
+      client.getRemovalStats(context, {
+        householdId: 'household-123',
+        month: '2026-06',
+      }),
+    ).resolves.toEqual({
+      current: {
+        compostedCount: 1,
+        month: '2026-06',
+        totalCount: 3,
+        usedCount: 2,
+      },
+      delta: {
+        compostedCountPercent: 0,
+        totalCountPercent: 50,
+        usedCountPercent: 100,
+      },
+      householdId: 'household-123',
+      previous: {
+        compostedCount: 1,
+        month: '2026-05',
+        totalCount: 2,
+        usedCount: 1,
+      },
+    });
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      'https://sackerl.supabase.co/rest/v1/items?and=%28removed_on.gte.2026-05-01%2Cremoved_on.lt.2026-07-01%29&household_id=eq.household-123&removal_reason=in.%28used%2Ccomposted%29&select=removed_on%2Cremoval_reason',
+    );
+    expect(fetchMock.mock.calls[0]?.[1]?.method).toBe('GET');
   });
 
   it('rejects invalid item payloads before calling the API', async () => {
@@ -381,6 +501,18 @@ describe('items API client', () => {
       }),
     ).rejects.toMatchObject({
       message: 'Item name is required.',
+      status: 400,
+    } satisfies Partial<ApiRequestError>);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await expect(
+      client.deleteItem(context, {
+        householdId: 'household-123',
+        id: 'item-123',
+        removalReason: 'trash' as never,
+      }),
+    ).rejects.toMatchObject({
+      message: 'Item removal reason is invalid.',
       status: 400,
     } satisfies Partial<ApiRequestError>);
     expect(fetchMock).not.toHaveBeenCalled();

@@ -9,6 +9,10 @@ export const itemSources = ['manual', 'receipt', 'imported'] as const;
 
 export type ItemSource = (typeof itemSources)[number];
 
+export const itemRemovalReasons = ['used', 'composted'] as const;
+
+export type ItemRemovalReason = (typeof itemRemovalReasons)[number];
+
 export const itemCategories = [
   { id: 'dairy', label: 'Dairy', short: 'MK', sortOrder: 10 },
   { id: 'produce', label: 'Produce', short: 'PR', sortOrder: 20 },
@@ -30,6 +34,100 @@ export const itemCategoryIds = itemCategories.map(
   (category) => category.id,
 ) as readonly ItemCategoryId[];
 
+export const expiryEstimateZoneKeys = [
+  'fridge',
+  'freezer',
+  'pantry',
+  'basement',
+  'cabinet',
+] as const;
+
+export type ExpiryEstimateZoneKey = (typeof expiryEstimateZoneKeys)[number];
+
+export const expiryEstimateDaysByCategoryZone: Readonly<
+  Record<ItemCategoryId, Readonly<Record<ExpiryEstimateZoneKey, number>>>
+> = {
+  bakery: {
+    basement: 5,
+    cabinet: 5,
+    freezer: 90,
+    fridge: 10,
+    pantry: 5,
+  },
+  canned: {
+    basement: 365,
+    cabinet: 365,
+    freezer: 180,
+    fridge: 5,
+    pantry: 365,
+  },
+  dairy: {
+    basement: 1,
+    cabinet: 1,
+    freezer: 60,
+    fridge: 7,
+    pantry: 1,
+  },
+  drinks: {
+    basement: 90,
+    cabinet: 90,
+    freezer: 1,
+    fridge: 14,
+    pantry: 90,
+  },
+  frozen: {
+    basement: 1,
+    cabinet: 1,
+    freezer: 180,
+    fridge: 2,
+    pantry: 1,
+  },
+  meat: {
+    basement: 1,
+    cabinet: 1,
+    freezer: 60,
+    fridge: 3,
+    pantry: 1,
+  },
+  pantry: {
+    basement: 120,
+    cabinet: 90,
+    freezer: 180,
+    fridge: 30,
+    pantry: 90,
+  },
+  produce: {
+    basement: 7,
+    cabinet: 5,
+    freezer: 180,
+    fridge: 6,
+    pantry: 5,
+  },
+  snacks: {
+    basement: 60,
+    cabinet: 60,
+    freezer: 90,
+    fridge: 30,
+    pantry: 60,
+  },
+  spices: {
+    basement: 365,
+    cabinet: 365,
+    freezer: 365,
+    fridge: 365,
+    pantry: 365,
+  },
+} as const;
+
+export type EstimateExpiryDaysInput = {
+  readonly categoryId: ItemCategoryId;
+  readonly zoneKey?: string | null | undefined;
+};
+
+export type EstimateExpiryDateInput = EstimateExpiryDaysInput & {
+  readonly baseDate?: string | undefined;
+};
+
 export type StorageZone = {
   readonly createdAt: string;
   readonly householdId: string;
@@ -48,6 +146,7 @@ export type StockItem = {
   readonly name: string;
   readonly qtyUnit: ItemQuantityUnit;
   readonly qtyValue: number;
+  readonly removalReason: ItemRemovalReason | null;
   readonly removedOn: string | null;
   readonly source: ItemSource;
   readonly zoneId: string;
@@ -71,6 +170,7 @@ export type DatabaseStockItemRow = {
   readonly name: string;
   readonly qty_unit: ItemQuantityUnit;
   readonly qty_value: number | string;
+  readonly removal_reason: ItemRemovalReason | null;
   readonly removed_on: string | null;
   readonly source: ItemSource;
   readonly zone_id: string;
@@ -129,6 +229,7 @@ export type UpdateStockItemInput = {
   readonly name?: string | undefined;
   readonly qtyUnit?: ItemQuantityUnit | undefined;
   readonly qtyValue?: number | undefined;
+  readonly removalReason?: ItemRemovalReason | null | undefined;
   readonly removedOn?: string | null | undefined;
   readonly source?: ItemSource | undefined;
   readonly zone?: string | undefined;
@@ -138,7 +239,38 @@ export type UpdateStockItemInput = {
 export type DeleteStockItemInput = {
   readonly householdId: string;
   readonly id: string;
+  readonly removalReason?: ItemRemovalReason | undefined;
   readonly removedOn?: string | undefined;
+};
+
+export type GetItemRemovalStatsInput = {
+  readonly householdId: string;
+  readonly month?: string | undefined;
+};
+
+export type ItemRemovalStatsMonth = {
+  readonly compostedCount: number;
+  readonly month: string;
+  readonly totalCount: number;
+  readonly usedCount: number;
+};
+
+export type ItemRemovalStatsDelta = {
+  readonly compostedCountPercent: number | null;
+  readonly totalCountPercent: number | null;
+  readonly usedCountPercent: number | null;
+};
+
+export type ItemRemovalStats = {
+  readonly current: ItemRemovalStatsMonth;
+  readonly delta: ItemRemovalStatsDelta;
+  readonly householdId: string;
+  readonly previous: ItemRemovalStatsMonth;
+};
+
+export type DatabaseItemRemovalStatsRow = {
+  readonly removal_reason: ItemRemovalReason | null;
+  readonly removed_on: string | null;
 };
 
 type QueryValue = boolean | number | string;
@@ -156,14 +288,17 @@ type ItemMutationRow = {
   name?: string;
   qty_unit?: ItemQuantityUnit;
   qty_value?: number;
+  removal_reason?: ItemRemovalReason | null;
   removed_on?: string | null;
   source?: ItemSource;
   zone_id?: string;
 };
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+const monthPattern = /^\d{4}-\d{2}$/;
 const itemSelect =
-  'id,household_id,name,qty_value,qty_unit,category_id,zone_id,expires_on,added_on,removed_on,source';
+  'id,household_id,name,qty_value,qty_unit,category_id,zone_id,expires_on,added_on,removed_on,removal_reason,source';
+const removalStatsSelect = 'removed_on,removal_reason';
 const zoneSelect = 'id,household_id,key,label,sort_order,created_at';
 
 export function isItemQuantityUnit(value: unknown): value is ItemQuantityUnit {
@@ -172,6 +307,10 @@ export function isItemQuantityUnit(value: unknown): value is ItemQuantityUnit {
 
 export function isItemSource(value: unknown): value is ItemSource {
   return typeof value === 'string' && itemSources.includes(value as ItemSource);
+}
+
+export function isItemRemovalReason(value: unknown): value is ItemRemovalReason {
+  return typeof value === 'string' && itemRemovalReasons.includes(value as ItemRemovalReason);
 }
 
 export function isItemCategoryId(value: unknown): value is ItemCategoryId {
@@ -199,6 +338,7 @@ export function mapStockItemRow(row: DatabaseStockItemRow): StockItem {
     name: row.name,
     qtyUnit: row.qty_unit,
     qtyValue: Number(row.qty_value),
+    removalReason: row.removal_reason,
     removedOn: row.removed_on,
     source: row.source,
     zoneId: row.zone_id,
@@ -260,6 +400,37 @@ function normaliseDate(
   return value;
 }
 
+function normaliseMonth(value: string | undefined): string {
+  const month = value ?? todayIsoDate().slice(0, 7);
+
+  if (!monthPattern.test(month)) {
+    throw new ApiRequestError('month must use YYYY-MM format.', 400);
+  }
+
+  return month;
+}
+
+function addMonths(month: string, months: number): string {
+  const [year, monthIndex] = month.split('-').map(Number);
+  const date = new Date(Date.UTC(year ?? 1970, (monthIndex ?? 1) - 1 + months, 1));
+
+  return date.toISOString().slice(0, 7);
+}
+
+function normaliseRemovalReason(
+  value: ItemRemovalReason | null | undefined,
+): ItemRemovalReason | null | undefined {
+  if (value == null) {
+    return value;
+  }
+
+  if (!isItemRemovalReason(value)) {
+    throw new ApiRequestError('Item removal reason is invalid.', 400);
+  }
+
+  return value;
+}
+
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -269,6 +440,37 @@ function addDaysIsoDate(days: number): string {
   date.setUTCDate(date.getUTCDate() + days);
 
   return date.toISOString().slice(0, 10);
+}
+
+function addDaysToIsoDate(baseDate: string, days: number): string {
+  const [year, month, day] = baseDate.split('-').map(Number);
+  const date = new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1));
+
+  date.setUTCDate(date.getUTCDate() + days);
+
+  return date.toISOString().slice(0, 10);
+}
+
+function isExpiryEstimateZoneKey(value: string): value is ExpiryEstimateZoneKey {
+  return expiryEstimateZoneKeys.includes(value as ExpiryEstimateZoneKey);
+}
+
+export function estimateExpiryDays(input: EstimateExpiryDaysInput): number {
+  const categoryId = validateCategoryId(input.categoryId);
+  const zoneKey = input.zoneKey ? normaliseZoneKey(input.zoneKey) : 'pantry';
+  const rules = expiryEstimateDaysByCategoryZone[categoryId];
+
+  return isExpiryEstimateZoneKey(zoneKey) ? rules[zoneKey] : rules.pantry;
+}
+
+export function estimateExpiryDate(input: EstimateExpiryDateInput): string {
+  const baseDate = normaliseDate(input.baseDate ?? todayIsoDate(), 'baseDate');
+
+  if (!baseDate) {
+    throw new ApiRequestError('baseDate is required.', 400);
+  }
+
+  return addDaysToIsoDate(baseDate, estimateExpiryDays(input));
 }
 
 function normaliseZoneKey(zone: string): string {
@@ -347,6 +549,68 @@ function validateSource(value: ItemSource | undefined): ItemSource {
   }
 
   return source;
+}
+
+function createEmptyRemovalStatsMonth(month: string): ItemRemovalStatsMonth {
+  return {
+    compostedCount: 0,
+    month,
+    totalCount: 0,
+    usedCount: 0,
+  };
+}
+
+function percentDelta(current: number, previous: number): number | null {
+  if (previous === 0) {
+    return current === 0 ? 0 : null;
+  }
+
+  return Math.round(((current - previous) / previous) * 100);
+}
+
+function addRemovalToStats(
+  stats: ItemRemovalStatsMonth,
+  reason: ItemRemovalReason,
+): ItemRemovalStatsMonth {
+  return {
+    compostedCount: stats.compostedCount + (reason === 'composted' ? 1 : 0),
+    month: stats.month,
+    totalCount: stats.totalCount + 1,
+    usedCount: stats.usedCount + (reason === 'used' ? 1 : 0),
+  };
+}
+
+function aggregateRemovalStats(
+  rows: readonly DatabaseItemRemovalStatsRow[],
+  currentMonth: string,
+  previousMonth: string,
+): Pick<ItemRemovalStats, 'current' | 'delta' | 'previous'> {
+  let current = createEmptyRemovalStatsMonth(currentMonth);
+  let previous = createEmptyRemovalStatsMonth(previousMonth);
+
+  for (const row of rows) {
+    if (!row.removed_on || !row.removal_reason) {
+      continue;
+    }
+
+    const removedMonth = row.removed_on.slice(0, 7);
+
+    if (removedMonth === currentMonth) {
+      current = addRemovalToStats(current, row.removal_reason);
+    } else if (removedMonth === previousMonth) {
+      previous = addRemovalToStats(previous, row.removal_reason);
+    }
+  }
+
+  return {
+    current,
+    delta: {
+      compostedCountPercent: percentDelta(current.compostedCount, previous.compostedCount),
+      totalCountPercent: percentDelta(current.totalCount, previous.totalCount),
+      usedCountPercent: percentDelta(current.usedCount, previous.usedCount),
+    },
+    previous,
+  };
 }
 
 async function readErrorMessage(response: Response): Promise<string> {
@@ -521,7 +785,17 @@ export class SackerlItemsClient {
     }
 
     if ('removedOn' in input) {
-      patch.removed_on = normaliseDate(input.removedOn, 'removedOn') ?? null;
+      const removedOn = normaliseDate(input.removedOn, 'removedOn');
+
+      patch.removed_on = removedOn ?? null;
+
+      if (!removedOn && !('removalReason' in input)) {
+        patch.removal_reason = null;
+      }
+    }
+
+    if ('removalReason' in input) {
+      patch.removal_reason = normaliseRemovalReason(input.removalReason) ?? null;
     }
 
     if (input.source !== undefined) {
@@ -563,8 +837,30 @@ export class SackerlItemsClient {
     return this.updateItem(context, {
       householdId: input.householdId,
       id: input.id,
+      removalReason: input.removalReason,
       removedOn: input.removedOn ?? todayIsoDate(),
     });
+  }
+
+  async getRemovalStats(
+    context: AuthenticatedUserContext,
+    input: GetItemRemovalStatsInput,
+  ): Promise<ItemRemovalStats> {
+    const householdId = validateHouseholdId(input.householdId);
+    const currentMonth = normaliseMonth(input.month);
+    const previousMonth = addMonths(currentMonth, -1);
+    const nextMonth = addMonths(currentMonth, 1);
+    const rows = await this.requestRows<DatabaseItemRemovalStatsRow>('items', context, {
+      and: `(removed_on.gte.${previousMonth}-01,removed_on.lt.${nextMonth}-01)`,
+      household_id: `eq.${householdId}`,
+      removal_reason: 'in.(used,composted)',
+      select: removalStatsSelect,
+    });
+
+    return {
+      householdId,
+      ...aggregateRemovalStats(rows, currentMonth, previousMonth),
+    };
   }
 
   private async createItemRows(

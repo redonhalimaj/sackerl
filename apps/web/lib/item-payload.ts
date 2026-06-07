@@ -3,6 +3,7 @@ import {
   type CreateStockItemInput,
   type ItemCategoryId,
   type ItemQuantityUnit,
+  type ItemRemovalReason,
   type ItemSource,
   type UpdateStockItemInput,
 } from '@sackerl/api-client';
@@ -122,6 +123,7 @@ export function readUpdateItemBody(body: unknown): UpdateItemBody {
   const name = readOptionalString(record, 'name');
   const qtyUnit = readOptionalString(record, 'qtyUnit');
   const qtyValue = readOptionalNumber(record, 'qtyValue');
+  const removalReason = readOptionalNullableString(record, 'removalReason');
   const removedOn = readOptionalNullableString(record, 'removedOn');
   const source = readOptionalString(record, 'source');
   const zone = readOptionalString(record, 'zone');
@@ -134,6 +136,9 @@ export function readUpdateItemBody(body: unknown): UpdateItemBody {
     ...(name !== undefined ? { name } : {}),
     ...(qtyUnit !== undefined ? { qtyUnit: qtyUnit as ItemQuantityUnit } : {}),
     ...(qtyValue !== undefined ? { qtyValue } : {}),
+    ...('removalReason' in record
+      ? { removalReason: removalReason as ItemRemovalReason | null }
+      : {}),
     ...('removedOn' in record ? { removedOn } : {}),
     ...(source !== undefined ? { source: source as ItemSource } : {}),
     ...(zone !== undefined ? { zone } : {}),
