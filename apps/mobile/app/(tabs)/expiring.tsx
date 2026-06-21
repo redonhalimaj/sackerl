@@ -1,7 +1,7 @@
 import { colors, nativeFont, nativeTypography, space } from '@sackerl/tokens';
 import type { AuthenticatedUserContext, StockItem, StorageZone } from '@sackerl/api-client';
 import { categoryMeta, type TileCategory } from '@sackerl/ui';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter, useSegments } from 'expo-router';
 import { useCallback, useMemo, useState, type JSX } from 'react';
 import {
   ActivityIndicator,
@@ -359,6 +359,7 @@ function ExpiringRow({
 export default function ExpiringRoute(): JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const segments = useSegments();
   const { session } = useAuthSession();
   const [actionItemId, setActionItemId] = useState<string | undefined>();
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
@@ -390,6 +391,7 @@ export default function ExpiringRoute(): JSX.Element {
     totalItems > 0
       ? `${totalItems} ${totalItems === 1 ? 'item wants' : 'items want'} your attention.`
       : 'Nothing needs attention for the next two weeks.';
+  const isTabRoute = (segments as readonly string[]).includes('(tabs)');
 
   const loadExpiringItems = useCallback(async () => {
     if (!session?.user) {
@@ -538,7 +540,7 @@ export default function ExpiringRoute(): JSX.Element {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingBottom: Math.max(insets.bottom, 12) + 116,
+            paddingBottom: Math.max(insets.bottom, 12) + (isTabRoute ? 116 : 24),
             paddingTop: Math.max(insets.top, 44) + 10,
           },
         ]}

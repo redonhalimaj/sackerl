@@ -1,10 +1,17 @@
 import { colors, nativeFont, nativeTypography, space } from '@sackerl/tokens';
-import type { AuthenticatedUserContext, StockItem, StorageZone } from '@sackerl/api-client';
+import type {
+  AuthenticatedUserContext,
+  RecipeSuggestion,
+  StockItem,
+  StorageZone,
+} from '@sackerl/api-client';
 import { categoryMeta, PaperBag, zoneMeta, type TileCategory, type ZoneKind } from '@sackerl/ui';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState, type JSX } from 'react';
+import { useCallback, useMemo, useRef, useState, type JSX } from 'react';
 import {
   ActivityIndicator,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Platform,
   Pressable,
   ScrollView,
@@ -18,6 +25,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { useAuthSession } from '../../lib/auth-session';
 import { getMobileItemsClient } from '../../lib/items';
 import { getMobileProfileClient } from '../../lib/profile';
+import { getMobileRecipesClient } from '../../lib/recipes';
 
 type DashboardLoadState = 'error' | 'loading' | 'ready';
 
@@ -55,6 +63,7 @@ const fontFamily =
       : nativeFont.fallback;
 
 const defaultDashboardZoneKeys = ['fridge', 'pantry', 'basement', 'freezer'] as const;
+let homeScrollOffsetY = 0;
 
 function SearchIcon(): JSX.Element {
   return (
@@ -83,6 +92,28 @@ function ChevronRightIcon(): JSX.Element {
   return (
     <Svg fill="none" height={14} stroke={colors.mute} viewBox="0 0 24 24" width={14}>
       <Path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+    </Svg>
+  );
+}
+
+function SuggestionSparkleIcon(): JSX.Element {
+  return (
+    <Svg fill="none" height={15} stroke={colors.sageDeep} viewBox="0 0 24 24" width={15}>
+      <Path
+        d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"
+        strokeLinejoin="round"
+        strokeWidth={1.7}
+      />
+      <Path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" />
+    </Svg>
+  );
+}
+
+function SuggestionArrowIcon(): JSX.Element {
+  return (
+    <Svg fill="none" height={15} stroke={colors.bg} viewBox="0 0 24 24" width={15}>
+      <Path d="M5 12h14" strokeLinecap="round" strokeWidth={2} />
+      <Path d="m13 6 6 6-6 6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
     </Svg>
   );
 }
@@ -156,6 +187,24 @@ function mapExpiringItem(
     name: item.name,
     zoneLabel: zoneLabelsById.get(item.zoneId) ?? 'Storage',
   };
+}
+
+function formatIngredientChip(value: string): string {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ');
+}
+
+function suggestionIngredientChips(suggestion: RecipeSuggestion): readonly string[] {
+  const coveredIngredients = suggestion.matchedIngredients
+    .filter((ingredient) => ingredient.covered)
+    .map((ingredient) => ingredient.ingredient);
+  const ingredients =
+    coveredIngredients.length > 0 ? coveredIngredients : suggestion.recipe.ingredients;
+
+  return ingredients.slice(0, 4).map(formatIngredientChip);
 }
 
 function zoneLabelsById(zones: readonly StorageZone[]): ReadonlyMap<string, string> {
@@ -261,28 +310,37 @@ export default function HomeRoute(): JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { session } = useAuthSession();
+  const scrollViewRef = useRef<ScrollView>(null);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const [expiringItems, setExpiringItems] = useState<readonly ExpiringSummaryItem[]>([]);
   const [expiringTotal, setExpiringTotal] = useState(0);
   const [itemCount, setItemCount] = useState(0);
   const [loadState, setLoadState] = useState<DashboardLoadState>('loading');
+  const [recipeSuggestion, setRecipeSuggestion] = useState<RecipeSuggestion | undefined>();
   const [storageCards, setStorageCards] = useState<readonly StorageSummaryCard[]>([]);
 
   const dashboardDate = useMemo(() => formatDashboardDate(new Date()), []);
   const dinnerCount = estimateDinnerCount(itemCount);
   const expiringHeaderText =
     expiringTotal === 1 ? '1 item expiring soon' : `${expiringTotal} items expiring soon`;
+  const recipeIngredientChips = recipeSuggestion ? suggestionIngredientChips(recipeSuggestion) : [];
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
+      const restoreScrollTimeout =
+        homeScrollOffsetY > 0
+          ? setTimeout(() => {
+              scrollViewRef.current?.scrollTo({ animated: false, y: homeScrollOffsetY });
+            }, 80)
+          : undefined;
 
       async function loadDashboardHero() {
         if (!session?.user) {
           return;
         }
 
-        setLoadState('loading');
+        setLoadState((current) => (current === 'ready' ? current : 'loading'));
         setErrorMessage(undefined);
 
         try {
@@ -300,6 +358,7 @@ export default function HomeRoute(): JSX.Element {
               setExpiringItems([]);
               setExpiringTotal(0);
               setItemCount(0);
+              setRecipeSuggestion(undefined);
               setStorageCards(defaultDashboardZoneKeys.map(storageCardFromZoneKey));
               setLoadState('ready');
             }
@@ -307,7 +366,8 @@ export default function HomeRoute(): JSX.Element {
           }
 
           const itemsClient = getMobileItemsClient();
-          const [countResult, expiringResult, zones] = await Promise.all([
+          const recipesClient = getMobileRecipesClient();
+          const [countResult, expiringResult, zones, suggestionsResult] = await Promise.all([
             itemsClient.listItems(context, {
               householdId: household.id,
               pageSize: 1,
@@ -318,6 +378,11 @@ export default function HomeRoute(): JSX.Element {
               pageSize: 3,
             }),
             itemsClient.listZones(context, household.id),
+            recipesClient.listSuggestions(context, {
+              householdId: household.id,
+              limit: 1,
+              minScore: 0.7,
+            }),
           ]);
 
           const labelsById = zoneLabelsById(zones);
@@ -332,6 +397,7 @@ export default function HomeRoute(): JSX.Element {
             setExpiringItems(expiringResult.items.map((item) => mapExpiringItem(item, labelsById)));
             setExpiringTotal(expiringResult.pagination.total ?? expiringResult.items.length);
             setItemCount(countResult.pagination.total ?? countResult.items.length);
+            setRecipeSuggestion(suggestionsResult.suggestions[0]);
             setStorageCards(storageSummaryCards);
             setLoadState('ready');
           }
@@ -347,13 +413,23 @@ export default function HomeRoute(): JSX.Element {
 
       return () => {
         isActive = false;
+        if (restoreScrollTimeout) {
+          clearTimeout(restoreScrollTimeout);
+        }
       };
     }, [session]),
   );
 
+  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    homeScrollOffsetY = event.nativeEvent.contentOffset.y;
+  }
+
   return (
     <View style={styles.screen}>
       <ScrollView
+        onScroll={handleScroll}
+        ref={scrollViewRef}
+        scrollEventThrottle={16}
         contentContainerStyle={[
           styles.scrollContent,
           {
@@ -458,7 +534,7 @@ export default function HomeRoute(): JSX.Element {
               accessibilityLabel={`See all ${expiringTotal} expiring items`}
               accessibilityRole="button"
               onPress={() => {
-                router.push('/expiring');
+                router.push('/use-soon');
               }}
               style={({ pressed }) => [
                 styles.seeAllButton,
@@ -551,6 +627,64 @@ export default function HomeRoute(): JSX.Element {
             </View>
           )}
         </View>
+
+        {loadState === 'ready' && recipeSuggestion ? (
+          <View style={styles.suggestionCard}>
+            <View style={styles.suggestionHeader}>
+              <View style={styles.suggestionEyebrowRow}>
+                <SuggestionSparkleIcon />
+                <Text style={styles.suggestionEyebrow}>From your stock</Text>
+              </View>
+              <Pressable
+                accessibilityLabel="See all recipe suggestions"
+                accessibilityRole="button"
+                onPress={() => {
+                  router.push('/suggestions');
+                }}
+                style={({ pressed }) => [
+                  styles.suggestionSeeAllButton,
+                  pressed ? styles.seeAllButtonPressed : null,
+                ]}
+              >
+                <Text style={styles.suggestionSeeAllText}>See all</Text>
+              </Pressable>
+            </View>
+
+            <Text style={styles.suggestionTitle}>
+              You have what you need for{' '}
+              <Text style={styles.suggestionRecipeName}>{recipeSuggestion.recipe.name}</Text>{' '}
+              tonight.
+            </Text>
+
+            <View style={styles.suggestionChips}>
+              {recipeIngredientChips.map((ingredient) => (
+                <View key={ingredient} style={styles.suggestionChip}>
+                  <Text numberOfLines={1} style={styles.suggestionChipText}>
+                    {ingredient}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <Pressable
+              accessibilityLabel={`Show recipe for ${recipeSuggestion.recipe.name}`}
+              accessibilityRole="button"
+              onPress={() => {
+                router.push({
+                  pathname: '/recipe/[id]',
+                  params: { id: recipeSuggestion.recipe.id },
+                });
+              }}
+              style={({ pressed }) => [
+                styles.suggestionButton,
+                pressed ? styles.suggestionButtonPressed : null,
+              ]}
+            >
+              <Text style={styles.suggestionButtonText}>Show recipe</Text>
+              <SuggestionArrowIcon />
+            </Pressable>
+          </View>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -969,6 +1103,99 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     letterSpacing: 0,
     textTransform: 'uppercase',
+  },
+  suggestionButton: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.ink,
+    borderRadius: 999,
+    flexDirection: 'row',
+    gap: space[1.5],
+    marginTop: space[4.5],
+    minHeight: 42,
+    paddingHorizontal: space[4.5],
+    paddingVertical: space[2.5],
+  },
+  suggestionButtonPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.985 }],
+  },
+  suggestionButtonText: {
+    color: colors.bg,
+    fontFamily: fontFamily.sans,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 18,
+  },
+  suggestionCard: {
+    backgroundColor: colors.sageSoft,
+    borderColor: colors.sageTint,
+    borderRadius: 22,
+    borderWidth: 1,
+    marginTop: space[5],
+    overflow: 'hidden',
+    padding: space[4.5],
+  },
+  suggestionChip: {
+    backgroundColor: colors.card,
+    borderColor: 'rgba(47, 106, 32, 0.08)',
+    borderRadius: 999,
+    borderWidth: 1,
+    maxWidth: '48%',
+    paddingHorizontal: space[3],
+    paddingVertical: space[1.5],
+  },
+  suggestionChipText: {
+    color: colors.sageDeep,
+    fontFamily: fontFamily.sans,
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 15,
+  },
+  suggestionChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: space[1.5],
+    marginTop: space[3.5],
+  },
+  suggestionEyebrow: {
+    ...typography.eyebrow,
+    color: colors.sageDeep,
+  },
+  suggestionEyebrowRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: space[1.5],
+  },
+  suggestionHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: space[2.5],
+  },
+  suggestionSeeAllButton: {
+    minHeight: 30,
+    paddingHorizontal: space[2],
+    paddingVertical: space[1],
+  },
+  suggestionSeeAllText: {
+    color: colors.sageDeep,
+    fontFamily: fontFamily.sans,
+    fontSize: 12,
+    fontWeight: '800',
+    lineHeight: 16,
+  },
+  suggestionRecipeName: {
+    fontStyle: 'italic',
+  },
+  suggestionTitle: {
+    color: colors.sageDeep,
+    fontFamily: fontFamily.serif,
+    fontSize: 24,
+    fontWeight: '400',
+    letterSpacing: 0,
+    lineHeight: 28,
+    maxWidth: 286,
   },
   zoneGlyph: {
     alignItems: 'center',

@@ -76,8 +76,13 @@ function TabIcon({ color, name, size = 22, sw = 1.6 }: TabIconProps): JSX.Elemen
   );
 }
 
-function SackerlTabBar({ descriptors, navigation, state }: BottomTabBarProps): JSX.Element {
+function SackerlTabBar({ descriptors, navigation, state }: BottomTabBarProps): JSX.Element | null {
   const insets = useSafeAreaInsets();
+  const activeRoute = state.routes[state.index];
+
+  if (activeRoute?.name === 'scan') {
+    return null;
+  }
 
   return (
     <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>

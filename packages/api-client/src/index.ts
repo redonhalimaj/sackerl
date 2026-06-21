@@ -66,6 +66,71 @@ export type {
   UpdateStockItemInput,
 } from './items';
 export {
+  SackerlShoppingListClient,
+  createSackerlShoppingListClient,
+  isShoppingListSource,
+  mapShoppingListItemRow,
+  shoppingListSources,
+} from './shopping-list';
+export type {
+  CreateShoppingListItemInput,
+  CreateShoppingListItemsBatchInput,
+  DatabaseShoppingListItemRow,
+  DatabaseShoppingListSuggestionRow,
+  DeleteShoppingListItemInput,
+  ListShoppingListItemsInput,
+  ListShoppingListItemsResult,
+  ListShoppingListSuggestionsInput,
+  ShoppingListClientOptions,
+  ShoppingListItem,
+  ShoppingListPagination,
+  ShoppingListSource,
+  ShoppingListSuggestion,
+  UpdateShoppingListItemInput,
+} from './shopping-list';
+export {
+  SackerlRecipesClient,
+  createSackerlRecipesClient,
+  ingredientMatchesStockItem,
+  mapRecipeRow,
+  mapRecipeStockItemRow,
+  recipeIsDinner,
+  recipeIsVegetarian,
+  recipeMatchesSuggestionFilter,
+  recipeSuggestionFilterIds,
+  scoreRecipeAgainstStock,
+} from './recipes';
+export type {
+  DatabaseRecipeRow,
+  DatabaseRecipeStockItemRow,
+  GetRecipeSuggestionInput,
+  ListRecipeSuggestionsInput,
+  ListRecipeSuggestionsResult,
+  Recipe,
+  RecipeIngredientMatch,
+  RecipeSuggestionFilterId,
+  RecipeStockItem,
+  RecipeSuggestion,
+  RecipesClientOptions,
+} from './recipes';
+export {
+  SackerlReceiptsClient,
+  createSackerlReceiptsClient,
+  isReceiptStatus,
+  mapReceiptRow,
+  receiptStatuses,
+} from './receipts';
+export type {
+  CreateReceiptInput,
+  DatabaseReceiptRow,
+  ListReceiptsInput,
+  ListReceiptsResult,
+  Receipt,
+  ReceiptPagination,
+  ReceiptsClientOptions,
+  ReceiptStatus,
+} from './receipts';
+export {
   ApiRequestError,
   SackerlProfileClient,
   createSackerlProfileClient,
