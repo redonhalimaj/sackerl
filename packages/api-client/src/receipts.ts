@@ -1,5 +1,17 @@
 import { assertSupabaseAuthConfig, type SupabaseAuthConfig } from './auth';
+import {
+  isItemCategoryId,
+  isItemQuantityUnit,
+  type ItemCategoryId,
+  type ItemQuantityUnit,
+} from './items';
 import { ApiRequestError, type AuthenticatedUserContext } from './profile';
+import {
+  confidenceLevelForScore,
+  isReceiptItemConfidenceLevel,
+  type ParsedReceiptLineItem,
+  type ReceiptItemConfidenceLevel,
+} from './receipt-parsing';
 
 export const receiptStatuses = ['uploaded', 'parsing', 'parsed', 'failed'] as const;
 
@@ -13,6 +25,7 @@ export type Receipt = {
   readonly id: string;
   readonly imageUrl: string;
   readonly parsedAt: string | null;
+  readonly purchasedOn: string | null;
   readonly status: ReceiptStatus;
   readonly storeName: string | null;
   readonly totalCents: number | null;
@@ -27,9 +40,42 @@ export type DatabaseReceiptRow = {
   readonly id: string;
   readonly image_url: string;
   readonly parsed_at: string | null;
+  readonly purchased_on: string | null;
   readonly status: ReceiptStatus;
   readonly store_name: string | null;
   readonly total_cents: number | null;
+  readonly updated_at: string;
+};
+
+export type ReceiptItem = {
+  readonly categoryId: ItemCategoryId;
+  readonly confidence: number;
+  readonly confidenceLevel: ReceiptItemConfidenceLevel;
+  readonly createdAt: string;
+  readonly householdId: string;
+  readonly id: string;
+  readonly inferredName: string;
+  readonly lineIndex: number;
+  readonly qtyUnit: ItemQuantityUnit;
+  readonly qtyValue: number;
+  readonly rawText: string;
+  readonly receiptId: string;
+  readonly updatedAt: string;
+};
+
+export type DatabaseReceiptItemRow = {
+  readonly category_id: ItemCategoryId;
+  readonly confidence: number | string;
+  readonly confidence_level: ReceiptItemConfidenceLevel;
+  readonly created_at: string;
+  readonly household_id: string;
+  readonly id: string;
+  readonly inferred_name: string;
+  readonly line_index: number;
+  readonly qty_unit: ItemQuantityUnit;
+  readonly qty_value: number | string;
+  readonly raw_text: string;
+  readonly receipt_id: string;
   readonly updated_at: string;
 };
 
@@ -55,6 +101,34 @@ export type ListReceiptsResult = {
   readonly receipts: readonly Receipt[];
 };
 
+export type GetReceiptInput = {
+  readonly householdId: string;
+  readonly id: string;
+};
+
+export type UpdateReceiptInput = {
+  readonly capturedAt?: string | undefined;
+  readonly currency?: string | undefined;
+  readonly householdId: string;
+  readonly id: string;
+  readonly parsedAt?: string | null | undefined;
+  readonly purchasedOn?: string | null | undefined;
+  readonly status?: ReceiptStatus | undefined;
+  readonly storeName?: string | null | undefined;
+  readonly totalCents?: number | null | undefined;
+};
+
+export type ListReceiptItemsInput = {
+  readonly householdId: string;
+  readonly receiptId: string;
+};
+
+export type ReplaceReceiptItemsInput = {
+  readonly householdId: string;
+  readonly items: readonly ParsedReceiptLineItem[];
+  readonly receiptId: string;
+};
+
 export type ReceiptPagination = {
   readonly page: number;
   readonly pageSize: number;
@@ -77,13 +151,33 @@ type ReceiptMutationRow = {
   currency?: string;
   household_id: string;
   image_url: string;
+  parsed_at?: string | null;
+  purchased_on?: string | null;
   status?: ReceiptStatus;
   store_name?: string | null;
   total_cents?: number | null;
 };
 
+type ReceiptPatchRow = Omit<Partial<ReceiptMutationRow>, 'household_id' | 'image_url'>;
+
+type ReceiptItemMutationRow = {
+  category_id: ItemCategoryId;
+  confidence: number;
+  confidence_level: ReceiptItemConfidenceLevel;
+  household_id: string;
+  inferred_name: string;
+  line_index: number;
+  qty_unit: ItemQuantityUnit;
+  qty_value: number;
+  raw_text: string;
+  receipt_id: string;
+};
+
 const receiptSelect =
-  'id,household_id,image_url,store_name,total_cents,currency,captured_at,parsed_at,status,created_at,updated_at';
+  'id,household_id,image_url,store_name,total_cents,currency,captured_at,purchased_on,parsed_at,status,created_at,updated_at';
+const receiptItemSelect =
+  'id,receipt_id,household_id,line_index,raw_text,inferred_name,qty_value,qty_unit,category_id,confidence,confidence_level,created_at,updated_at';
+const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const timestampPattern = /^\d{4}-\d{2}-\d{2}T/;
 
 export function isReceiptStatus(value: unknown): value is ReceiptStatus {
@@ -99,9 +193,28 @@ export function mapReceiptRow(row: DatabaseReceiptRow): Receipt {
     id: row.id,
     imageUrl: row.image_url,
     parsedAt: row.parsed_at,
+    purchasedOn: row.purchased_on,
     status: row.status,
     storeName: row.store_name,
     totalCents: row.total_cents,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function mapReceiptItemRow(row: DatabaseReceiptItemRow): ReceiptItem {
+  return {
+    categoryId: row.category_id,
+    confidence: Number(row.confidence),
+    confidenceLevel: row.confidence_level,
+    createdAt: row.created_at,
+    householdId: row.household_id,
+    id: row.id,
+    inferredName: row.inferred_name,
+    lineIndex: row.line_index,
+    qtyUnit: row.qty_unit,
+    qtyValue: Number(row.qty_value),
+    rawText: row.raw_text,
+    receiptId: row.receipt_id,
     updatedAt: row.updated_at,
   };
 }
@@ -127,6 +240,16 @@ function validateHouseholdId(householdId: string): string {
 
   if (!value) {
     throw new ApiRequestError('Household is required.', 400);
+  }
+
+  return value;
+}
+
+function validateReceiptId(id: string): string {
+  const value = id.trim();
+
+  if (!value) {
+    throw new ApiRequestError('Receipt id is required.', 400);
   }
 
   return value;
@@ -206,16 +329,114 @@ function normaliseTotalCents(value: number | null | undefined): number | null | 
   return value;
 }
 
-function normaliseCapturedAt(value: string | undefined): string | undefined {
-  if (value === undefined) {
-    return undefined;
+function normaliseTimestamp(
+  value: string | null | undefined,
+  fieldName: string,
+): string | null | undefined {
+  if (value == null) {
+    return value;
   }
 
   if (!timestampPattern.test(value) || Number.isNaN(Date.parse(value))) {
-    throw new ApiRequestError('capturedAt must be an ISO timestamp.', 400);
+    throw new ApiRequestError(`${fieldName} must be an ISO timestamp.`, 400);
   }
 
   return value;
+}
+
+function normaliseDate(
+  value: string | null | undefined,
+  fieldName: string,
+): string | null | undefined {
+  if (value == null) {
+    return value;
+  }
+
+  if (!datePattern.test(value)) {
+    throw new ApiRequestError(`${fieldName} must be an ISO date.`, 400);
+  }
+
+  return value;
+}
+
+function validateLineIndex(value: number): number {
+  if (!Number.isInteger(value) || value < 0 || value > 999) {
+    throw new ApiRequestError('Receipt item line index is invalid.', 400);
+  }
+
+  return value;
+}
+
+function validateReceiptItemText(value: string, fieldName: string, maxLength: number): string {
+  const text = value.trim().replace(/\s+/g, ' ');
+
+  if (!text) {
+    throw new ApiRequestError(`${fieldName} is required.`, 400);
+  }
+
+  if (text.length > maxLength) {
+    throw new ApiRequestError(`${fieldName} is too long.`, 400);
+  }
+
+  return text;
+}
+
+function validateQuantityValue(value: number): number {
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new ApiRequestError('Receipt item quantity must be greater than zero.', 400);
+  }
+
+  return value;
+}
+
+function validateQuantityUnit(value: ItemQuantityUnit): ItemQuantityUnit {
+  if (!isItemQuantityUnit(value)) {
+    throw new ApiRequestError('Receipt item quantity unit is invalid.', 400);
+  }
+
+  return value;
+}
+
+function validateCategoryId(value: ItemCategoryId): ItemCategoryId {
+  if (!isItemCategoryId(value)) {
+    throw new ApiRequestError('Receipt item category is invalid.', 400);
+  }
+
+  return value;
+}
+
+function validateConfidenceLevel(value: ReceiptItemConfidenceLevel): ReceiptItemConfidenceLevel {
+  if (!isReceiptItemConfidenceLevel(value)) {
+    throw new ApiRequestError('Receipt item confidence level is invalid.', 400);
+  }
+
+  return value;
+}
+
+function prepareReceiptItemRow(
+  householdId: string,
+  receiptId: string,
+  item: ParsedReceiptLineItem,
+  lineIndex: number,
+): ReceiptItemMutationRow {
+  const confidenceLevel = confidenceLevelForScore(item.confidence);
+
+  if (validateConfidenceLevel(item.confidenceLevel) !== confidenceLevel) {
+    throw new ApiRequestError('Receipt item confidence level does not match confidence.', 400);
+  }
+
+  return {
+    category_id: validateCategoryId(item.categoryId),
+    confidence: item.confidence,
+    confidence_level: confidenceLevel,
+    household_id: householdId,
+    inferred_name: validateReceiptItemText(item.inferredName, 'Receipt item inferred name', 120),
+    line_index: validateLineIndex(lineIndex),
+    qty_unit: validateQuantityUnit(item.qtyUnit),
+    qty_value: validateQuantityValue(item.qtyValue),
+    raw_text: validateReceiptItemText(item.rawText, 'Receipt item raw text', 300),
+    receipt_id: receiptId,
+  };
 }
 
 function parsePositiveInteger(value: number | undefined, fallback: number): number {
@@ -265,11 +486,11 @@ export class SackerlReceiptsClient {
       image_url: validateImageUrl(input.imageUrl),
       status: normaliseReceiptStatus(input.status),
     };
-    const capturedAt = normaliseCapturedAt(input.capturedAt);
+    const capturedAt = normaliseTimestamp(input.capturedAt, 'capturedAt');
     const storeName = normaliseStoreName(input.storeName);
     const totalCents = normaliseTotalCents(input.totalCents);
 
-    if (capturedAt !== undefined) {
+    if (capturedAt) {
       body.captured_at = capturedAt;
     }
 
@@ -288,6 +509,7 @@ export class SackerlReceiptsClient {
       {
         body,
         method: 'POST',
+        prefer: 'return=representation',
       },
     );
     const receipt = result.rows[0];
@@ -336,14 +558,159 @@ export class SackerlReceiptsClient {
     };
   }
 
+  async getReceipt(context: AuthenticatedUserContext, input: GetReceiptInput): Promise<Receipt> {
+    const householdId = validateHouseholdId(input.householdId);
+    const id = validateReceiptId(input.id);
+    const result = await this.request<DatabaseReceiptRow>('receipts', context, {
+      household_id: `eq.${householdId}`,
+      id: `eq.${id}`,
+      limit: 1,
+      select: receiptSelect,
+    });
+    const receipt = result.rows[0];
+
+    if (!receipt) {
+      throw new ApiRequestError('Receipt not found.', 404);
+    }
+
+    return mapReceiptRow(receipt);
+  }
+
+  async updateReceipt(
+    context: AuthenticatedUserContext,
+    input: UpdateReceiptInput,
+  ): Promise<Receipt> {
+    const householdId = validateHouseholdId(input.householdId);
+    const id = validateReceiptId(input.id);
+    const patch: ReceiptPatchRow = {};
+
+    if (input.capturedAt !== undefined) {
+      const capturedAt = normaliseTimestamp(input.capturedAt, 'capturedAt');
+
+      if (capturedAt) {
+        patch.captured_at = capturedAt;
+      }
+    }
+
+    if ('parsedAt' in input) {
+      patch.parsed_at = normaliseTimestamp(input.parsedAt, 'parsedAt') ?? null;
+    }
+
+    if ('purchasedOn' in input) {
+      patch.purchased_on = normaliseDate(input.purchasedOn, 'purchasedOn') ?? null;
+    }
+
+    if (input.currency !== undefined) {
+      patch.currency = normaliseCurrency(input.currency);
+    }
+
+    if (input.status !== undefined) {
+      patch.status = normaliseReceiptStatus(input.status);
+    }
+
+    if ('storeName' in input) {
+      patch.store_name = normaliseStoreName(input.storeName) ?? null;
+    }
+
+    if ('totalCents' in input) {
+      patch.total_cents = normaliseTotalCents(input.totalCents) ?? null;
+    }
+
+    if (Object.keys(patch).length < 1) {
+      throw new ApiRequestError('No receipt changes were provided.', 400);
+    }
+
+    const result = await this.request<DatabaseReceiptRow>(
+      'receipts',
+      context,
+      {
+        household_id: `eq.${householdId}`,
+        id: `eq.${id}`,
+        select: receiptSelect,
+      },
+      {
+        body: patch,
+        method: 'PATCH',
+        prefer: 'return=representation',
+      },
+    );
+    const receipt = result.rows[0];
+
+    if (!receipt) {
+      throw new ApiRequestError('Receipt not found.', 404);
+    }
+
+    return mapReceiptRow(receipt);
+  }
+
+  async listReceiptItems(
+    context: AuthenticatedUserContext,
+    input: ListReceiptItemsInput,
+  ): Promise<readonly ReceiptItem[]> {
+    const householdId = validateHouseholdId(input.householdId);
+    const receiptId = validateReceiptId(input.receiptId);
+    const result = await this.request<DatabaseReceiptItemRow>('receipt_items', context, {
+      household_id: `eq.${householdId}`,
+      order: 'line_index.asc',
+      receipt_id: `eq.${receiptId}`,
+      select: receiptItemSelect,
+    });
+
+    return result.rows.map(mapReceiptItemRow);
+  }
+
+  async replaceReceiptItems(
+    context: AuthenticatedUserContext,
+    input: ReplaceReceiptItemsInput,
+  ): Promise<readonly ReceiptItem[]> {
+    const householdId = validateHouseholdId(input.householdId);
+    const receiptId = validateReceiptId(input.receiptId);
+
+    if (input.items.length > 100) {
+      throw new ApiRequestError('A receipt parse can contain at most 100 items.', 400);
+    }
+
+    await this.request<DatabaseReceiptItemRow>(
+      'receipt_items',
+      context,
+      {
+        household_id: `eq.${householdId}`,
+        receipt_id: `eq.${receiptId}`,
+        select: receiptItemSelect,
+      },
+      { method: 'DELETE' },
+    );
+
+    if (input.items.length < 1) {
+      return [];
+    }
+
+    const rows = input.items.map((item, index) =>
+      prepareReceiptItemRow(householdId, receiptId, item, index),
+    );
+    const result = await this.request<DatabaseReceiptItemRow>(
+      'receipt_items',
+      context,
+      { select: receiptItemSelect },
+      {
+        body: rows,
+        method: 'POST',
+        prefer: 'return=representation',
+      },
+    );
+
+    return result.rows.map(mapReceiptItemRow);
+  }
+
   private async request<T>(
     table: string,
     context: AuthenticatedUserContext,
     query: Record<string, QueryValue | undefined>,
     options: {
-      readonly body?: object | undefined;
+      readonly body?: object | readonly object[] | undefined;
       readonly count?: boolean | undefined;
-      readonly method?: 'GET' | 'POST' | undefined;
+      readonly method?: 'DELETE' | 'GET' | 'PATCH' | 'POST' | undefined;
+      readonly prefer?: string | undefined;
       readonly range?: { readonly from: number; readonly to: number } | undefined;
     } = {},
   ): Promise<RequestResult<T>> {
@@ -359,11 +726,12 @@ export class SackerlReceiptsClient {
 
     if (options.body) {
       headers['Content-Type'] = 'application/json';
-      headers.Prefer = 'return=representation';
     }
 
-    if (options.count) {
-      headers.Prefer = headers.Prefer ? `${headers.Prefer},count=exact` : 'count=exact';
+    const preferences = [options.prefer, options.count ? 'count=exact' : undefined].filter(Boolean);
+
+    if (preferences.length > 0) {
+      headers.Prefer = preferences.join(',');
     }
 
     if (options.range) {
@@ -384,6 +752,13 @@ export class SackerlReceiptsClient {
       const message = await readErrorMessage(response);
 
       throw new ApiRequestError(message, response.status);
+    }
+
+    if (response.status === 204) {
+      return {
+        rows: [],
+        total: parseTotalFromContentRange(response.headers.get('Content-Range')),
+      };
     }
 
     return {

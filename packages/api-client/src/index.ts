@@ -117,19 +117,37 @@ export {
   SackerlReceiptsClient,
   createSackerlReceiptsClient,
   isReceiptStatus,
+  mapReceiptItemRow,
   mapReceiptRow,
   receiptStatuses,
 } from './receipts';
 export type {
   CreateReceiptInput,
+  DatabaseReceiptItemRow,
   DatabaseReceiptRow,
+  GetReceiptInput,
+  ListReceiptItemsInput,
   ListReceiptsInput,
   ListReceiptsResult,
   Receipt,
+  ReceiptItem,
   ReceiptPagination,
+  ReplaceReceiptItemsInput,
   ReceiptsClientOptions,
   ReceiptStatus,
+  UpdateReceiptInput,
 } from './receipts';
+export {
+  confidenceLevelForScore,
+  isReceiptItemConfidenceLevel,
+  parseReceiptText,
+  receiptItemConfidenceLevels,
+} from './receipt-parsing';
+export type {
+  ParsedReceiptDocument,
+  ParsedReceiptLineItem,
+  ReceiptItemConfidenceLevel,
+} from './receipt-parsing';
 export {
   ApiRequestError,
   SackerlProfileClient,

@@ -4,6 +4,7 @@ import type { ApiRequestError, AuthenticatedUserContext } from './profile';
 import {
   createSackerlReceiptsClient,
   isReceiptStatus,
+  mapReceiptItemRow,
   mapReceiptRow,
   receiptStatuses,
 } from './receipts';
@@ -27,6 +28,10 @@ function jsonResponse(body: unknown, init: ResponseInit = {}): Response {
     status: 200,
     ...init,
   });
+}
+
+function emptyResponse(): Response {
+  return new Response(null, { status: 204 });
 }
 
 function requireString(value: unknown): string {
@@ -54,6 +59,7 @@ describe('receipts API client', () => {
         id: 'receipt-123',
         image_url: 'sackerl://receipt/mock-camera',
         parsed_at: null,
+        purchased_on: '2026-06-21',
         status: 'uploaded',
         store_name: 'Sackerl Mart',
         total_cents: 2480,
@@ -67,10 +73,45 @@ describe('receipts API client', () => {
       id: 'receipt-123',
       imageUrl: 'sackerl://receipt/mock-camera',
       parsedAt: null,
+      purchasedOn: '2026-06-21',
       status: 'uploaded',
       storeName: 'Sackerl Mart',
       totalCents: 2480,
       updatedAt: '2026-06-21T17:00:01Z',
+    });
+  });
+
+  it('maps receipt item database rows into API model shape', () => {
+    expect(
+      mapReceiptItemRow({
+        category_id: 'dairy',
+        confidence: '0.950',
+        confidence_level: 'high',
+        created_at: '2026-06-21T17:00:02Z',
+        household_id: 'household-123',
+        id: 'receipt-item-123',
+        inferred_name: 'Milk',
+        line_index: 0,
+        qty_unit: 'l',
+        qty_value: '1.000',
+        raw_text: 'Milk 1L 1.49',
+        receipt_id: 'receipt-123',
+        updated_at: '2026-06-21T17:00:02Z',
+      }),
+    ).toEqual({
+      categoryId: 'dairy',
+      confidence: 0.95,
+      confidenceLevel: 'high',
+      createdAt: '2026-06-21T17:00:02Z',
+      householdId: 'household-123',
+      id: 'receipt-item-123',
+      inferredName: 'Milk',
+      lineIndex: 0,
+      qtyUnit: 'l',
+      qtyValue: 1,
+      rawText: 'Milk 1L 1.49',
+      receiptId: 'receipt-123',
+      updatedAt: '2026-06-21T17:00:02Z',
     });
   });
 
@@ -85,6 +126,7 @@ describe('receipts API client', () => {
           id: 'receipt-123',
           image_url: 'sackerl://receipt/mock-camera',
           parsed_at: null,
+          purchased_on: null,
           status: 'uploaded',
           store_name: null,
           total_cents: null,
@@ -136,6 +178,7 @@ describe('receipts API client', () => {
             id: 'receipt-123',
             image_url: 'sackerl://receipt/mock-camera',
             parsed_at: null,
+            purchased_on: null,
             status: 'uploaded',
             store_name: null,
             total_cents: null,
@@ -168,6 +211,163 @@ describe('receipts API client', () => {
       Prefer: 'count=exact',
       Range: '0-24',
     });
+  });
+
+  it('updates parsed receipt metadata', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      jsonResponse([
+        {
+          captured_at: '2026-06-21T17:00:00Z',
+          created_at: '2026-06-21T17:00:01Z',
+          currency: 'EUR',
+          household_id: 'household-123',
+          id: 'receipt-123',
+          image_url: 'sackerl://receipt/mock-camera',
+          parsed_at: '2026-06-21T17:00:10Z',
+          purchased_on: '2026-06-21',
+          status: 'parsed',
+          store_name: 'Sackerl Mart',
+          total_cents: 549,
+          updated_at: '2026-06-21T17:00:10Z',
+        },
+      ]),
+    );
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+
+    await expect(
+      client.updateReceipt(context, {
+        currency: 'eur',
+        householdId: 'household-123',
+        id: 'receipt-123',
+        parsedAt: '2026-06-21T17:00:10Z',
+        purchasedOn: '2026-06-21',
+        status: 'parsed',
+        storeName: 'Sackerl Mart',
+        totalCents: 549,
+      }),
+    ).resolves.toMatchObject({
+      parsedAt: '2026-06-21T17:00:10Z',
+      purchasedOn: '2026-06-21',
+      status: 'parsed',
+      totalCents: 549,
+    });
+
+    const url = new URL(requireString(fetchMock.mock.calls[0]?.[0]));
+
+    expect(url.pathname).toBe('/rest/v1/receipts');
+    expect(url.searchParams.get('id')).toBe('eq.receipt-123');
+    expect(fetchMock.mock.calls[0]?.[1]?.method).toBe('PATCH');
+    expect(JSON.parse(requireString(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      currency: 'EUR',
+      parsed_at: '2026-06-21T17:00:10Z',
+      purchased_on: '2026-06-21',
+      status: 'parsed',
+      store_name: 'Sackerl Mart',
+      total_cents: 549,
+    });
+  });
+
+  it('replaces parsed receipt items transactionally from the client perspective', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(emptyResponse())
+      .mockResolvedValueOnce(
+        jsonResponse([
+          {
+            category_id: 'dairy',
+            confidence: '0.950',
+            confidence_level: 'high',
+            created_at: '2026-06-21T17:00:02Z',
+            household_id: 'household-123',
+            id: 'receipt-item-123',
+            inferred_name: 'Milk',
+            line_index: 0,
+            qty_unit: 'l',
+            qty_value: '1.000',
+            raw_text: 'Milk 1L 1.49',
+            receipt_id: 'receipt-123',
+            updated_at: '2026-06-21T17:00:02Z',
+          },
+        ]),
+      );
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+
+    await expect(
+      client.replaceReceiptItems(context, {
+        householdId: 'household-123',
+        receiptId: 'receipt-123',
+        items: [
+          {
+            categoryId: 'dairy',
+            confidence: 0.95,
+            confidenceLevel: 'high',
+            inferredName: 'Milk',
+            qtyUnit: 'l',
+            qtyValue: 1,
+            rawText: 'Milk 1L 1.49',
+          },
+        ],
+      }),
+    ).resolves.toMatchObject([{ id: 'receipt-item-123', inferredName: 'Milk' }]);
+
+    const deleteUrl = new URL(requireString(fetchMock.mock.calls[0]?.[0]));
+    const insertUrl = new URL(requireString(fetchMock.mock.calls[1]?.[0]));
+
+    expect(deleteUrl.pathname).toBe('/rest/v1/receipt_items');
+    expect(deleteUrl.searchParams.get('receipt_id')).toBe('eq.receipt-123');
+    expect(fetchMock.mock.calls[0]?.[1]?.method).toBe('DELETE');
+    expect(insertUrl.pathname).toBe('/rest/v1/receipt_items');
+    expect(fetchMock.mock.calls[1]?.[1]?.method).toBe('POST');
+    expect(JSON.parse(requireString(fetchMock.mock.calls[1]?.[1]?.body))).toEqual([
+      {
+        category_id: 'dairy',
+        confidence: 0.95,
+        confidence_level: 'high',
+        household_id: 'household-123',
+        inferred_name: 'Milk',
+        line_index: 0,
+        qty_unit: 'l',
+        qty_value: 1,
+        raw_text: 'Milk 1L 1.49',
+        receipt_id: 'receipt-123',
+      },
+    ]);
+  });
+
+  it('lists parsed receipt items in source order', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      jsonResponse([
+        {
+          category_id: 'produce',
+          confidence: '0.900',
+          confidence_level: 'high',
+          created_at: '2026-06-21T17:00:02Z',
+          household_id: 'household-123',
+          id: 'receipt-item-123',
+          inferred_name: 'Bananas',
+          line_index: 0,
+          qty_unit: 'kg',
+          qty_value: '1.000',
+          raw_text: 'Bananas 1 kg 2.20',
+          receipt_id: 'receipt-123',
+          updated_at: '2026-06-21T17:00:02Z',
+        },
+      ]),
+    );
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+
+    await expect(
+      client.listReceiptItems(context, {
+        householdId: 'household-123',
+        receiptId: 'receipt-123',
+      }),
+    ).resolves.toMatchObject([{ inferredName: 'Bananas', lineIndex: 0 }]);
+
+    const url = new URL(requireString(fetchMock.mock.calls[0]?.[0]));
+
+    expect(url.pathname).toBe('/rest/v1/receipt_items');
+    expect(url.searchParams.get('order')).toBe('line_index.asc');
+    expect(url.searchParams.get('receipt_id')).toBe('eq.receipt-123');
   });
 
   it('rejects invalid receipt inputs before calling the API', async () => {
