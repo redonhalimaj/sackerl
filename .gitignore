@@ -19,3 +19,5 @@ coverage/
 *.swp
 *.sql
 !supabase/migrations/*.sql
+
+.mcp.json
