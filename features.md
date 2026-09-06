@@ -16,6 +16,86 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 
 ---
 
+# EPIC-0 - Product Truth And Stage Gates
+
+## SCKRL-020 - Product-owner QA triage
+
+**Summary.** Convert the product owner's broad current-version QA pass into explicit, sized SCKRL tickets before new product-screen implementation resumes.
+
+**Acceptance criteria**
+
+- Findings are grouped as defects, usability gaps, documentation drift, or new product scope.
+- Each accepted finding has a proposed SCKRL ticket, owner, dependency, and severity.
+- Duplicate findings are merged without losing the original user observation.
+- Out-of-scope or deferred findings include the reason and the next decision needed.
+
+**Depends on.** SCKRL-303
+
+**Notes.** This is Stage 0 P0.1 in `PROGRAM.md`. Do not implement fixes directly from untriaged feedback.
+
+## SCKRL-021 - Done-ticket truth audit
+
+**Summary.** Audit completed tickets against their literal acceptance criteria and record production gaps as explicit follow-up tickets.
+
+**Acceptance criteria**
+
+- SCKRL-301, SCKRL-302, and SCKRL-303 are checked against the acceptance criteria in this file and their recorded evidence in `status.md`.
+- Any mock-only, simulated, missing provider, missing device, missing E2E, or missing failure-path behavior is linked to a follow-up ticket.
+- `status.md` distinguishes validated foundation behavior from production behavior that remains unimplemented.
+- The SCKRL-304 and SCKRL-305 prerequisites are listed before those tickets move forward.
+
+**Depends on.** SCKRL-303
+
+**Notes.** This is Stage 0 P0.2 in `PROGRAM.md`. The initial artifact is `docs/qa/done-ticket-truth-audit.md`.
+
+## SCKRL-022 - Core journey test matrix
+
+**Summary.** Create a repeatable QA matrix for the current reliable-food-loop journeys and the receipt-to-stock slice.
+
+**Acceptance criteria**
+
+- Matrix covers onboarding, storage setup, manual stock, item edit/removal, receipt upload/parse/review/placement, expiry, recipes, and shopping list.
+- Each journey lists setup data, happy path, failure path, accessibility checks, device/browser target, automation candidate, and required evidence.
+- The matrix separates checks that can run with local deterministic data from checks requiring Supabase dev credentials, Expo Go, object storage, OCR, or push providers.
+- Gaps become explicit QA or implementation follow-up tickets.
+
+**Depends on.** SCKRL-303
+
+**Notes.** This is Stage 0 P0.3 in `PROGRAM.md`. The initial artifact is `docs/qa/core-journey-test-matrix.md`.
+
+## SCKRL-023 - Reliable food-loop architecture ADR
+
+**Summary.** Decide the next-slice architecture for command APIs, private receipt media, asynchronous OCR, expiry provenance, inventory events, and data retention.
+
+**Acceptance criteria**
+
+- ADR records accepted decisions, rejected alternatives, and consequences for SCKRL-304 and SCKRL-305.
+- ADR covers server-owned transactional commands for multi-record stock changes.
+- ADR covers private receipt media storage, validation, signed access, retry behavior, and default retention.
+- ADR covers idempotent OCR job state and completion signaling.
+- ADR covers the minimum expiry provenance and inventory event data required before receipt placement creates stock.
+
+**Depends on.** SCKRL-021, SCKRL-022
+
+**Notes.** This is Stage 0 P0.4 in `PROGRAM.md`. The initial artifact is `docs/architecture/adr-0001-reliable-food-loop.md`.
+
+## SCKRL-024 - Product measurement plan
+
+**Summary.** Define privacy-safe product metrics for activation, capture reliability, parser quality, inventory fidelity, waste, recommendations, and retention.
+
+**Acceptance criteria**
+
+- Metrics avoid receipt text, personal names, health data, and other unnecessary PII.
+- Every metric has a purpose, event or source table, aggregation level, retention expectation, and stage when it becomes useful.
+- Measurement definitions distinguish deterministic quality checks from product analytics.
+- Any telemetry implementation is deferred to scoped engineering tickets after provider decisions.
+
+**Depends on.** SCKRL-021
+
+**Notes.** This is Stage 0 P0.5 in `PROGRAM.md`. The initial artifact is `docs/product/measurement-plan.md`.
+
+---
+
 # EPIC-1 - Foundation And Design System
 
 ## SCKRL-001 - Repo, CI, environments
@@ -409,7 +489,7 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 - Add missing item via dashed CTA at the bottom.
 - "Continue to placement" only enabled when no items are flagged `needs review`.
 
-**Depends on.** SCKRL-303
+**Depends on.** SCKRL-020, SCKRL-310
 
 ## SCKRL-305 - Placement screen (drag and drop)
 
@@ -420,9 +500,10 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 - Matches `ScreenPlacement`.
 - Default zone suggested per category, for example Dairy -> Fridge, Pantry -> Pantry.
 - User can override; "Auto-sort" button accepts all suggestions.
-- "Save & set reminders" creates items via SCKRL-202 batch endpoint, kicks off SCKRL-405 expiry estimation, navigates to dashboard with a toast.
+- "Save & set reminders" calls the idempotent SCKRL-311 placement command and navigates to the dashboard with a toast only after the transaction succeeds.
+- A complete tap-based placement path is available in addition to drag and drop.
 
-**Depends on.** SCKRL-304, SCKRL-202
+**Depends on.** SCKRL-304, SCKRL-311
 
 ## SCKRL-306 - Receipt history
 
@@ -434,7 +515,88 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 - Filter by store.
 - Tap re-opens Review screen for re-edit. It cannot re-place; new items would have to be added manually.
 
-**Depends on.** SCKRL-302
+**Depends on.** SCKRL-304, SCKRL-308, SCKRL-310
+
+## SCKRL-307 - Real receipt acquisition
+
+**Summary.** Replace the simulated Scan handoff with real camera, gallery, and PDF acquisition on mobile.
+
+**Acceptance criteria**
+
+- Camera capture produces a real local image asset after permission grant.
+- Gallery import accepts JPEG, PNG, HEIC where supported by Expo, and rejects unsupported files with recoverable feedback.
+- PDF import accepts a supported PDF file and rejects unsupported or oversized files with recoverable feedback.
+- Permission denial, cancellation, retry, and manual-entry fallback are handled without losing navigation state.
+- Receipt acquisition remains accessible without drag-only interactions.
+
+**Depends on.** SCKRL-020, SCKRL-021, SCKRL-023, SCKRL-301
+
+**Notes.** This closes the SCKRL-301 production gap where capture currently creates a simulated receipt handoff.
+
+## SCKRL-308 - Private receipt media storage
+
+**Summary.** Store real receipt images and PDFs in household-authorized private object storage instead of synthetic `sackerl://` URLs.
+
+**Acceptance criteria**
+
+- Private storage bucket or equivalent is configured with household-scoped authorization and no public read access.
+- Upload path validates file type, size, household ownership, and authenticated user context.
+- `receipts.image_url` or its successor stores a private object reference, not a public URL with unbounded access.
+- Signed read access is available only where needed for review/history.
+- Default retention, deletion, and cleanup behavior are documented.
+
+**Depends on.** SCKRL-302, SCKRL-023
+
+**Notes.** This closes the SCKRL-302 production gap where persistence currently uses temporary synthetic URLs.
+
+## SCKRL-309 - Asynchronous OCR processing and completion signaling
+
+**Summary.** Replace synchronous deterministic parsing with an idempotent OCR job pipeline and client-visible completion state.
+
+**Acceptance criteria**
+
+- Receipt parsing is represented by an idempotent job or equivalent durable attempt state.
+- Real OCR provider adapter is called for private receipt media, while deterministic parser fixtures remain available for tests.
+- Retry limits, failed state, provider errors, and no-line parse results are observable without logging receipt text.
+- Client can poll or subscribe to status changes from `uploaded` to `parsing`, `parsed`, or `failed`.
+- Completion signaling satisfies the SCKRL-303 webhook or push requirement before production receipt flows depend on it.
+
+**Depends on.** SCKRL-303, SCKRL-308
+
+**Notes.** This closes the SCKRL-303 production gap where local parsing currently returns deterministic sample text for synthetic URLs.
+
+## SCKRL-310 - Receipt review data upgrade
+
+**Summary.** Add the minimum durable receipt-line fields and correction state needed before SCKRL-304 review and SCKRL-305 placement create inventory.
+
+**Acceptance criteria**
+
+- Receipt items track review state separately from parser confidence.
+- User edits preserve raw text, original inferred values, corrected values, correction timestamp, and parser version.
+- Line total, unit price, discount, and tax fields are either implemented or explicitly deferred with documented null behavior.
+- Review replacement is transactional and cannot duplicate or silently drop accepted lines.
+- SCKRL-304 receives a stable typed contract for editable lines, confidence, and unresolved fields.
+
+**Depends on.** SCKRL-021, SCKRL-023, SCKRL-303
+
+**Notes.** Keep this smaller than full product normalization; only add what review and placement need.
+
+## SCKRL-311 - Atomic receipt placement command
+
+**Summary.** Finalize one reviewed receipt into stock through an idempotent server-owned transaction with receipt-line lineage, expiry facts, and acquisition events.
+
+**Acceptance criteria**
+
+- Command requires an idempotency key and validates authenticated household membership.
+- Every included receipt line is reviewed and has a valid household storage zone before placement.
+- Stock rows link uniquely to their source receipt lines and use `source: receipt`.
+- Stock creation, active expiry facts, acquisition events, and receipt placement state commit or roll back together.
+- Retrying a completed command returns the prior result without creating duplicate stock or events.
+- Injected validation and persistence failures leave reviewed receipt data and existing stock unchanged.
+
+**Depends on.** SCKRL-202, SCKRL-310, SCKRL-406
+
+**Notes.** Implement the transaction defined by ADR-0001. Do not extend this ticket into later product normalization or full event sourcing.
 
 ---
 
@@ -463,6 +625,20 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 - User can override on Add Item or Edit.
 
 **Depends on.** SCKRL-201
+
+## SCKRL-406 - Expiry provenance and confirmation
+
+**Summary.** Separate exact, user-entered, estimated, and model-derived expiry facts so reminders do not imply unsupported precision.
+
+**Acceptance criteria**
+
+- Item expiry stores source, confidence where relevant, and user confirmation state separately from the displayed date.
+- Manual Add/Edit and receipt placement can distinguish user-entered expiry from category-zone estimates.
+- UI copy can show whether an expiry date is estimated or confirmed.
+- Existing items receive a forward-compatible default provenance without changing their visible dates.
+- Follow-up notification tickets can filter or phrase reminders based on expiry provenance.
+
+**Depends on.** SCKRL-405, SCKRL-023
 
 ## SCKRL-411 - Push registration
 
@@ -731,6 +907,59 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 - CI lighthouse + RN profiler reports.
 
 **Depends on.** SCKRL-705, full app
+
+## SCKRL-906 - Application test harness
+
+**Summary.** Establish deterministic web/mobile application test tooling and prevent empty suites from reporting success.
+
+**Acceptance criteria**
+
+- The repo records the chosen route-test, mobile component-test, and device-journey tools with local and CI commands.
+- Mobile and web test commands fail when their expected suites contain no tests.
+- One deterministic web route test and one deterministic mobile behavior test run in CI without production providers or secrets.
+- Test fixtures use isolated, de-identified data and document cleanup requirements.
+- CI can run deterministic checks without real OCR, push, or production secrets.
+
+**Depends on.** SCKRL-022, SCKRL-023
+
+## SCKRL-907 - Authenticated API journey tests
+
+**Summary.** Add isolated integration coverage for current authenticated household, stock, receipt, recipe, and shopping-list routes.
+
+**Acceptance criteria**
+
+- Tests cover household zones, manual stock CRUD, receipt persistence and deterministic parsing, recipe suggestions, and shopping-list idempotency.
+- Failure cases cover unauthorized access, missing household, invalid payloads, parse failure, and duplicate parse requests.
+- Each run creates isolated data and verifies cleanup without logging credentials or receipt content.
+- Local/dev environment requirements and exact commands are documented.
+
+**Depends on.** SCKRL-906
+
+## SCKRL-908 - Current mobile journey smoke tests
+
+**Summary.** Automate the critical mobile journeys that exist before receipt review and placement.
+
+**Acceptance criteria**
+
+- Automated smoke covers onboarding/storage setup, manual add/edit/remove, expiry actions, recipe detail, and recipe-to-shopping-list.
+- Checks include accessible labels, focus order where supported, stable tap targets, and non-color-only status.
+- Network failure and retry behavior is exercised for at least one read and one mutation.
+- The suite runs against an Expo development build with deterministic fixtures and documents device prerequisites.
+
+**Depends on.** SCKRL-906
+
+## SCKRL-909 - Receipt-to-stock journey automation
+
+**Summary.** Extend application automation across real acquisition, processing, review, placement, and receipt-created stock.
+
+**Acceptance criteria**
+
+- Happy path proves one real test asset reaches reviewed and placed inventory with receipt-line lineage.
+- Failure paths cover denied permission, upload interruption, OCR failure/retry, unresolved review lines, and duplicate placement retry.
+- Both drag and tap placement paths are tested; the tap path is the accessibility baseline.
+- Provider/device evidence is separated from deterministic CI evidence.
+
+**Depends on.** SCKRL-304, SCKRL-305, SCKRL-307, SCKRL-308, SCKRL-309, SCKRL-310, SCKRL-311
 
 ## SCKRL-910 - Telemetry events
 

@@ -198,13 +198,13 @@ Indicative scope: one sprint.
 Outcome: everyone can distinguish working product behavior from scaffolding, and the next slice is
 based on current evidence.
 
-| Work package                      | Primary owner            | Supporting owners | Deliverable                                                                                 |
-| --------------------------------- | ------------------------ | ----------------- | ------------------------------------------------------------------------------------------- |
-| P0.1 Product-owner QA triage      | Business Process Analyst | QA, Orchestrator  | Findings grouped into defects, usability gaps, and new scope                                |
-| P0.2 Ticket truth audit           | Orchestrator             | QA                | Follow-up tickets for simulated or partially accepted behavior; current docs reconciled     |
-| P0.3 Core journey test plan       | QA                       | Frontend, Backend | Repeatable onboarding, manual stock, receipt, expiry, recipe, and shopping-list test matrix |
-| P0.4 Architecture decision record | Infrastructure           | Backend, DevOps   | Decision on command API, background jobs, media storage, event ledger, and data retention   |
-| P0.5 Product measurement plan     | Business Process Analyst | QA, Backend       | Activation, fidelity, waste, recommendation, and retention definitions without PII          |
+| Work package                                  | Primary owner            | Supporting owners | Deliverable                                                                                 |
+| --------------------------------------------- | ------------------------ | ----------------- | ------------------------------------------------------------------------------------------- |
+| P0.1 Product-owner QA triage (SCKRL-020)      | Business Process Analyst | QA, Orchestrator  | Findings grouped into defects, usability gaps, and new scope                                |
+| P0.2 Ticket truth audit (SCKRL-021)           | Orchestrator             | QA                | Follow-up tickets for simulated or partially accepted behavior; current docs reconciled     |
+| P0.3 Core journey test plan (SCKRL-022)       | QA                       | Frontend, Backend | Repeatable onboarding, manual stock, receipt, expiry, recipe, and shopping-list test matrix |
+| P0.4 Architecture decision record (SCKRL-023) | Infrastructure           | Backend, DevOps   | Decision on command API, background jobs, media storage, event ledger, and data retention   |
+| P0.5 Product measurement plan (SCKRL-024)     | Business Process Analyst | QA, Backend       | Activation, fidelity, waste, recommendation, and retention definitions without PII          |
 
 Exit criteria:
 
@@ -473,17 +473,17 @@ Routing policy:
 
 This order minimizes rework after the current product-owner QA pause:
 
-1. Triage the broad current-version QA feedback into explicit tickets.
-2. Audit Done tickets against their literal acceptance criteria and create follow-ups for real
+1. Triage the broad current-version QA feedback into explicit tickets through SCKRL-020.
+2. Audit Done tickets against their literal acceptance criteria through SCKRL-021 and create follow-ups for real
    capture, upload, OCR completion signaling, and app-level tests.
-3. Decide the minimal receipt-line, expiry-provenance, and inventory-event schema needed before
+3. Decide the minimal receipt-line, expiry-provenance, and inventory-event schema needed through SCKRL-023 before
    placement creates more data.
-4. Implement real receipt acquisition, private media storage, and an idempotent OCR job.
-5. Implement SCKRL-304 Review with durable correction state.
-6. Implement SCKRL-305 Placement with both drag and tap paths and atomic item creation.
+4. Establish the application test harness (SCKRL-906), private media storage (SCKRL-308), review data contract (SCKRL-310), and expiry provenance (SCKRL-406) as bounded foundation work.
+5. Implement real receipt acquisition (SCKRL-307) and an idempotent OCR job (SCKRL-309) against those contracts.
+6. Implement SCKRL-304 Review, then SCKRL-311 atomic receipt placement with both drag and tap paths.
 7. Implement SCKRL-306 Receipt history.
 8. Implement push preferences, registration, daily reminders, and notification inbox.
-9. Add product normalization, partial consumption, and the inventory event ledger.
+9. Add product normalization, partial consumption, and extend the inventory event ledger after the initial SCKRL-311 acquisition events.
 10. Begin budget and buying-pattern discovery only after the resulting data can be measured.
 
 Premium gating and the web companion should not outrank the reliable food loop unless a concrete

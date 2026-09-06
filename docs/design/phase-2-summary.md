@@ -17,7 +17,9 @@ Phase 2 extends the Phase 1 design-system foundation. It does not replace the co
 
 The Slice 1 walking skeleton has completed the foundation/auth/profile/household, onboarding start, storage-zone setup, item data model, and item API work now represented by SCKRL-006 through SCKRL-009, SCKRL-100 through SCKRL-102, and SCKRL-201/SCKRL-202.
 
-The next unblocked delivery work is the read-only dashboard:
+The dashboard slice is complete locally. The next delivery work is the Stage 0 product-truth and
+reliability gate documented in `PROGRAM.md` and `status.md`; receipt review and placement remain
+blocked until their data and transaction contracts are accepted.
 
 1. SCKRL-203: dashboard hero widget.
 2. SCKRL-204: dashboard expiring soon card.

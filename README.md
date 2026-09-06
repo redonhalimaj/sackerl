@@ -39,7 +39,7 @@ pnpm dev:mobile
 
 The Phase 1 design-system foundation is present locally through tokens, shared UI primitives, icon assets, the animated paper bag, brand logo utilities, and the mobile tab shell. Slice 1 now also includes Supabase Auth, profile/household persistence, storage-zone onboarding, the normalized item data model, and item CRUD API routes.
 
-The active Phase 2 product handoff is in `Design/Phase 2/sackerl phase 2`. It is the source for onboarding, stock, receipt, expiry, suggestions, premium, and web companion screens. The next unblocked Slice 1 work is the read-only dashboard modules: SCKRL-203, SCKRL-204, and SCKRL-205.
+The active Phase 2 product handoff is in `Design/Phase 2/sackerl phase 2`. It is the source for onboarding, stock, receipt, expiry, suggestions, premium, and web companion screens. Stage 0 is now the active delivery gate: SCKRL-021 through SCKRL-024 are complete, SCKRL-020 is waiting for product-owner QA findings, and SCKRL-304/305 remain gated while bounded foundation work starts from the accepted follow-up queue in `status.md`.
 
 ## Monorepo Layout
 

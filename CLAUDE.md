@@ -18,7 +18,7 @@ The repo has the SCKRL-001 foundation scaffold in place. The selected baseline i
 
 The Phase 1 design-system foundation is implemented locally from the initial design handoff: shared tokens, typography, core primitives, icon registry, animated paper bag, brand mark/logo utilities, and the mobile tab shell. SCKRL-006 and SCKRL-007 are Done after screenshot-based visual QA.
 
-The working prototype now includes Supabase Auth, profile/household persistence, storage zones, stock CRUD, expiry flows, receipt records and deterministic parsing, recipe suggestions, and a shopping list. Real receipt media capture/upload, production OCR, receipt review/placement/history, notifications, learning-grade event data, and release hardening remain incomplete. Use `status.md` for the exact current queue and `PROGRAM.md` for the staged path forward.
+The working prototype now includes Supabase Auth, profile/household persistence, storage zones, stock CRUD, expiry flows, receipt records and deterministic parsing, recipe suggestions, and a shopping list. Stage 0 is active through SCKRL-020 through SCKRL-024 to reconcile product truth, QA gates, architecture, and measurement before SCKRL-304 resumes. Real receipt media capture/upload, production OCR, receipt review/placement/history, notifications, learning-grade event data, and release hardening remain incomplete. Use `status.md` for the exact current queue and `PROGRAM.md` for the staged path forward.
 
 The active product-screen handoff is now `Design/Phase 2/sackerl phase 2`. Use its `index.html` as visual source of truth and its `handoff` docs for epics, features, screens, and design-system details. Phase 2 extends the Phase 1 foundation; it does not replace the completed design-system work.
 

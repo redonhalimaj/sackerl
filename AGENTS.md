@@ -19,6 +19,8 @@ The foundation scaffold, Phase 1 design-system implementation, Slice 1 auth/prof
 - [docs/environment.md](docs/environment.md): environment keys and ignored local env-file rules.
 - [docs/design](docs/design): design source pointers and Phase 2 handoff summary.
 - [docs/agents](docs/agents): detailed role briefs for the orchestrator and subagents.
+- [docs/qa](docs/qa), [docs/architecture](docs/architecture), and [docs/product](docs/product):
+  accepted Stage 0 truth, journey, architecture, and measurement artifacts.
 
 ## Current Foundation Baseline
 
@@ -32,7 +34,7 @@ The foundation scaffold, Phase 1 design-system implementation, Slice 1 auth/prof
 - `.env*` files are ignored local files and must not be tracked in Git.
 - CI is defined in `.github/workflows/ci.yml` for install, format, lint, typecheck, and tests.
 - Phase 2 product handoff is available at `Design/Phase 2/sackerl phase 2` and is the active source for Slice 1 product-screen work.
-- The current implemented prototype is recorded in `status.md`; SCKRL-304 is the next defined receipt-flow screen, subject to the Stage 0 product-truth and QA work in `PROGRAM.md`.
+- The current implemented prototype is recorded in `status.md`; Stage 0 is launched through SCKRL-020 through SCKRL-024, and SCKRL-304 remains gated by that product-truth and QA work.
 - The dev Supabase API secret exposed during runtime QA was deleted and replaced on 2026-06-02. Do not paste the new secret into chat; add it only to ignored local env files if needed.
 
 Do not add unrelated product UI, OCR, notification, or AI provider implementation unless the relevant SCKRL ticket or explicit user request is active.
