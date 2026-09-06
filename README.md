@@ -5,6 +5,8 @@
 > **Where to go next**
 >
 > - [CLAUDE.md](CLAUDE.md) - project context, agent guidance, conventions
+> - [PROGRAM.md](PROGRAM.md) - long-term product direction, delivery stages, and agent ownership
+> - [TEAM.md](TEAM.md) - canonical agent roster, model routing, delegation, and handoffs
 > - [status.md](status.md) - tactical delivery status and decisions
 > - [epic.md](epic.md) - product epic map
 > - [features.md](features.md) - canonical SCKRL ticket backlog

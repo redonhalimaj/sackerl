@@ -2,7 +2,7 @@
 
 ## Session Handoff
 
-Last updated: 2026-08-18
+Last updated: 2026-09-06
 
 SCKRL-001 has been completed locally. The repo now has a pnpm/Turborepo monorepo scaffold with web, mobile, shared packages, environment documentation, ignored local env-file rules, lockfile, and CI.
 
@@ -12,15 +12,19 @@ When a new session starts, read these files first:
 
 - [AGENTS.md](AGENTS.md)
 - [CLAUDE.md](CLAUDE.md)
+- [PROGRAM.md](PROGRAM.md)
+- [TEAM.md](TEAM.md)
 - [epic.md](epic.md)
 - [features.md](features.md)
 - [status.md](status.md)
 
 Immediate next step for Slice 1:
 
-1. Product owner is running a broad current-version QA pass before new feature implementation resumes. Wait for feedback on missing behavior, regressions, and polish issues.
-2. After product-owner feedback is triaged, resume with SCKRL-304 Review screen unless the feedback creates higher-priority fix tickets.
-3. Keep the new dev Supabase API secret out of chat; add it only to ignored local `.env` files if future runtime QA requires it.
+1. Complete the Stage 0 product-owner QA triage and ticket-truth audit defined in `PROGRAM.md` before new feature implementation resumes.
+2. Create explicit follow-up tickets for real receipt acquisition/upload, production OCR completion signaling, expiry provenance, and app-level journey tests where the existing Done tickets cover only foundations or simulations.
+3. Decide the minimal receipt-line, expiry-provenance, and inventory-event contracts needed before SCKRL-304 Review and SCKRL-305 Placement create more data.
+4. Use the model-routing matrix in `AGENTS.md`: Sol xhigh for orchestration, GPT-5.5 for complex Backend/Infrastructure/QA reasoning, and Luna high for bounded Business Analysis/Frontend/DevOps work.
+5. Keep the new dev Supabase API secret out of chat; add it only to ignored local `.env` files if future runtime QA requires it.
 
 Pause handoff for next session:
 
@@ -211,7 +215,7 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | Date       | Decision                                                                                                                                                     | Owner              |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ |
 | 2026-05-17 | Use `SCKRL-XXX` ticket IDs and Scrum-style status tracking in Markdown.                                                                                      | Agent Orchestrator |
-| 2026-05-17 | Use GPT-5.5 as the logical Agent Orchestrator with DevOps, Frontend, Backend, Infrastructure, Business Process Analyst, and QA subagents.                    | Agent Orchestrator |
+| 2026-05-17 | Initial decision used GPT-5.5 as the logical Agent Orchestrator; superseded by the role-specific model-routing decision recorded on 2026-09-06.                  | Agent Orchestrator |
 | 2026-05-17 | Treat [features.md](features.md) as the canonical backlog and [epic.md](epic.md) as the Obsidian-friendly epic overview.                                     | Agent Orchestrator |
 | 2026-05-17 | Use pnpm workspaces with Turborepo for the monorepo foundation.                                                                                              | DevOps             |
 | 2026-05-17 | Use Next.js App Router for `apps/web` and Expo Router for `apps/mobile`.                                                                                     | DevOps             |
@@ -222,6 +226,7 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | 2026-05-30 | Treat `.env*` files as ignored local-only files; use local ignored files, CI secrets, or host-managed secret stores for real environment values.             | DevOps             |
 | 2026-05-31 | Store selected household storage zones on `households.zones` as a non-empty `text[]`; custom zones use generated lowercase slugs.                            | Frontend / Backend |
 | 2026-05-31 | Keep `households.zones` as the onboarding selection source and sync it into normalized per-household `zones` rows for item foreign keys.                     | Backend            |
+| 2026-09-06 | Supersede the original GPT-5.5-only Orchestrator assignment with the `PROGRAM.md` model-routing matrix: `gpt-5.6-sol` xhigh for Orchestrator; `gpt-5.5` xhigh for Backend and Infrastructure; `gpt-5.5` high for QA; `gpt-5.6-luna` high for Business Process Analyst, Frontend, and DevOps. | Agent Orchestrator |
 
 ## Open Decisions
 

@@ -18,13 +18,15 @@ The repo has the SCKRL-001 foundation scaffold in place. The selected baseline i
 
 The Phase 1 design-system foundation is implemented locally from the initial design handoff: shared tokens, typography, core primitives, icon registry, animated paper bag, brand mark/logo utilities, and the mobile tab shell. SCKRL-006 and SCKRL-007 are Done after screenshot-based visual QA.
 
-Slice 1 now has Supabase Auth, profile/household persistence, storage-zone onboarding, the normalized item data model, and item CRUD API routes implemented on `dev`. SCKRL-008, SCKRL-009, SCKRL-100 through SCKRL-102, and SCKRL-201/SCKRL-202 are Done. SCKRL-203, SCKRL-204, and SCKRL-205 are Ready and are the next unblocked dashboard work.
+The working prototype now includes Supabase Auth, profile/household persistence, storage zones, stock CRUD, expiry flows, receipt records and deterministic parsing, recipe suggestions, and a shopping list. Real receipt media capture/upload, production OCR, receipt review/placement/history, notifications, learning-grade event data, and release hardening remain incomplete. Use `status.md` for the exact current queue and `PROGRAM.md` for the staged path forward.
 
 The active product-screen handoff is now `Design/Phase 2/sackerl phase 2`. Use its `index.html` as visual source of truth and its `handoff` docs for epics, features, screens, and design-system details. Phase 2 extends the Phase 1 foundation; it does not replace the completed design-system work.
 
 ## How To Work
 
-- Read [AGENTS.md](AGENTS.md), [status.md](status.md), [epic.md](epic.md), and [features.md](features.md) before starting substantial work.
+- Read [AGENTS.md](AGENTS.md), [PROGRAM.md](PROGRAM.md), [TEAM.md](TEAM.md), [status.md](status.md), [epic.md](epic.md), and [features.md](features.md) before starting substantial work.
+- Use `PROGRAM.md` for long-term sequencing, stage gates, safety constraints, and agent ownership. Use `status.md` and `features.md` for active ticket state and accepted implementation scope.
+- Follow the canonical model, delegation, escalation, and handoff policy in `TEAM.md`. Luna agents receive bounded work with stable contracts; unresolved architecture, privacy, transactional, health-safety, or recommendation-policy decisions must be escalated through the assigned GPT-5.5 specialist and the Sol Orchestrator.
 - Work from explicit `SCKRL-XXX` tickets or direct user instructions.
 - Keep changes scoped to the active ticket.
 - Do not introduce unrelated refactors while the codebase is still forming.
@@ -51,11 +53,11 @@ pnpm --filter @sackerl/web build
 
 ## Current Structure
 
-- `apps/web`: Next.js App Router scaffold with profile, household, and item API routes.
-- `apps/mobile`: Expo SDK 54 + Expo Router app with auth-gated onboarding, storage-zone setup, and the Phase 1 tab shell.
+- `apps/web`: Next.js App Router scaffold with profile, household, stock, receipt, parsing, recipe-suggestion, and shopping-list routes.
+- `apps/mobile`: Expo SDK 54 + Expo Router app with auth-gated onboarding, storage zones, stock and expiry management, recipe suggestions, shopping lists, and simulated receipt capture.
 - `packages/tokens`: shared design token package.
 - `packages/ui`: shared primitives, icons, logo utilities, and animated paper bag.
-- `packages/api-client`: shared Supabase-backed auth, profile/household, and item clients.
+- `packages/api-client`: shared Supabase-backed auth, profile/household, stock, receipt, parsing, recipe, and shopping-list clients.
 - `.env*`: ignored local environment files; keep real values out of Git.
 
 ## Current Design Source
