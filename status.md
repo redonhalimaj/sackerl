@@ -4,6 +4,44 @@
 
 Last updated: 2026-09-13
 
+### Current takeover checkpoint
+
+- **Writer:** released by Codex after documentation-only SCKRL-026 (runtime model not reported).
+  No delegated writer remains for this task; the next assistant claims ownership when resumed.
+- **Checkout:** `dev`, base HEAD `1fe4b99`. There is substantial staged, unstaged and untracked
+  work from previous sessions. Preserve the index and working tree; inspect both diffs on takeover.
+- **Current scope:** the owner's latest instruction is to update status and create the shared
+  Codex/Claude workflow only. No new app implementation is active or authorized by this handoff.
+- **Active ticket:** none. SCKRL-026 is Done locally after independent GPT-5.5 documentation QA
+  and root integration review. Shared workflow, provider profiles and resume prompts are complete.
+- **Owned files this task:** `status.md`, `features.md`, `TEAM.md`, `AGENTS.md`, `CLAUDE.md`,
+  `PROGRAM.md` (routing pointer only), `docs/agents/README.md` and
+  `docs/agents/codex-claude-handoff.md`. Existing edits in these files were preserved.
+- **Completed app work:** SCKRL-020, SCKRL-025, SCKRL-310 and SCKRL-506 are Done locally after
+  acceptance. SCKRL-906 is also complete. Do not repeat these audits or restart their implementation.
+- **Verification inherited from the completed batch:** 122 tests, typecheck/lint and focused
+  formatting passed. Full formatting flags `.claude/settings.local.json` and
+  `apps/mobile/expo-env.d.ts`. Code map: 577 callables, 77 modules, zero stale files and valid links.
+  These are previous-batch results, not newly run application tests for this documentation change.
+- **Environment:** SCKRL-310's live Supabase migration remains unapplied. No live deployment,
+  commit or merge was performed. This documentation task starts no app/server/database processes;
+  inspect any inherited processes before using them and stop old writers before switching.
+- **Documentation verification:** independent review accepted all workflow criteria; 70 relative
+  documentation links resolve and `git diff --check` passes. No application tests were rerun for
+  this documentation-only task.
+- **Next action now:** wait for the owner's development instruction. On a later request to
+  continue app work, begin SCKRL-406
+  with its feature criteria and `docs/architecture/adr-0001-reliable-food-loop.md`, publish the
+  expiry-provenance contract, and validate it before SCKRL-407 warnings / SCKRL-408 snooze work.
+  SCKRL-304 is also Ready but has not started; SCKRL-305 remains gated by review and atomic placement.
+- **Transfer rule:** follow [Codex ↔ Claude handoff](docs/agents/codex-claude-handoff.md) and
+  `TEAM.md`'s provider profiles. Claude uses the model selected in its runtime; either provider
+  must record actual ownership and retain independent QA. A provider limit alone is not Done.
+
+This checkpoint and the live ticket table supersede older dated handoff instructions below.
+
+### Accepted implementation batch — 2026-09-13
+
 SCKRL-310 is Done locally after Backend implementation, Infrastructure acceptance, independent
 SQL QA and final integration review. No live Supabase migration, deployment or device validation
 was performed. Apply the migration before running these new receipt APIs against dev Supabase.
@@ -237,6 +275,7 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | SCKRL-309 | Todo    | Backend                  | Async OCR and completion signaling.              | Follow-up ticket added by the Stage 0 truth audit on 2026-09-06. Closes the SCKRL-303 production gap by adding durable parse attempts or jobs, provider failure handling, retry semantics, parser/provider versioning, and client-visible completion state. Depends on SCKRL-308.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | SCKRL-304 | Ready | Frontend | Receipt review screen. | SCKRL-020 and SCKRL-310 accepted locally. Not started; use the published versioned review contract and apply its migration before connected dev testing. |
 | SCKRL-025 | Done | Agent Orchestrator | Linked code overview. | Accepted by independent QA on 2026-09-13. 88 notes; 577 callables, 1053 relationships, 77 generated modules. Source/wiki links valid and refresh/check passes. Start docs/code-map/Sackerl Code Map.md. |
+| SCKRL-026 | Done | Agent Orchestrator | Shared Codex/Claude handoff workflow. | Accepted locally 2026-09-13 after independent GPT-5.5 documentation QA and root review. 70 relative links valid; diff check clean. Shared checkpoint, provider profiles, interruption recovery and resume prompts. No app changes. |
 | SCKRL-407 | Todo | Frontend | Expiry warnings and overdue interaction. | Phone-feedback triage 2026-09-13; criteria in features.md. Not started. |
 | SCKRL-408 | Todo | Backend | Separate reminder snooze from expiry. | Phone-feedback triage 2026-09-13; criteria in features.md. Not started. |
 | SCKRL-409 | Todo | Infrastructure | Optional package photo/barcode evidence; later. | Phone-feedback triage 2026-09-13; criteria in features.md. Not started. |

@@ -10,6 +10,7 @@ The foundation scaffold, Phase 1 design-system implementation, Slice 1 auth/prof
 
 - [PROGRAM.md](PROGRAM.md): long-term product direction, capability review, staged delivery program, and agent ownership. It does not replace live ticket status or accepted ticket scope.
 - [TEAM.md](TEAM.md): canonical team composition, model assignment, delegation contract, escalation rules, and handoff workflow.
+- [Codex ↔ Claude handoff](docs/agents/codex-claude-handoff.md): shared resume/checkpoint workflow; use the current takeover checkpoint in `status.md` first.
 - [epic.md](epic.md): product epics and high-level delivery map.
 - [features.md](features.md): feature index and feature-document rules.
 - [status.md](status.md): live Scrum ticket status.
@@ -56,6 +57,11 @@ Default Slice 1 provider recommendation: Supabase Auth plus Supabase/Postgres un
 | QA                       | `gpt-5.5`      | `high`    | Owns stage-gate validation, integration and journey coverage, accessibility, data quality, recommendation evaluation, and risk. |
 
 ## Model Routing Rules
+
+The roster above lists Codex defaults. The user-authorized Claude
+profile in `TEAM.md` overrides GPT-specific routing when Claude takes over. Preserve the same role
+ownership, escalation and independent QA gates; record actual provider/model and file ownership in
+`status.md`. Checkpoint at milestones so either assistant can recover after an abrupt limit.
 
 - Use the exact model and reasoning effort in the roster when the runtime supports explicit agent selection. Do not silently substitute another model.
 - Use `gpt-5.6-sol` at `xhigh` for program integration, dependency resolution, conflicting evidence, final review, and work spanning multiple specialist roles.

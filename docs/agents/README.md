@@ -4,7 +4,11 @@ This folder contains role briefs for the Sackerl agent workflow.
 
 The canonical roster, model-routing rules, delegation contract, and handoff contract live in [TEAM.md](../../TEAM.md).
 
-## Model Matrix
+Use [Codex ↔ Claude handoff](codex-claude-handoff.md) when changing assistants. `TEAM.md`'s provider
+profiles take precedence over GPT-specific model wording in these role briefs; role ownership and
+review requirements apply in both providers.
+
+## Model Matrix (Codex Defaults)
 
 | Role                     | Model          | Reasoning |
 | ------------------------ | -------------- | --------- |

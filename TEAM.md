@@ -1,6 +1,6 @@
 # Sackerl Agent Team
 
-Last reviewed: 2026-09-06
+Last reviewed: 2026-09-13
 
 Status: Canonical team, model-routing, delegation, and handoff policy.
 
@@ -16,7 +16,31 @@ receives, how work moves between roles, and when a task must be escalated.
 - `docs/agents/*.md` contains the detailed brief for each role.
 - This file is authoritative for team composition and model assignment.
 
-## Team Matrix
+## Provider Profiles
+
+The owner explicitly authorized Codex ↔ Claude continuation on 2026-09-13. Follow
+[the shared handoff workflow](docs/agents/codex-claude-handoff.md) and keep the live checkpoint in
+`status.md`. One assistant owns writing to a given set of files at a time.
+
+- **Codex profile:** use the exact roster below for delegated work when available. Existing
+  running sessions retain their actual model; record it honestly.
+- **Claude profile:** use the Claude model selected in the user's runtime. Record its actual
+  identity/settings when exposed, or `unknown` otherwise. The same Orchestrator, Business Process
+  Analyst, Frontend, Backend, Infrastructure, DevOps and QA roles apply. Explicit GPT assignments
+  in the roster and role briefs are Codex defaults, not a requirement to obtain GPT access from
+  Claude. Delegates use available, explicitly recorded Claude models; no cross-provider effort
+  equivalence is assumed.
+- In either profile, escalate unresolved architecture, security, transactional, privacy, health
+  and recommendation-policy decisions to the responsible specialist role and Orchestrator.
+  Preserve independent QA and integration gates. If a required reviewer is unavailable, leave
+  review pending rather than asserting acceptance.
+
+This is a standing provider-routing exception authorized by the user, not a silent model
+substitution. Switching providers needs no repeated permission within the existing task scope.
+It does not authorize new feature scope, simultaneous overlapping writers, or external writes.
+The profile rules take precedence over provider-specific wording elsewhere in the repo.
+
+## Team Matrix (Codex Defaults)
 
 | Role                     | Model          | Reasoning | Primary responsibility                                                                                                         |
 | ------------------------ | -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------ |

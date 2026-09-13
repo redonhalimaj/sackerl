@@ -114,6 +114,29 @@ callers and database boundaries, with a repeatable method-index refresh as AI ch
 
 ---
 
+## SCKRL-026 - Shared Codex and Claude continuation workflow
+
+**Summary.** Let either assistant continue from the other's saved repo state after a usage limit
+or an explicit switch, with one shared handoff and consistent team ownership.
+
+**Acceptance criteria**
+
+- `status.md` has a current takeover checkpoint with scope, writer, checkout, completed work,
+  verification limits and the exact next action.
+- A shared workflow covers both directions, regular checkpoints, abrupt interruption recovery,
+  staged/uncommitted work, writer transfer and independent QA.
+- `AGENTS.md`, `CLAUDE.md` and `TEAM.md` agree on the authorized Claude provider profile; existing
+  Codex defaults remain explicit and Claude can use the model selected in its runtime.
+- Copyable resume and handoff prompts are provided without claiming automatic switching.
+- Documentation links and routing consistency pass review. No application behavior changes.
+
+**Depends on.** None; explicit user workflow request on 2026-09-13.
+
+**Notes.** Agent Orchestrator owns this workflow. See
+[Codex ↔ Claude handoff](docs/agents/codex-claude-handoff.md).
+
+---
+
 # EPIC-1 - Foundation And Design System
 
 ## SCKRL-001 - Repo, CI, environments

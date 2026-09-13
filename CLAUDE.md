@@ -1,5 +1,14 @@
 # Sackerl Coding Agent Guide
 
+## Shared Codex / Claude Continuation
+
+Start with the **Current takeover checkpoint** in [status.md](status.md) and follow
+[the handoff workflow](docs/agents/codex-claude-handoff.md). The owner authorizes continuation in
+either assistant. Use `TEAM.md`'s Claude profile in Claude and Codex profile in Codex; GPT-specific
+role assignments are not a barrier to Claude takeover. Record actual model identity when known,
+preserve existing staged/unstaged work, and keep one writer per file set. Save checkpoints after
+milestones and before limits; independent QA is still required before Done.
+
 ## Repo Context
 
 Sackerl is a mobile-first grocery stock management app for private households. The core user journey is:
@@ -26,7 +35,7 @@ The active product-screen handoff is now `Design/Phase 2/sackerl phase 2`. Use i
 
 - Read [AGENTS.md](AGENTS.md), [PROGRAM.md](PROGRAM.md), [TEAM.md](TEAM.md), [status.md](status.md), [epic.md](epic.md), and [features.md](features.md) before starting substantial work.
 - Use `PROGRAM.md` for long-term sequencing, stage gates, safety constraints, and agent ownership. Use `status.md` and `features.md` for active ticket state and accepted implementation scope.
-- Follow the canonical model, delegation, escalation, and handoff policy in `TEAM.md`. Luna agents receive bounded work with stable contracts; unresolved architecture, privacy, transactional, health-safety, or recommendation-policy decisions must be escalated through the assigned GPT-5.5 specialist and the Sol Orchestrator.
+- Follow the active provider profile, delegation, escalation, and handoff policy in `TEAM.md`. Bounded implementation starts from stable contracts; unresolved architecture, privacy, transactional, health-safety, or recommendation-policy decisions go to the responsible specialist role and Orchestrator under that profile.
 - Work from explicit `SCKRL-XXX` tickets or direct user instructions.
 - Keep changes scoped to the active ticket.
 - Do not introduce unrelated refactors while the codebase is still forming.

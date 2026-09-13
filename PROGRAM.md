@@ -376,7 +376,9 @@ and durable goods have materially different safety and lifecycle rules.
 
 ### Model Assignment And Routing
 
-`TEAM.md` is the canonical source for team composition and model routing. The matrix below records the assignment in program context.
+`TEAM.md` is the canonical source for team composition and model routing. The matrix below records
+the Codex defaults in program context. Its user-authorized Claude provider profile overrides
+GPT-specific routing during Claude continuation; the roles and stage gates below still apply.
 
 | Role                     | Model          | Reasoning | Why this tier                                                                                                            |
 | ------------------------ | -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
