@@ -28,7 +28,7 @@ The foundation scaffold, Phase 1 design-system implementation, Slice 1 auth/prof
 - The repo uses pnpm workspaces with Turborepo.
 - `apps/web` is a Next.js App Router scaffold.
 - `apps/web` exposes authenticated API route handlers for profile, household, stock, receipts, receipt parsing, recipes, and shopping lists.
-- `apps/mobile` is an Expo SDK 54 + Expo Router app with auth-gated onboarding, storage-zone setup, stock and expiry flows, recipe suggestions, shopping lists, and a simulated receipt-capture foundation.
+- `apps/mobile` is an Expo SDK 57 + Expo Router app with auth-gated onboarding, storage-zone setup, stock and expiry flows, recipe suggestions, shopping lists, and a simulated receipt-capture foundation.
 - `packages/tokens` and `packages/ui` contain the Phase 1 design-system foundation, including the animated paper bag and tab-shell UI assets.
 - `packages/api-client` contains shared Supabase-backed auth, profile/household, stock, receipt, recipe, and shopping-list clients.
 - `.env*` files are ignored local files and must not be tracked in Git.

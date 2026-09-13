@@ -94,6 +94,24 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 
 **Notes.** This is Stage 0 P0.5 in `PROGRAM.md`. The initial artifact is `docs/product/measurement-plan.md`.
 
+## SCKRL-025 - Linked code overview
+
+**Summary.** Give the owner an Obsidian-friendly view of implemented user flows, modules, methods,
+callers and database boundaries, with a repeatable method-index refresh as AI changes the source.
+
+**Acceptance criteria**
+
+- Dedicated `docs/code-map` folder has a starting note, linked domain notes, source links and diagrams.
+- Current mobile, web/API, shared clients, UI, database and test boundaries are explained accurately.
+- Key methods show where they are used; a generated index provides source-derived call/reference links.
+- Static-analysis limits and unimplemented product behavior are explicit.
+- Regeneration/check commands and a change-maintenance guide keep the map reviewable and current.
+- Internal/source links and representative method relationships pass independent review.
+
+**Depends on.** SCKRL-310 (user-requested sequencing; documentation only).
+
+**Notes.** Explicit user request on 2026-09-13. No app behavior or provider changes.
+
 ---
 
 # EPIC-1 - Foundation And Design System
@@ -638,7 +656,59 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 - Existing items receive a forward-compatible default provenance without changing their visible dates.
 - Follow-up notification tickets can filter or phrase reminders based on expiry provenance.
 
+**Phone-QA refinement (2026-09-13).** Retain printed date marking (use-by, best-before, unknown)
+separately from source/confirmation. Define household calendar time zone to replace SCKRL-506's
+explicit Vienna pilot configuration. Unknown and estimated dates must not imply guaranteed safety.
+
 **Depends on.** SCKRL-405, SCKRL-023
+
+## SCKRL-407 - Add source-aware expiry warning and overdue interaction
+
+**Classification:** usability gap/new scope. **Priority:** P1 alpha trust. **Primary owner:** Frontend, with Backend support. **Stage:** Stage 1 after SCKRL-406. **Proposed state:** Todo after SCKRL-020 acceptance.
+
+**Summary:** Show estimated-versus-confirmed expiry clearly and provide accessible warning, overdue, and explicit discard interactions on Add Item, item detail, Stock, and Expiring surfaces.
+
+**Acceptance criteria:**
+
+- Estimated dates have a yellow warning affordance with an accessible label and a short explanation that invites exact package-date entry; the exact date remains user-editable.
+- Overdue status has a red visual treatment plus a non-color indicator, such as the requested double exclamation, with accessible text that names the state and source.
+- The interaction distinguishes printed use-by, printed best-before, user-entered, estimated, and unknown states when those facts are available; no generic “unsafe” claim is shown for every past date.
+- Trash/discard requires a visible user action and confirmation. A notification or warning never auto-deletes, marks discarded, or claims the user has already discarded the item.
+- Used, Compost, and any future Trash outcome retain the existing removal-outcome semantics and can be reloaded after the mutation; failed mutations leave the row unchanged and report the failure.
+- Every warning has a tap path and a screen-reader path. Red/yellow styling is supplementary, not the only signal.
+
+**Depends on:** SCKRL-406; coordinate with SCKRL-213, SCKRL-401, SCKRL-415, and SCKRL-908. Do not duplicate push-delivery implementation from SCKRL-411/412/421.
+
+## SCKRL-408 - Preserve expiry when snoozing reminders
+
+**Classification:** defect already identified by the mobile-first delivery review. **Priority:** P1 correctness. **Primary owner:** Backend, with Frontend and QA. **Stage:** Stage 1 before external reminders.
+
+**Summary:** Store snooze/reminder state separately from the item expiry fact. “Snooze 2d” postpones a reminder or view without changing the source date.
+
+**Acceptance criteria:**
+
+- Snoozing an item leaves the displayed expiry date and its SCKRL-406 provenance unchanged.
+- The item is omitted from the applicable reminder window only for the snooze period, then becomes eligible again according to the same expiry policy.
+- Repeated snoozes, timezone boundaries, app restart, failed update, and retry are deterministic and idempotent.
+- Recipe eligibility and discard decisions never treat a snooze as a new expiry date.
+
+**Depends on:** SCKRL-406 and SCKRL-401. Publish the snooze contract for SCKRL-411/412 before reminder delivery; those tickets must not create a circular dependency. This ticket is the follow-up named in `docs/product/mobile-first-delivery-plan.md`.
+
+## SCKRL-409 - Capture optional package evidence
+
+**Classification:** later product scope. **Priority:** P2. **Primary owner:** Infrastructure for media/evidence boundaries, with Backend, Frontend, and QA. **Stage:** Stage 2 or later.
+
+**Summary:** Let a user optionally attach a package-date photo and/or barcode to an existing stock item, keeping the flow quick and optional. Evidence supports identification and review; it does not prove expiry automatically.
+
+**Acceptance criteria:**
+
+- The user can skip evidence and retain an estimated or unknown item state without blocking normal stock management.
+- A photo is captured/uploaded through the private-media contract, with household authorization, size/type checks, retention/deletion behavior, and visible upload failure/retry.
+- A barcode is stored as optional product-identity evidence and is never treated alone as an expiry fact.
+- Any date extracted from an image is a candidate with provenance and user confirmation; it cannot silently replace the active expiry fact.
+- The product records whether evidence was user-provided, extracted, or confirmed, without claiming that evidence establishes a minimum safe lifetime.
+
+**Depends on:** SCKRL-307, SCKRL-308, SCKRL-406, and a Backend product-identity/provenance contract. This is intentionally later than the current simulated receipt media path.
 
 ## SCKRL-411 - Push registration
 
@@ -652,6 +722,10 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 
 **Depends on.** SCKRL-009
 
+**Phone-QA refinement (2026-09-13).** Coordinate SCKRL-406/407/408: controllable overdue
+reminders, source-appropriate wording, household-local timing, duplicate suppression, and a deep link
+to explicit item review/discard confirmation. Delivery never marks an item discarded automatically.
+
 ## SCKRL-412 - Daily reminder job
 
 **Summary.** Server cron at 08:00 local time per household. Sends a single notification listing top 3 expiring items.
@@ -664,6 +738,10 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 - No reminder if zero items expiring within 2 days.
 
 **Depends on.** SCKRL-411
+
+**Phone-QA refinement (2026-09-13).** Coordinate SCKRL-406/407/408: controllable overdue
+reminders, source-appropriate wording, household-local timing, duplicate suppression, and a deep link
+to explicit item review/discard confirmation. Delivery never marks an item discarded automatically.
 
 ## SCKRL-415 - Waste-avoided counter
 
@@ -690,6 +768,10 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 **Depends on.** SCKRL-412
 
 ---
+
+**Phone-QA refinement (2026-09-13).** Coordinate SCKRL-406/407/408: controllable overdue
+reminders, source-appropriate wording, household-local timing, duplicate suppression, and a deep link
+to explicit item review/discard confirmation. Delivery never marks an item discarded automatically.
 
 # EPIC-6 - Suggestions And Recipes
 
@@ -718,6 +800,64 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 - Button: "Cooked it" marks the matched stock items as used.
 
 **Depends on.** SCKRL-501
+
+## SCKRL-506 - Exclude overdue stock from recipe matching
+
+**Summary.** Phone QA found June-dated stock contributing to recipe suggestions in September.
+Only active, dated stock eligible on the recommendation calendar day may count as an ingredient.
+
+**Acceptance criteria**
+
+- List and detail matching exclude past, missing, null and invalid expiry dates from coverage and
+  every matched-item ID. Today remains date-eligible; this is not a food-safety guarantee.
+- The exported pure scorer takes an explicit valid calendar date and applies the same eligibility
+  rule, so direct use cannot bypass the gate.
+- With no eligible stock or no ingredient matches, list suggestions are empty even at minScore 0.
+  Direct recipe detail remains available with zero matched stock and missing ingredients.
+- The client derives one day per request from an injectable clock and explicit IANA time zone.
+  Mobile and web visibly configure Europe/Vienna for the current Austrian pilot; household time
+  zone persistence is a documented follow-up, not an implicit universal default.
+- Regression tests cover the reported old stock, today/yesterday, malformed/missing dates, leap
+  days, Vienna midnight and DST, empty stock, direct scorer and list/detail agreement.
+- No stock is deleted or expiry rewritten by recommendation. Estimates and printed dates are
+  not represented as proof food is safe; provenance/labeling remains SCKRL-406/407.
+
+**Depends on.** SCKRL-501, SCKRL-020 triage of the reported defect.
+
+**Notes.** Backend owns the shared contract and factory configuration; QA and Orchestrator review
+required. No media/OCR, nutrition, personalized recipes or notification implementation in this fix.
+Accepted contract: [SCKRL-506 recipe expiry eligibility](docs/features/sckrl-506-recipe-expiry-eligibility.md).
+
+## SCKRL-507 - Personal recipe book and priority
+
+**Classification:** later product scope. **Priority:** P2. **Primary owner:** Backend, with Frontend and QA. **Stage:** Stage 4 personalized recipes and meal timing.
+
+**Summary:** Support household-owned custom recipes that appear alongside suggestions and receive an explicit personal-priority treatment, while preserving recipe source, editing, and outcome provenance.
+
+**Acceptance criteria:**
+
+- A household member can create, edit, archive, and view a custom recipe with structured ingredients, instructions, servings, tags, and source metadata.
+- Personal recipes are clearly labeled and can be prioritized in the recipe book without falsifying match score or expiry eligibility.
+- Suggestions can include personal recipes only through the same stock-eligibility and hard-constraint contracts as seeded recipes.
+- Missing ingredients can flow to the existing shopping-list path, and any cooked/consumed action remains explicit and recoverable.
+- Recipe data has ownership, authorization, source/license handling, and an outcome path for cooked, skipped, or dismissed states.
+
+**Depends on:** SCKRL-501, SCKRL-505, structured recipe data, and the Stage 4 quantity-aware/non-destructive recipe contracts in `PROGRAM.md`.
+
+## SCKRL-508 - Recipe sharing and album voting discovery
+
+**Classification:** discovery/new scope. **Priority:** P3. **Decision owner:** Business Process Analyst and Orchestrator; Backend/Frontend support. **Stage:** Stage 4+ only after a product decision.
+
+**Summary:** Explore private or bounded recipe collections with an album-like sharing and voting metaphor. This is a product discovery ticket, not authorization to build a social feed.
+
+**Acceptance criteria for discovery:**
+
+- Define the sharing boundary, household/member model, visibility, invitations, reporting/moderation, deletion, and abuse controls.
+- Define whether votes rank recipes, collections, or suggestions, and how manipulation and personal data are handled.
+- Define source/license requirements for user-created and imported recipes.
+- Produce a decision record with pilot hypothesis, success/failure signals, and a recommendation to proceed, defer, or reject.
+
+**Depends on:** SCKRL-507, recipe provenance/licensing, privacy controls, and an explicit Orchestrator product decision. No implementation should start from the metaphor alone.
 
 ## SCKRL-511 - Shopping list
 
@@ -895,6 +1035,22 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 
 **Depends on.** all UI epics
 
+## SCKRL-902 - Add bounded swipe interactions on mobile
+
+**Classification:** usability gap. **Priority:** P1 mobile polish. **Primary owner:** Frontend, with QA/accessibility. **Stage:** Stage 1.
+
+**Summary:** Add native-feeling swipe affordances where they fit the information architecture, beginning with the Phase 2 Expiring row actions and any clearly defined horizontal option navigation. Keep visible tap controls and system back behavior.
+
+**Acceptance criteria:**
+
+- The ticket names each screen and gesture; “swipe navigation everywhere” is not accepted as an unbounded requirement.
+- Expiring-row swipe actions match the handoff where implemented: Used, Snooze 2d, and Compost, with a tap equivalent.
+- Swipe actions have confirmation and error recovery for mutations; they cannot bypass discard confirmation or change expiry while snoozing.
+- VoiceOver/accessibility labels, tap targets, keyboard/web fallback where applicable, reduced motion, and non-gesture alternatives pass QA.
+- Native back swipe and horizontal content gestures do not conflict, and the screen remains usable for one-handed interaction.
+
+**Depends on:** SCKRL-401, SCKRL-408, SCKRL-908, and a short Frontend interaction decision based on the user's intended surface.
+
 ## SCKRL-905 - Performance budget
 
 **Summary.** Define and enforce budgets.
@@ -984,6 +1140,22 @@ Keep the local SCKRL-003 decision that app text letter spacing is `0` across web
 - App Privacy nutrition labels filled in.
 
 **Depends on.** SCKRL-901
+
+## SCKRL-930 - Optional nutrition and calorie information discovery
+
+**Classification:** later health/recommendation scope. **Priority:** P3. **Primary owner:** Backend with Orchestrator/QA health-policy review; Frontend and Infrastructure support. **Stage:** Stage 6 only.
+
+**Summary:** Explore an explicitly optional question/opt-in for nutrition or calorie information on suggested and custom recipes. This ticket does not decide whether health data is collected or what guidance is safe.
+
+**Acceptance criteria for discovery and policy gate:**
+
+- Decide whether any health-related data is collected, with explicit purpose, consent, access, export, deletion, and retention boundaries.
+- Identify vetted regional nutrition/allergen sources, licensing, update cadence, provenance, and confidence requirements.
+- Define the UI boundary between general food information, optional wellness preferences, and medical advice; exclude diagnosis, treatment, eating-disorder, pregnancy, chronic-illness, and minor-specific guidance until reviewed.
+- Require hard allergy/explicit-constraint exclusions with zero tolerated known-allergen breaches before implementation.
+- Define opt-in, dismiss/skip, explanation, correction, and “not relevant” behavior for both seeded and personal recipes.
+
+**Depends on:** `PROGRAM.md` Stage 6 gates, privacy controls, structured recipe data, and a Backend/Orchestrator decision. Do not implement calories or nourishment as part of SCKRL-501, SCKRL-507, or the current phone-test fix.
 
 ## SCKRL-920 - Release pipeline
 

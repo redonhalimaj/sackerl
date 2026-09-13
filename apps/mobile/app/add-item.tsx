@@ -26,6 +26,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { useAuthSession } from '../lib/auth-session';
+import { normalizeZoneParam, parseQuantity } from '../lib/add-item-form';
 import { getMobileItemsClient } from '../lib/items';
 import { getMobileProfileClient } from '../lib/profile';
 
@@ -111,27 +112,6 @@ function zoneOptionFromStorageZone(zone: StorageZone): ZoneOption {
     key: zone.key,
     label: zone.label,
   };
-}
-
-function firstParamValue(value: string | readonly string[] | undefined): string | undefined {
-  if (typeof value === 'string') {
-    return value;
-  }
-
-  return value?.[0];
-}
-
-function normalizeZoneParam(value: string | readonly string[] | undefined): string | undefined {
-  const zone = firstParamValue(value)?.trim().toLowerCase();
-
-  return zone && /^[a-z][a-z0-9-]{1,31}$/.test(zone) ? zone : undefined;
-}
-
-function parseQuantity(value: string): number | null {
-  const normalized = value.trim().replace(',', '.');
-  const parsed = Number(normalized);
-
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
 function formatQuantity(value: number): string {

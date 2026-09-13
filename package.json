@@ -17,7 +17,9 @@
     "typecheck:mobile": "pnpm --filter @sackerl/mobile typecheck",
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,cjs,json,yml,yaml,css}\" \"README.md\" \"docs/environment.md\" \"docs/monorepo.md\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,cjs,json,yml,yaml,css}\" \"README.md\" \"docs/environment.md\" \"docs/monorepo.md\""
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,cjs,json,yml,yaml,css}\" \"README.md\" \"docs/environment.md\" \"docs/monorepo.md\"",
+    "code:map": "node scripts/update-code-map.mjs",
+    "code:map:check": "node scripts/update-code-map.mjs --check"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",

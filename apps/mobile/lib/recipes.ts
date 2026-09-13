@@ -5,7 +5,9 @@ import { mobileSupabaseAuthConfig } from './auth';
 let mobileRecipesClient: SackerlRecipesClient | undefined;
 
 export function getMobileRecipesClient(): SackerlRecipesClient {
-  mobileRecipesClient ??= createSackerlRecipesClient(mobileSupabaseAuthConfig);
+  mobileRecipesClient ??= createSackerlRecipesClient(mobileSupabaseAuthConfig, {
+    calendarTimeZone: 'Europe/Vienna',
+  });
 
   return mobileRecipesClient;
 }

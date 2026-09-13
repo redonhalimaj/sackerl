@@ -1688,8 +1688,12 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(27, 36, 24, 0.18)',
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
   modalRoot: {
     flex: 1,

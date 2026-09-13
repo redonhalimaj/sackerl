@@ -1,6 +1,6 @@
 # Sackerl Product And Delivery Program
 
-Last reviewed: 2026-09-06
+Last reviewed: 2026-09-11
 
 Status: Program direction. This document does not change ticket states.
 
@@ -15,6 +15,9 @@ program-level guide for sequencing, architecture, product safety, and agent owne
 - The Orchestrator and Business Process Analyst must turn the work packages below into explicit
   `SCKRL-XXX` tickets before implementation begins.
 - A work package in this file is not permission to implement unrelated scope.
+- [Mobile-first delivery review](docs/product/mobile-first-delivery-plan.md) defines the near-term
+  alpha, beta, and web-companion milestones, required ticket refinements, and release evidence.
+  These checkpoints refine sequencing; they do not mark tickets Done or waive stage exit criteria.
 
 ## Product Direction
 
@@ -471,23 +474,34 @@ Routing policy:
 
 ## Immediate Recommended Queue
 
-This order minimizes rework after the current product-owner QA pause:
+Use the [mobile-first delivery review](docs/product/mobile-first-delivery-plan.md) for the full
+milestone gates and ticket refinements. SCKRL-021 through SCKRL-024 are already Done; use their
+accepted artifacts rather than repeating their audits.
 
-1. Triage the broad current-version QA feedback into explicit tickets through SCKRL-020.
-2. Audit Done tickets against their literal acceptance criteria through SCKRL-021 and create follow-ups for real
-   capture, upload, OCR completion signaling, and app-level tests.
-3. Decide the minimal receipt-line, expiry-provenance, and inventory-event schema needed through SCKRL-023 before
-   placement creates more data.
-4. Establish the application test harness (SCKRL-906), private media storage (SCKRL-308), review data contract (SCKRL-310), and expiry provenance (SCKRL-406) as bounded foundation work.
-5. Implement real receipt acquisition (SCKRL-307) and an idempotent OCR job (SCKRL-309) against those contracts.
-6. Implement SCKRL-304 Review, then SCKRL-311 atomic receipt placement with both drag and tap paths.
-7. Implement SCKRL-306 Receipt history.
-8. Implement push preferences, registration, daily reminders, and notification inbox.
-9. Add product normalization, partial consumption, and extend the inventory event ledger after the initial SCKRL-311 acquisition events.
-10. Begin budget and buying-pattern discovery only after the resulting data can be measured.
-
-Premium gating and the web companion should not outrank the reliable food loop unless a concrete
-commercial or user-research result changes that priority.
+1. Use the locally completed SCKRL-906 harness for bounded SCKRL-907/908 coverage while collecting actual product-owner
+   findings through SCKRL-020. Keep SCKRL-304/307 gated by that feedback; independent foundation
+   work remains available. Refine snooze/expiry and destructive recipe-completion fixes into tickets.
+2. Establish SCKRL-310 review data and SCKRL-406 expiry provenance, then SCKRL-311 atomic placement.
+   Implement only the minimal provenance and acquisition ledger required by ADR-0001.
+3. In a separate workstream, establish SCKRL-308 private media, SCKRL-307 real acquisition, and an
+   installable staging mobile build plus reachable API from a bounded SCKRL-920 increment.
+4. Deliver SCKRL-309 durable OCR against private media and atomic parse-generation contracts.
+   Reconcile completion criteria with ADR-0001's polling decision before implementation.
+5. Deliver SCKRL-304 Review against its accepted contract, then SCKRL-305 drag and tap placement
+   using SCKRL-311. Integrate SCKRL-909 journey validation and SCKRL-306 history/resume. Demonstrate
+   the internal mobile alpha with real receipt input, restart recovery, and safe retries.
+6. Complete Stage 1 reminders, remaining acquisition formats, accessibility/device evidence, and
+   minimum account recovery/deletion, retention, monitoring, and release readiness before external
+   mobile beta acceptance. Split missing release controls into explicit tickets; do not defer the
+   minimum privacy lifecycle to learning work.
+7. Observe a small mobile pilot across repeated shopping cycles. Reconcile the beta evidence with
+   all Stage 1 exit criteria before opening Stage 2.
+8. Deliver a small web companion for shared-account auth, stock/expiry, and printable shopping lists.
+   Add web receipt upload only through the proven pipeline and explicitly scoped web review and
+   placement. Desktop parity and premium remain lower priority than reliable mobile use.
+9. Extend partial consumption and the inventory ledger, then normalization and other learning data,
+   using pilot findings to prioritize Stage 2 work. Begin buying-pattern discovery only when its
+   inputs and outcomes can be measured.
 
 ## Program Metrics
 

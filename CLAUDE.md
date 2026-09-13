@@ -14,7 +14,7 @@ The product should feel friendly, simple, accessible, and practical. It must not
 
 ## Current Stage
 
-The repo has the SCKRL-001 foundation scaffold in place. The selected baseline is pnpm workspaces + Turborepo, Next.js App Router for web, Expo SDK 54 with Expo Router for mobile, and shared packages for tokens, UI, and API-client boundaries.
+The repo has the SCKRL-001 foundation scaffold in place. The selected baseline is pnpm workspaces + Turborepo, Next.js App Router for web, Expo SDK 57 with Expo Router for mobile, and shared packages for tokens, UI, and API-client boundaries.
 
 The Phase 1 design-system foundation is implemented locally from the initial design handoff: shared tokens, typography, core primitives, icon registry, animated paper bag, brand mark/logo utilities, and the mobile tab shell. SCKRL-006 and SCKRL-007 are Done after screenshot-based visual QA.
 
@@ -54,7 +54,7 @@ pnpm --filter @sackerl/web build
 ## Current Structure
 
 - `apps/web`: Next.js App Router scaffold with profile, household, stock, receipt, parsing, recipe-suggestion, and shopping-list routes.
-- `apps/mobile`: Expo SDK 54 + Expo Router app with auth-gated onboarding, storage zones, stock and expiry management, recipe suggestions, shopping lists, and simulated receipt capture.
+- `apps/mobile`: Expo SDK 57 + Expo Router app with auth-gated onboarding, storage zones, stock and expiry management, recipe suggestions, shopping lists, and simulated receipt capture.
 - `packages/tokens`: shared design token package.
 - `packages/ui`: shared primitives, icons, logo utilities, and animated paper bag.
 - `packages/api-client`: shared Supabase-backed auth, profile/household, stock, receipt, parsing, recipe, and shopping-list clients.

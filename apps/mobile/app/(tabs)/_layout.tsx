@@ -1,7 +1,6 @@
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { colors, nativeTypography } from '@sackerl/tokens';
 import { iconDefinitions, resolveIconName, type IconName } from '@sackerl/ui';
-import { Tabs } from 'expo-router';
+import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import type { JSX } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

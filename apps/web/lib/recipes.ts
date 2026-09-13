@@ -10,7 +10,9 @@ import { webSupabaseAuthConfig } from './auth';
 let webRecipesClient: SackerlRecipesClient | undefined;
 
 export function getWebRecipesClient(): SackerlRecipesClient {
-  webRecipesClient ??= createSackerlRecipesClient(webSupabaseAuthConfig);
+  webRecipesClient ??= createSackerlRecipesClient(webSupabaseAuthConfig, {
+    calendarTimeZone: 'Europe/Vienna',
+  });
 
   return webRecipesClient;
 }

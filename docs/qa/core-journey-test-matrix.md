@@ -1,6 +1,6 @@
 # Sackerl Core Journey Test Matrix
 
-Last reviewed: 2026-09-06
+Last reviewed: 2026-09-11
 
 Ticket: SCKRL-022
 
@@ -27,10 +27,13 @@ valid, but it must record device, environment, date, and observed result.
 
 ## Current Baseline
 
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass on 2026-09-06.
-- The test suite contains 69 tests: 58 API-client tests, 8 UI tests, and 3 token tests.
-- `apps/mobile` and `apps/web` contain no test files. Their test scripts currently pass through
-  `--passWithNoTests`.
+- SCKRL-906 is Done locally after independent QA on 2026-09-11. Root tests/typecheck and both
+  app lint/typecheck commands passed; changed harness files passed formatting checks.
+- The test suite contains 75 tests: 58 API-client, 8 UI, 3 token, 5 mobile, and 1 web route test.
+- Both app scripts now fail on empty suites. Mobile coverage includes mounted React render/rerender
+  behavior with mocked native hosts; web coverage exercises the real household route's rejection
+  of missing credentials. This is deterministic harness evidence, not authenticated integration or
+  a native device journey. See [accepted harness and commands](application-test-harness.md).
 - Receipt parsing tests cover deterministic DE, EN, FR, and IT examples. They do not establish the
   accuracy target in SCKRL-810 or validate a real OCR provider.
 - Prior Expo Go and authenticated Supabase checks in `status.md` are useful L2/L4 evidence, but they
@@ -55,20 +58,22 @@ valid, but it must record device, environment, date, and observed result.
 
 ## Automation Order
 
-SCKRL-906 should deliver the harness incrementally in this order:
+Use the accepted SCKRL-906 harness for the following delivery order:
 
-1. Make mobile and web test commands fail when their expected test suites are absent.
-2. Add authenticated API integration coverage for household setup and manual item CRUD.
-3. Add mobile smoke coverage for onboarding, manual add/edit/remove, expiry actions, recipe detail,
+1. Keep the strict mobile/web empty-suite guard delivered by SCKRL-906.
+2. Add authenticated API integration coverage through SCKRL-907 for household setup and manual item CRUD.
+3. Add SCKRL-908 mobile smoke coverage for onboarding, manual add/edit/remove, expiry actions, recipe detail,
    and shopping list.
 4. Add deterministic receipt route tests for authorization, parse failure, idempotency, and data
    preservation.
 5. Extend the receipt smoke journey as SCKRL-307 through SCKRL-311 and SCKRL-304/305 land.
 6. Run physical-device and real-provider suites as explicit release checks rather than ordinary CI.
 
-Recommended layers are Vitest for server route/contract tests, React Native Testing Library for
-focused mobile behavior, and Maestro against an Expo development build for critical device journeys.
-Tool selection becomes binding only when SCKRL-906 records the dependency and CI cost decision.
+Accepted SCKRL-906 tooling is Vitest for route/contract tests and React Test Renderer 19.1.0 for
+focused mounted mobile component behavior. React Native Testing Library was an initial recommendation;
+it is not installed by this increment. Maestro remains selected for future device journeys against
+an Expo development build, with implementation in SCKRL-908. Tool boundaries and commands are recorded
+in [the harness documentation](application-test-harness.md).
 
 ## Test Data And Isolation
 

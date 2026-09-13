@@ -9,10 +9,14 @@ export type ParsedReceiptLineItem = {
   readonly categoryId: ItemCategoryId;
   readonly confidence: number;
   readonly confidenceLevel: ReceiptItemConfidenceLevel;
+  readonly discountCents: number | null;
   readonly inferredName: string;
+  readonly lineTotalCents: number | null;
   readonly qtyUnit: ItemQuantityUnit;
   readonly qtyValue: number;
   readonly rawText: string;
+  readonly taxCents: number | null;
+  readonly unitPriceCents: number | null;
 };
 
 export type ParsedReceiptDocument = {
@@ -279,10 +283,14 @@ function parseLineItem(line: string): ParsedReceiptLineItem | null {
     categoryId,
     confidence,
     confidenceLevel: confidenceLevelForScore(confidence),
+    discountCents: null,
     inferredName: productName.canonicalName,
+    lineTotalCents: null,
     qtyUnit: quantity.qtyUnit,
     qtyValue: quantity.qtyValue,
     rawText: line,
+    taxCents: null,
+    unitPriceCents: null,
   };
 }
 

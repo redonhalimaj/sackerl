@@ -22,11 +22,13 @@ export type DatabaseRecipeRow = {
 };
 
 export type RecipeStockItem = {
+  readonly expiresOn: string | null;
   readonly id: string;
   readonly name: string;
 };
 
 export type DatabaseRecipeStockItemRow = {
+  readonly expires_on?: string | null | undefined;
   readonly id: string;
   readonly name: string;
 };
@@ -67,6 +69,8 @@ export type GetRecipeSuggestionInput = {
 };
 
 export type RecipesClientOptions = {
+  readonly calendarTimeZone: string;
+  readonly clock?: (() => Date) | undefined;
   readonly fetch?: typeof fetch | undefined;
 };
 
@@ -76,7 +80,8 @@ const defaultSuggestionLimit = 5;
 const defaultMinimumScore = 0.7;
 const maxSuggestionLimit = 50;
 const recipeSelect = 'id,name,image,ingredients,serves,time_minutes,created_at';
-const stockItemSelect = 'id,name';
+const stockItemSelect = 'id,name,expires_on';
+const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 const animalProteinWords = new Set([
   'bacon',
   'beef',
@@ -120,6 +125,7 @@ export function mapRecipeRow(row: DatabaseRecipeRow): Recipe {
 
 export function mapRecipeStockItemRow(row: DatabaseRecipeStockItemRow): RecipeStockItem {
   return {
+    expiresOn: row.expires_on ?? null,
     id: row.id,
     name: row.name,
   };
@@ -128,10 +134,15 @@ export function mapRecipeStockItemRow(row: DatabaseRecipeStockItemRow): RecipeSt
 export function scoreRecipeAgainstStock(
   recipe: Recipe,
   stockItems: readonly RecipeStockItem[],
+  today: string,
 ): RecipeSuggestion {
+  const scoringDate = validateRecipeScoringDate(today);
+  const eligibleStockItems = stockItems.filter((item) =>
+    recipeStockItemIsEligibleForScoring(item, scoringDate),
+  );
   const matchedItemIds = new Set<string>();
   const matchedIngredients = recipe.ingredients.map((ingredient) => {
-    const ingredientItemIds = stockItems
+    const ingredientItemIds = eligibleStockItems
       .filter((item) => ingredientMatchesStockItem(ingredient, item.name))
       .map((item) => item.id);
 
@@ -229,6 +240,47 @@ function normaliseBaseUrl(url: string): string {
   return url.replace(/\/+$/, '');
 }
 
+function assertCalendarTimeZone(value: string): string {
+  const calendarTimeZone = typeof value === 'string' ? value.trim() : '';
+
+  if (!calendarTimeZone) {
+    throw new Error('calendarTimeZone is required.');
+  }
+
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: calendarTimeZone });
+  } catch {
+    throw new Error('calendarTimeZone must be a valid IANA time zone.');
+  }
+
+  return calendarTimeZone;
+}
+
+function calendarDateInTimeZone(date: Date, timeZone: string): string {
+  if (Number.isNaN(date.getTime())) {
+    throw new Error('clock must return a valid Date.');
+  }
+
+  const parts = new Intl.DateTimeFormat('en', {
+    calendar: 'gregory',
+    day: '2-digit',
+    month: '2-digit',
+    numberingSystem: 'latn',
+    timeZone,
+    year: 'numeric',
+  }).formatToParts(date);
+  const values = new Map(parts.map((part) => [part.type, part.value]));
+  const year = values.get('year')?.padStart(4, '0');
+  const month = values.get('month');
+  const day = values.get('day');
+
+  if (!year || !month || !day) {
+    throw new Error('Unable to resolve calendar date.');
+  }
+
+  return `${year}-${month}-${day}`;
+}
+
 function encodeQuery(params: Record<string, QueryValue | undefined>): string {
   const query = new URLSearchParams();
 
@@ -290,6 +342,28 @@ function isWordSubset(candidate: readonly string[], target: readonly string[]): 
   return candidate.every((word) => targetWords.has(word));
 }
 
+function isValidIsoDate(value: string): boolean {
+  if (!isoDatePattern.test(value)) {
+    return false;
+  }
+
+  const date = new Date(`${value}T00:00:00.000Z`);
+
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function validateRecipeScoringDate(value: string): string {
+  if (!isValidIsoDate(value)) {
+    throw new ApiRequestError('today must be an ISO date.', 400);
+  }
+
+  return value;
+}
+
+function recipeStockItemIsEligibleForScoring(item: RecipeStockItem, today: string): boolean {
+  return item.expiresOn !== null && isValidIsoDate(item.expiresOn) && item.expiresOn >= today;
+}
+
 function validateHouseholdId(householdId: string): string {
   const value = householdId.trim();
 
@@ -342,13 +416,17 @@ async function readErrorMessage(response: Response): Promise<string> {
 
 export class SackerlRecipesClient {
   private readonly anonKey: string;
+  private readonly calendarTimeZone: string;
+  private readonly clock: () => Date;
   private readonly fetch: typeof fetch;
   private readonly restUrl: string;
 
-  constructor(config: SupabaseAuthConfig, options: RecipesClientOptions = {}) {
+  constructor(config: SupabaseAuthConfig, options: RecipesClientOptions) {
     const resolvedConfig = assertSupabaseAuthConfig(config);
 
     this.anonKey = resolvedConfig.anonKey;
+    this.calendarTimeZone = assertCalendarTimeZone(options.calendarTimeZone);
+    this.clock = options.clock ?? (() => new Date());
     this.fetch = options.fetch ?? fetch;
     this.restUrl = `${normaliseBaseUrl(resolvedConfig.url)}/rest/v1`;
   }
@@ -360,6 +438,7 @@ export class SackerlRecipesClient {
     const householdId = validateHouseholdId(input.householdId);
     const limit = normaliseSuggestionLimit(input.limit);
     const minScore = normaliseMinimumScore(input.minScore);
+    const today = this.today();
     const recipeRows = await this.requestRows<DatabaseRecipeRow>('recipes', context, {
       order: 'name.asc',
       select: recipeSelect,
@@ -367,8 +446,8 @@ export class SackerlRecipesClient {
     const stockItems = await this.listActiveStockItems(context, householdId);
     const suggestions = recipeRows
       .map(mapRecipeRow)
-      .map((recipe) => scoreRecipeAgainstStock(recipe, stockItems))
-      .filter((suggestion) => suggestion.score >= minScore)
+      .map((recipe) => scoreRecipeAgainstStock(recipe, stockItems, today))
+      .filter((suggestion) => suggestion.coveredIngredientCount > 0 && suggestion.score >= minScore)
       .sort(compareRecipeSuggestions)
       .slice(0, limit);
 
@@ -381,6 +460,7 @@ export class SackerlRecipesClient {
   ): Promise<RecipeSuggestion> {
     const householdId = validateHouseholdId(input.householdId);
     const recipeId = validateRecipeId(input.recipeId);
+    const today = this.today();
     const recipeRows = await this.requestRows<DatabaseRecipeRow>('recipes', context, {
       id: `eq.${recipeId}`,
       limit: 1,
@@ -395,6 +475,7 @@ export class SackerlRecipesClient {
     return scoreRecipeAgainstStock(
       mapRecipeRow(recipeRow),
       await this.listActiveStockItems(context, householdId),
+      today,
     );
   }
 
@@ -409,6 +490,10 @@ export class SackerlRecipesClient {
     });
 
     return stockRows.map(mapRecipeStockItemRow);
+  }
+
+  private today(): string {
+    return calendarDateInTimeZone(this.clock(), this.calendarTimeZone);
   }
 
   private async requestRows<T>(
@@ -450,7 +535,7 @@ function compareRecipeSuggestions(a: RecipeSuggestion, b: RecipeSuggestion): num
 
 export function createSackerlRecipesClient(
   config: SupabaseAuthConfig,
-  options?: RecipesClientOptions,
+  options: RecipesClientOptions,
 ): SackerlRecipesClient {
   return new SackerlRecipesClient(config, options);
 }
