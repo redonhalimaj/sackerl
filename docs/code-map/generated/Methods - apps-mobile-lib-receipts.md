@@ -14,4 +14,4 @@ TypeScript. [apps/mobile/lib/receipts.ts](<../../../apps/mobile/lib/receipts.ts>
 
 Calls / references: [[Methods - packages-api-client-src-receipts#^s-8c2d03b805c4|createSackerlReceiptsClient]] (call)
 
-Used by: [[Methods - apps-mobile-app-tabs-scan#^s-3dcdc0f04877|ScanRoute.createUploadedReceipt]] (call), [[Methods - apps-mobile-app-receipt-review-id-#^s-1acc32fe1b86|ReceiptReviewRoute.handleSaveReview]] (call), [[Methods - apps-mobile-app-receipt-review-id-#^s-6a1bc4b188f9|ReceiptReviewRoute.loadReview]] (call)
+Used by: [[Methods - apps-mobile-app-tabs-scan#^s-3dcdc0f04877|ScanRoute.createUploadedReceipt]] (call), [[Methods - apps-mobile-app-tabs-scan#^s-f39b8c5839b0|ScanRoute.handleLoadSample]] (call), [[Methods - apps-mobile-app-receipt-review-id-#^s-1acc32fe1b86|ReceiptReviewRoute.handleSaveReview]] (call), [[Methods - apps-mobile-app-receipt-review-id-#^s-6a1bc4b188f9|ReceiptReviewRoute.loadReview]] (call)

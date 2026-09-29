@@ -520,6 +520,15 @@ or an explicit switch, with one shared handoff and consistent team ownership.
 
 ## SCKRL-304 - Review screen
 
+Development QA entry (2026-09-29): **Scan → Load sample receipt**, gated by both `__DEV__` and
+`EXPO_PUBLIC_APP_ENV=dev`, saves a clearly labelled synthetic receipt and unresolved Milk/Bananas/Bread
+rows through existing authenticated commands. It opens the real review editor without adding stock.
+It reuses the mounted Scan session's attempt on retry, including an already edited generation;
+uncertain creation is reconciled by a stable URI without another insert. App restart loses recovery
+state. This is a QA aid, not real acquisition/OCR. See
+[Council decision](docs/agents/council-decisions/COUNCIL-20260929-01.md) and
+[source QA](docs/qa/sckrl-304-sample-review.md); connected/native gates remain open.
+
 **Summary.** Editable list of parsed items with confidence chips, original raw text on each row.
 
 **Acceptance criteria**

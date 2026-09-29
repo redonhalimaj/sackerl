@@ -9,6 +9,11 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { useAuthSession } from '../../lib/auth-session';
 import { getMobileProfileClient } from '../../lib/profile';
 import { getMobileReceiptsClient } from '../../lib/receipts';
+import {
+  createSampleReceiptAttempt,
+  loadSampleReceipt,
+  type SampleReceiptAttempt,
+} from '../../lib/sample-receipt';
 
 type ScanState = 'aligned' | 'capturing' | 'misaligned';
 type ReceiptCaptureSource = 'camera' | 'gallery' | 'pdf';
@@ -147,6 +152,8 @@ export default function ScanRoute(): JSX.Element {
   const [statusText, setStatusText] = useState('Align receipt inside frame - hold steady');
   const captureInFlight = useRef(false);
   const captureRequest = useRef(0);
+  const sampleAttempt = useRef<SampleReceiptAttempt | null>(null);
+  const sampleEnabled = __DEV__ && process.env.EXPO_PUBLIC_APP_ENV === 'dev';
   const captureDisabled = scanState === 'misaligned' || scanState === 'capturing';
 
   useFocusEffect(
@@ -206,6 +213,49 @@ export default function ScanRoute(): JSX.Element {
 
   function handleCapture() {
     void createUploadedReceipt('camera');
+  }
+
+  async function handleLoadSample() {
+    if (
+      !(__DEV__ && process.env.EXPO_PUBLIC_APP_ENV === 'dev') ||
+      captureDisabled ||
+      captureInFlight.current
+    )
+      return;
+    captureInFlight.current = true;
+    const request = ++captureRequest.current;
+    const isCurrent = () => request === captureRequest.current;
+    setScanState('capturing');
+    setStatusText('Preparing sample receipt...');
+    try {
+      const context = buildContext(session);
+      const household = await getMobileProfileClient().getHousehold(context);
+      if (!isCurrent()) return;
+      if (!household) throw new Error('Household not found.');
+      if (
+        sampleAttempt.current?.userId !== context.user.id ||
+        sampleAttempt.current?.householdId !== household.id
+      ) {
+        sampleAttempt.current = createSampleReceiptAttempt(context.user.id, household.id);
+      }
+      const id = await loadSampleReceipt(
+        getMobileReceiptsClient(),
+        context,
+        sampleAttempt.current,
+        isCurrent,
+      );
+      if (!isCurrent() || !id) return;
+      setStatusText('Sample ready. Opening review...');
+      router.push({ pathname: '/receipt-review/[id]', params: { id } });
+    } catch (error) {
+      if (!isCurrent()) return;
+      setStatusText(error instanceof Error ? error.message : 'Unable to load sample receipt.');
+    } finally {
+      if (isCurrent()) {
+        captureInFlight.current = false;
+        setScanState('aligned');
+      }
+    }
   }
 
   function handleHelp() {
@@ -269,6 +319,25 @@ export default function ScanRoute(): JSX.Element {
           <Text style={styles.statusText}>{statusText}</Text>
         </View>
         <Text style={styles.statusText}>Capture is simulated. No photo is uploaded yet.</Text>
+        {sampleEnabled ? (
+          <View style={styles.samplePanel}>
+            <Text style={styles.sampleHint}>
+              Development sample · not a real purchase. Saves to your household; no stock is added.
+            </Text>
+            <Pressable
+              accessibilityLabel="Load sample receipt"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: captureDisabled }}
+              disabled={captureDisabled}
+              onPress={() => {
+                void handleLoadSample();
+              }}
+              style={({ pressed }) => [styles.sampleButton, pressed ? styles.pressed : null]}
+            >
+              <Text style={styles.sideActionText}>Load sample receipt</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         <View style={styles.bottomActions}>
           <Pressable
@@ -330,6 +399,16 @@ export default function ScanRoute(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  samplePanel: { gap: space[2], marginTop: space[3] },
+  sampleHint: { color: cameraText, fontSize: 12, lineHeight: 17, textAlign: 'center' },
+  sampleButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.amber,
+  },
   bottomActions: {
     alignItems: 'center',
     flexDirection: 'row',

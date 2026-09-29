@@ -238,7 +238,7 @@ TypeScript. [packages/api-client/src/receipts.ts](<../../../packages/api-client/
 
 Calls / references: [[Methods - packages-api-client-src-profile#^s-c2ace5fd70e5|ApiRequestError.constructor]] (call), [[Methods - packages-api-client-src-receipts#^s-07678b3a205d|mapReceiptRow]] (call), [[Methods - packages-api-client-src-receipts#^s-67fe21482812|normaliseCurrency]] (call), [[Methods - packages-api-client-src-receipts#^s-1985ba944452|normaliseReceiptStatus]] (call), [[Methods - packages-api-client-src-receipts#^s-b88b220e641e|normaliseStoreName]] (call), [[Methods - packages-api-client-src-receipts#^s-73b622931bf5|normaliseTimestamp]] (call), [[Methods - packages-api-client-src-receipts#^s-cc11d48d4bf6|normaliseTotalCents]] (call), [[Methods - packages-api-client-src-receipts#^s-9fb092f9e77f|SackerlReceiptsClient.request]] (call), [[Methods - packages-api-client-src-receipts#^s-600360c42d86|validateHouseholdId]] (call), [[Methods - packages-api-client-src-receipts#^s-c693b4b11963|validateImageUrl]] (call)
 
-Used by: [[Methods - apps-mobile-app-tabs-scan#^s-3dcdc0f04877|ScanRoute.createUploadedReceipt]] (call), [[Methods - apps-web-app-receipts-route#^s-d27589dd996c|POST]] (call)
+Used by: [[Methods - apps-mobile-app-tabs-scan#^s-3dcdc0f04877|ScanRoute.createUploadedReceipt]] (call), [[Methods - apps-mobile-lib-sample-receipt#^s-f259248e9730|loadSampleReceipt]] (call), [[Methods - apps-web-app-receipts-route#^s-d27589dd996c|POST]] (call)
 
 ## SackerlReceiptsClient.getReceipt
 
@@ -254,7 +254,7 @@ TypeScript. [packages/api-client/src/receipts.ts](<../../../packages/api-client/
 
 Calls / references: [[Methods - packages-api-client-src-receipts#^s-e083c6e97671|mapReceiptReviewSnapshot]] (call), [[Methods - packages-api-client-src-receipts#^s-f9ea6594bd00|SackerlReceiptsClient.requestRpcJson]] (call), [[Methods - packages-api-client-src-receipts#^s-600360c42d86|validateHouseholdId]] (call), [[Methods - packages-api-client-src-receipts#^s-9121b322f8e5|validateReceiptId]] (call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-e61d34f22abd|get_receipt_review]] (RPC)
 
-Used by: [[Methods - apps-mobile-app-receipt-review-id-#^s-6a1bc4b188f9|ReceiptReviewRoute.loadReview]] (call), [[Methods - apps-web-app-receipts-id-items-route#^s-c1f484f1c053|GET]] (call), [[Methods - packages-api-client-src-receipts#^s-ca084ff7a017|SackerlReceiptsClient.listReceiptItems]] (call)
+Used by: [[Methods - apps-mobile-app-receipt-review-id-#^s-6a1bc4b188f9|ReceiptReviewRoute.loadReview]] (call), [[Methods - apps-mobile-lib-sample-receipt#^s-f259248e9730|loadSampleReceipt]] (call), [[Methods - apps-web-app-receipts-id-items-route#^s-c1f484f1c053|GET]] (call), [[Methods - packages-api-client-src-receipts#^s-ca084ff7a017|SackerlReceiptsClient.listReceiptItems]] (call)
 
 ## SackerlReceiptsClient.listReceiptItems
 
@@ -270,7 +270,7 @@ TypeScript. [packages/api-client/src/receipts.ts](<../../../packages/api-client/
 
 Calls / references: [[Methods - packages-api-client-src-receipts#^s-55cf71738f68|clampPageSize]] (call), [[Methods - packages-api-client-src-receipts#^s-07678b3a205d|mapReceiptRow]] (argument reference), [[Methods - packages-api-client-src-receipts#^s-f16c6946592c|normaliseOptionalReceiptStatus]] (call), [[Methods - packages-api-client-src-receipts#^s-575f9b0964ef|parsePositiveInteger]] (call), [[Methods - packages-api-client-src-receipts#^s-9fb092f9e77f|SackerlReceiptsClient.request]] (call), [[Methods - packages-api-client-src-receipts#^s-600360c42d86|validateHouseholdId]] (call)
 
-Used by: [[Methods - apps-web-app-receipts-route#^s-4b941b39d78a|GET]] (call)
+Used by: [[Methods - apps-mobile-lib-sample-receipt#^s-f259248e9730|loadSampleReceipt]] (call), [[Methods - apps-web-app-receipts-route#^s-4b941b39d78a|GET]] (call)
 
 ## SackerlReceiptsClient.markReceiptParseFailed
 
@@ -286,7 +286,7 @@ TypeScript. [packages/api-client/src/receipts.ts](<../../../packages/api-client/
 
 Calls / references: [[Methods - packages-api-client-src-profile#^s-c2ace5fd70e5|ApiRequestError.constructor]] (call), [[Methods - packages-api-client-src-receipts#^s-e083c6e97671|mapReceiptReviewSnapshot]] (call), [[Methods - packages-api-client-src-receipts#^s-67fe21482812|normaliseCurrency]] (call), [[Methods - packages-api-client-src-receipts#^s-b4f926e8eb8f|normaliseDate]] (call), [[Methods - packages-api-client-src-receipts#^s-b88b220e641e|normaliseStoreName]] (call), [[Methods - packages-api-client-src-receipts#^s-cc11d48d4bf6|normaliseTotalCents]] (call), [[Methods - packages-api-client-src-receipts#^s-d9a86560f8a9|normaliseVersion]] (call), [[Methods - packages-api-client-src-receipts#^s-08c1624d4134|prepareParsedReceiptItemRow]] (argument reference), [[Methods - packages-api-client-src-receipts#^s-f9ea6594bd00|SackerlReceiptsClient.requestRpcJson]] (call), [[Methods - packages-api-client-src-receipts#^s-83d079e2bbb8|validateGenerationId]] (call), [[Methods - packages-api-client-src-receipts#^s-600360c42d86|validateHouseholdId]] (call), [[Methods - packages-api-client-src-receipts#^s-9121b322f8e5|validateReceiptId]] (call), [[Methods - packages-api-client-src-receipts#^s-9d81b2974936|validateReviewRevision]] (call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-76aaed087c14|promote_receipt_parse]] (RPC)
 
-Used by: [[Methods - apps-web-lib-receipt-parsing#^s-74590945c56c|runReceiptParseJob]] (call), [[Methods - packages-api-client-src-receipts#^s-13656e7f2011|SackerlReceiptsClient.replaceReceiptItems]] (call)
+Used by: [[Methods - apps-mobile-lib-sample-receipt#^s-f259248e9730|loadSampleReceipt]] (call), [[Methods - apps-web-lib-receipt-parsing#^s-74590945c56c|runReceiptParseJob]] (call), [[Methods - packages-api-client-src-receipts#^s-13656e7f2011|SackerlReceiptsClient.replaceReceiptItems]] (call)
 
 ## SackerlReceiptsClient.replaceReceiptItems
 

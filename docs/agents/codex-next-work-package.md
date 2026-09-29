@@ -6,7 +6,20 @@ The owner requests continuation in GPT/Codex, not Claude. This supersedes the ou
 `claude-next-work-package.md` and the mandatory alternating-assistant instructions from September 28.
 There is no Claude implementation to collect or validate. Keep future checkpoints for Codex unless
 the owner explicitly requests another provider. This update is documentation only; it does not start
-a feature or waive a QA gate.
+a feature or waive a QA gate. The later sample addition below supersedes that earlier scope note.
+
+**Latest increment — development sample (2026-09-29):** Council
+[COUNCIL-20260929-01](council-decisions/COUNCIL-20260929-01.md) accepted a development-only
+**Scan → Load sample receipt** path after the owner had no parsed fixture to open.
+`apps/mobile/lib/sample-receipt.ts`, Scan and its tests are local uncommitted changes on top of
+published commit `5f3c395` / [draft PR #4](https://github.com/redonhalimaj/sackerl/pull/4).
+Milk, Bananas and Bread are clearly synthetic unresolved parser rows saved via existing authenticated
+commands; no stock write. Same-session retry recovers uncertain creation by URI and reuses a known
+receipt/generation, preserving edits. Recovery state is in memory and is lost on restart/unmount.
+Independent [source QA](../qa/sckrl-304-sample-review.md) supports Review; connected creation/read/save
+and native visual/accessibility validation remain open. Root implemented; Deputy and QA explicitly
+used configured `gpt-6-sol` / `high` fallbacks (preferred routes unavailable). No migration/deployment
+or additional publication occurred. Continue with owner QA before choosing the next implementation.
 
 **Later owner authorization, 2026-09-29:** commit the accumulated branch work and open a PR into
 `dev`. Staging, commit and branch push are authorized for that publication; merge, deployment and
@@ -30,7 +43,7 @@ instructions as a bar to the explicitly requested publication.
 4. On a development resume, use the Council to triage the latest owner findings before selecting
    one bounded task. SCKRL-308 remains the previously accepted next foundation candidate; its
    implementation contract has not been ratified. Do not automatically start every finding or treat
-   the proposed development-only receipt preview as approved work.
+   further receipt acquisition or OCR work as approved by the bounded sample addition above.
 5. Name the ticket, scope, actual available models and file owners in status before implementation.
    Use TEAM.md's Codex routing. If an exact model is unavailable, record the limitation and resolve
    routing explicitly; never claim an unavailable model ran. Retain separate independent QA.

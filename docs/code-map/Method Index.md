@@ -6,7 +6,7 @@ tags: [code-map, generated]
 
 [[Sackerl Code Map]] · [[Maintenance]]
 
-Generated from 78 runtime TypeScript files and 11 SQL migrations: **645 named callables**, **1164 resolved relationships**, **81 module notes**.
+Generated from 79 runtime TypeScript files and 11 SQL migrations: **649 named callables**, **1177 resolved relationships**, **82 module notes**.
 
 Open a module to see each method, its source line, what it calls and what uses it. In Obsidian, open its Local graph to explore connected modules.
 
@@ -30,7 +30,7 @@ Open a module to see each method, its source line, what it calls and what uses i
 | [[Methods - apps-mobile-app-tabs-layout\|apps/mobile/app/(tabs)/_layout.tsx]] | 3 |
 | [[Methods - apps-mobile-app-tabs-expiring\|apps/mobile/app/(tabs)/expiring.tsx]] | 26 |
 | [[Methods - apps-mobile-app-tabs-index\|apps/mobile/app/(tabs)/index.tsx]] | 24 |
-| [[Methods - apps-mobile-app-tabs-scan\|apps/mobile/app/(tabs)/scan.tsx]] | 14 |
+| [[Methods - apps-mobile-app-tabs-scan\|apps/mobile/app/(tabs)/scan.tsx]] | 16 |
 | [[Methods - apps-mobile-app-tabs-settings\|apps/mobile/app/(tabs)/settings.tsx]] | 3 |
 | [[Methods - apps-mobile-app-tabs-stock\|apps/mobile/app/(tabs)/stock.tsx]] | 51 |
 | [[Methods - apps-mobile-app-add-item\|apps/mobile/app/add-item.tsx]] | 19 |
@@ -51,6 +51,7 @@ Open a module to see each method, its source line, what it calls and what uses i
 | [[Methods - apps-mobile-lib-receipt-review\|apps/mobile/lib/receipt-review.ts]] | 15 |
 | [[Methods - apps-mobile-lib-receipts\|apps/mobile/lib/receipts.ts]] | 1 |
 | [[Methods - apps-mobile-lib-recipes\|apps/mobile/lib/recipes.ts]] | 1 |
+| [[Methods - apps-mobile-lib-sample-receipt\|apps/mobile/lib/sample-receipt.ts]] | 2 |
 | [[Methods - apps-mobile-lib-shopping-list\|apps/mobile/lib/shopping-list.ts]] | 1 |
 | [[Methods - apps-web-app-design-components-page\|apps/web/app/design-components/page.tsx]] | 4 |
 | [[Methods - apps-web-app-design-icons-page\|apps/web/app/design-icons/page.tsx]] | 1 |
