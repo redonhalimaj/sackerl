@@ -58,7 +58,7 @@ Used by: No resolved internal caller; may be a framework entry point or dynamic 
 
 ## RecipeDetailRoute.handleAddMissingToShoppingList
 
-TypeScript. [apps/mobile/app/recipe/[id].tsx](<../../../apps/mobile/app/recipe/[id].tsx>), line 206. ^s-8891435c58e2
+TypeScript. [apps/mobile/app/recipe/[id].tsx](<../../../apps/mobile/app/recipe/[id].tsx>), line 208. ^s-8891435c58e2
 
 Calls / references: [[Methods - apps-mobile-app-recipe-id-#^s-259dc5d967c9|formatIngredient]] (call), [[Methods - apps-mobile-lib-profile#^s-fb6f37989700|getMobileProfileClient]] (call), [[Methods - apps-mobile-lib-shopping-list#^s-8679d3609ef1|getMobileShoppingListClient]] (call), [[Methods - packages-api-client-src-profile#^s-47e9083eeefa|SackerlProfileClient.getHousehold]] (call), [[Methods - packages-api-client-src-shopping-list#^s-4d9240ff2091|SackerlShoppingListClient.createItemsBatch]] (call)
 
@@ -66,7 +66,7 @@ Used by: [[Methods - apps-mobile-app-recipe-id-#^s-d6f999984fe6|RecipeDetailRout
 
 ## RecipeDetailRoute.handleCookedIt
 
-TypeScript. [apps/mobile/app/recipe/[id].tsx](<../../../apps/mobile/app/recipe/[id].tsx>), line 154. ^s-2b1f2324068f
+TypeScript. [apps/mobile/app/recipe/[id].tsx](<../../../apps/mobile/app/recipe/[id].tsx>), line 156. ^s-2b1f2324068f
 
 Calls / references: [[Methods - apps-mobile-lib-items#^s-fcacdce6e990|getMobileItemsClient]] (call), [[Methods - apps-mobile-lib-profile#^s-fb6f37989700|getMobileProfileClient]] (call), [[Methods - packages-api-client-src-items#^s-ca99b9591151|SackerlItemsClient.deleteItem]] (call), [[Methods - packages-api-client-src-profile#^s-47e9083eeefa|SackerlProfileClient.getHousehold]] (call)
 

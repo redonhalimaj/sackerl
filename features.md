@@ -532,6 +532,15 @@ or an explicit switch, with one shared handoff and consistent team ownership.
 
 **Depends on.** SCKRL-020, SCKRL-310
 
+**Accepted SCKRL-304 boundary (2026-09-28).** Council v2/v3 in
+[COUNCIL-20260928-02](docs/agents/council-decisions/COUNCIL-20260928-02.md) applies the SCKRL-310
+contract: confidence never approves rows, corrections require explicit review, and the full active
+line list is saved atomically with generation/revision guards. `Save review` is functional;
+`Continue to placement` stays disabled with explanatory copy until SCKRL-305/311 activates it.
+All-excluded reviews can save but have no items to place. No-generation receipts offer refresh and
+manual grocery entry. SCKRL-304's remaining acceptance gates are its own connected and native
+visual/accessibility checks; it does not acquire a circular dependency on completion of SCKRL-305.
+
 ## SCKRL-305 - Placement screen (drag and drop)
 
 **Summary.** Drag each item chip into a zone target. Targets highlight on hover, items snap home or revert on miss.

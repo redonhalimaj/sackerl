@@ -82,7 +82,7 @@ Used by: No resolved internal caller; may be a framework entry point or dynamic 
 
 ## ScanRoute.createUploadedReceipt
 
-TypeScript. [apps/mobile/app/(tabs)/scan.tsx](<../../../apps/mobile/app/(tabs)/scan.tsx>), line 150. ^s-3dcdc0f04877
+TypeScript. [apps/mobile/app/(tabs)/scan.tsx](<../../../apps/mobile/app/(tabs)/scan.tsx>), line 164. ^s-3dcdc0f04877
 
 Calls / references: [[Methods - apps-mobile-app-tabs-scan#^s-671c5b979186|buildContext]] (call), [[Methods - apps-mobile-app-tabs-scan#^s-d568b39511c1|receiptMockUrl]] (call), [[Methods - apps-mobile-app-tabs-scan#^s-b196c45a2748|wait]] (call), [[Methods - apps-mobile-lib-profile#^s-fb6f37989700|getMobileProfileClient]] (call), [[Methods - apps-mobile-lib-receipts#^s-733084a658ec|getMobileReceiptsClient]] (call), [[Methods - packages-api-client-src-profile#^s-47e9083eeefa|SackerlProfileClient.getHousehold]] (call), [[Methods - packages-api-client-src-receipts#^s-74a20325b8e7|SackerlReceiptsClient.createReceipt]] (call)
 
@@ -90,7 +90,7 @@ Used by: [[Methods - apps-mobile-app-tabs-scan#^s-f0b9a2a50b26|ScanRoute.handleC
 
 ## ScanRoute.handleCapture
 
-TypeScript. [apps/mobile/app/(tabs)/scan.tsx](<../../../apps/mobile/app/(tabs)/scan.tsx>), line 183. ^s-f0b9a2a50b26
+TypeScript. [apps/mobile/app/(tabs)/scan.tsx](<../../../apps/mobile/app/(tabs)/scan.tsx>), line 207. ^s-f0b9a2a50b26
 
 Calls / references: [[Methods - apps-mobile-app-tabs-scan#^s-3dcdc0f04877|ScanRoute.createUploadedReceipt]] (call)
 
@@ -98,7 +98,7 @@ Used by: [[Methods - apps-mobile-app-tabs-scan#^s-65e397b9af94|ScanRoute]] (JSX 
 
 ## ScanRoute.handleHelp
 
-TypeScript. [apps/mobile/app/(tabs)/scan.tsx](<../../../apps/mobile/app/(tabs)/scan.tsx>), line 187. ^s-48c574d10c1c
+TypeScript. [apps/mobile/app/(tabs)/scan.tsx](<../../../apps/mobile/app/(tabs)/scan.tsx>), line 211. ^s-48c574d10c1c
 
 Calls / references: No resolved internal relationship.
 
@@ -106,7 +106,7 @@ Used by: [[Methods - apps-mobile-app-tabs-scan#^s-65e397b9af94|ScanRoute]] (JSX 
 
 ## ScanRoute.handleImport
 
-TypeScript. [apps/mobile/app/(tabs)/scan.tsx](<../../../apps/mobile/app/(tabs)/scan.tsx>), line 191. ^s-8e4cac99a886
+TypeScript. [apps/mobile/app/(tabs)/scan.tsx](<../../../apps/mobile/app/(tabs)/scan.tsx>), line 215. ^s-8e4cac99a886
 
 Calls / references: [[Methods - apps-mobile-app-tabs-scan#^s-3dcdc0f04877|ScanRoute.createUploadedReceipt]] (call)
 

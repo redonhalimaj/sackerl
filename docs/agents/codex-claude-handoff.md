@@ -5,13 +5,48 @@ both directions on 2026-09-13. [TEAM.md](../../TEAM.md) defines roles and provid
 [status.md](../../status.md) holds the current checkpoint and ticket states. Keep live progress in
 that one file so the assistants do not develop separate versions of the plan.
 
+**Current owner preference (2026-09-29):** resume in a future GPT/Codex session using
+[the active Codex handover](codex-next-work-package.md). No Claude takeover or mandatory alternation
+is requested. Update that same Codex package at future stopping points. The older provider-switch
+instructions below apply only if the owner explicitly requests a switch again; the shared ownership,
+recovery, evidence and independent QA rules continue to apply between Codex sessions.
+
+Owner clarification (2026-09-16): Codex continues as the active assistant by default. Use a Claude
+handover when unfinished work cannot be completed in the current session, or when the owner asks
+to involve Claude. Saving an ordinary progress checkpoint does not release Codex ownership or
+request a switch. Completing a task does not require a Claude handover.
+
+Historical owner update (2026-09-28; superseded by the preference above): after the active Council work, prepare a bounded handover to Claude
+for the next program issue, and require Claude to do the same back to Codex. For this alternating
+workflow, each outgoing assistant must update status.md, record the current ticket's actual state
+and evidence, name the next authorized issue and its exact scope, and write a ready-to-use resume
+prompt. If acceptance remains incomplete, preserve those gates explicitly; do not rename Review
+as Done merely to hand off. Independent next work may be assigned only when its prerequisites are
+met and the shared checkpoint explains the remaining earlier gates. This request supersedes the
+earlier optional-handover default for the current sequence, not the one-writer or permission rules.
+
+Each handover must tell the receiving assistant to repeat these steps on return: inspect the actual
+working tree and accepted Council record, claim bounded ownership, implement and validate with
+independent QA, update status and the code map, write the next assistant's package and prompt, then
+stop delegated writers and release ownership. Do not automatically launch the other assistant or
+chain unrelated tickets. User-driven session switching remains manual.
+
 Switching is manual: stop the outgoing writer, open the same checkout in the other assistant, and
 give it the resume prompt below. This document does not install automatic switching, transfer chat
 history, detect account limits, or start another application.
 
+## Optional parallel work
+
+When the owner requests Claude in parallel, the Orchestrator records each assistant's ticket,
+role, owned files and dependencies in `status.md`. Give the second assistant a bounded task and
+avoid overlapping edits; shared files such as `status.md` have one integration owner. Codex may
+remain active while Claude works on its assigned files. The stop-and-release steps below apply
+only when transferring the same ownership, not to separate parallel workstreams. No Claude
+workstream is started merely because this workflow exists.
+
 ## Start or resume
 
-1. Read the **Current takeover checkpoint** at the top of `status.md`, then `AGENTS.md`,
+1. Read the **Current work checkpoint** at the top of `status.md`, then `AGENTS.md`,
    `CLAUDE.md`, `TEAM.md`, and this workflow. Read the active ticket in `features.md`, its linked
    contract/ADR and the relevant code-map flow note. Consult `PROGRAM.md` for its stage gate.
 2. Inspect `git branch --show-current`, `git rev-parse --short HEAD`, `git status --short`,
@@ -39,7 +74,7 @@ decision, and before expensive work or a likely limit. Do not depend on receivin
 before access ends. A useful checkpoint records:
 
 ```markdown
-### Current takeover checkpoint
+### Current work checkpoint
 
 - Updated: <date/time and timezone>
 - Writer: <Codex/Claude; actual model or unknown>; <active/released/interrupted>
@@ -95,7 +130,7 @@ that exact next action. It must not be marked Done on self-review alone.
 
 **Resume in Claude or Codex:**
 
-> Continue Sackerl development from the Current takeover checkpoint in status.md. The previous writer is
+> Continue Sackerl development from the Current work checkpoint in status.md. The previous writer is
 > stopped. Read AGENTS.md, CLAUDE.md, TEAM.md and docs/agents/codex-claude-handoff.md. Inspect the
 > actual staged and unstaged work, claim the appropriate provider/role, and continue the recorded
 > next action. If no ticket is active, begin the next Ready development ticket named in the

@@ -366,7 +366,7 @@ export default function HomeRoute(): JSX.Element {
           }
 
           const itemsClient = getMobileItemsClient();
-          const recipesClient = getMobileRecipesClient();
+          const recipesClient = getMobileRecipesClient(household.calendarTimeZone);
           const [countResult, expiringResult, zones, suggestionsResult] = await Promise.all([
             itemsClient.listItems(context, {
               householdId: household.id,

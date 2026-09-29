@@ -210,7 +210,7 @@ Used by: No resolved internal caller; may be a framework entry point or dynamic 
 
 ## StockRoute.authContext
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 560. ^s-c81226e697cb
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 561. ^s-c81226e697cb
 
 Calls / references: No resolved internal relationship.
 
@@ -218,7 +218,7 @@ Used by: [[Methods - apps-mobile-app-tabs-stock#^s-32ad3c9a6139|StockRoute.handl
 
 ## StockRoute.categoryCounts
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 520. ^s-64740139e207
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 521. ^s-64740139e207
 
 Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-9559d73c032d|countItemsByCategory]] (call)
 
@@ -226,7 +226,7 @@ Used by: No resolved internal caller; may be a framework entry point or dynamic 
 
 ## StockRoute.closeItemDetail
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 574. ^s-662a6e82b7be
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 575. ^s-662a6e82b7be
 
 Calls / references: No resolved internal relationship.
 
@@ -234,7 +234,7 @@ Used by: [[Methods - apps-mobile-app-tabs-stock#^s-1849c9c0fb4a|StockRoute]] (ca
 
 ## StockRoute.confirmDelete
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 746. ^s-bb2f7e85c247
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 763. ^s-bb2f7e85c247
 
 Calls / references: No resolved internal relationship.
 
@@ -242,7 +242,7 @@ Used by: [[Methods - apps-mobile-app-tabs-stock#^s-1849c9c0fb4a|StockRoute]] (JS
 
 ## StockRoute.confirmDelete.onPress
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 750. ^s-9ac5b716dcce
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 767. ^s-9ac5b716dcce
 
 Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-e9ba78cb14e6|StockRoute.removeSelectedItem]] (call)
 
@@ -250,7 +250,7 @@ Used by: No resolved internal caller; may be a framework entry point or dynamic 
 
 ## StockRoute.confirmMarkUsed
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 734. ^s-ea73dda59349
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 751. ^s-ea73dda59349
 
 Calls / references: No resolved internal relationship.
 
@@ -258,7 +258,7 @@ Used by: [[Methods - apps-mobile-app-tabs-stock#^s-1849c9c0fb4a|StockRoute]] (JS
 
 ## StockRoute.confirmMarkUsed.onPress
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 738. ^s-5de2c3a10f9b
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 755. ^s-5de2c3a10f9b
 
 Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-e9ba78cb14e6|StockRoute.removeSelectedItem]] (call)
 
@@ -266,7 +266,7 @@ Used by: No resolved internal caller; may be a framework entry point or dynamic 
 
 ## StockRoute.filteredItems
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 533. ^s-8c3ec26ed9ee
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 534. ^s-8c3ec26ed9ee
 
 Calls / references: No resolved internal relationship.
 
@@ -274,15 +274,15 @@ Used by: No resolved internal caller; may be a framework entry point or dynamic 
 
 ## StockRoute.handleSaveItem
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 655. ^s-32ad3c9a6139
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 648. ^s-32ad3c9a6139
 
-Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-09d8d36c4b15|sortByExpiryAscending]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-c81226e697cb|StockRoute.authContext]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-662a6e82b7be|StockRoute.closeItemDetail]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-87dff9403374|StockRoute.removeItemFromList]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-b0224354f251|StockRoute.validateEditFields]] (call), [[Methods - apps-mobile-lib-items#^s-fcacdce6e990|getMobileItemsClient]] (call), [[Methods - apps-mobile-lib-profile#^s-fb6f37989700|getMobileProfileClient]] (call), [[Methods - packages-api-client-src-items#^s-fd644ae033c3|SackerlItemsClient.updateItem]] (call), [[Methods - packages-api-client-src-profile#^s-b1449ad2a4d9|SackerlProfileClient.ensureHousehold]] (call)
+Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-09d8d36c4b15|sortByExpiryAscending]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-c81226e697cb|StockRoute.authContext]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-662a6e82b7be|StockRoute.closeItemDetail]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-87dff9403374|StockRoute.removeItemFromList]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-b0224354f251|StockRoute.validateEditFields]] (call), [[Methods - apps-mobile-lib-add-item-form#^s-3cd74582538d|buildEditItemMutation]] (call), [[Methods - apps-mobile-lib-items#^s-fcacdce6e990|getMobileItemsClient]] (call), [[Methods - apps-mobile-lib-profile#^s-fb6f37989700|getMobileProfileClient]] (call), [[Methods - packages-api-client-src-items#^s-44e45c32a92c|SackerlItemsClient.clearItemExpiry]] (call), [[Methods - packages-api-client-src-items#^s-fd644ae033c3|SackerlItemsClient.updateItem]] (call), [[Methods - packages-api-client-src-profile#^s-b1449ad2a4d9|SackerlProfileClient.ensureHousehold]] (call)
 
 Used by: [[Methods - apps-mobile-app-tabs-stock#^s-1849c9c0fb4a|StockRoute]] (call)
 
 ## StockRoute.loadStockDetail
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 455. ^s-c706ab084151
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 456. ^s-c706ab084151
 
 Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-915728456881|loadAllZoneItems]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-ca431f8ff190|resolveZoneOptions]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-09d8d36c4b15|sortByExpiryAscending]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-551da389f531|zoneFromKey]] (argument reference), [[Methods - apps-mobile-app-tabs-stock#^s-551da389f531|zoneFromKey]] (call), [[Methods - apps-mobile-lib-items#^s-fcacdce6e990|getMobileItemsClient]] (call), [[Methods - apps-mobile-lib-profile#^s-fb6f37989700|getMobileProfileClient]] (call), [[Methods - packages-api-client-src-items#^s-700c15598679|SackerlItemsClient.listZones]] (call), [[Methods - packages-api-client-src-profile#^s-47e9083eeefa|SackerlProfileClient.getHousehold]] (call)
 
@@ -290,7 +290,7 @@ Used by: [[Methods - apps-mobile-app-tabs-stock#^s-1849c9c0fb4a|StockRoute]] (ca
 
 ## StockRoute.openItemDetail
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 585. ^s-0120858164f9
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 586. ^s-0120858164f9
 
 Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-0d5fbaed7663|formatQuantityValue]] (call)
 
@@ -298,7 +298,7 @@ Used by: [[Methods - apps-mobile-app-tabs-stock#^s-1849c9c0fb4a|StockRoute]] (ca
 
 ## StockRoute.removeItemFromList
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 650. ^s-87dff9403374
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 643. ^s-87dff9403374
 
 Calls / references: No resolved internal relationship.
 
@@ -306,7 +306,7 @@ Used by: [[Methods - apps-mobile-app-tabs-stock#^s-32ad3c9a6139|StockRoute.handl
 
 ## StockRoute.removeSelectedItem
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 698. ^s-e9ba78cb14e6
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 715. ^s-e9ba78cb14e6
 
 Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-c81226e697cb|StockRoute.authContext]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-662a6e82b7be|StockRoute.closeItemDetail]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-87dff9403374|StockRoute.removeItemFromList]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-aab85893c367|todayIsoDate]] (call), [[Methods - apps-mobile-lib-items#^s-fcacdce6e990|getMobileItemsClient]] (call), [[Methods - apps-mobile-lib-profile#^s-fb6f37989700|getMobileProfileClient]] (call), [[Methods - packages-api-client-src-items#^s-ca99b9591151|SackerlItemsClient.deleteItem]] (call), [[Methods - packages-api-client-src-profile#^s-b1449ad2a4d9|SackerlProfileClient.ensureHousehold]] (call)
 
@@ -322,7 +322,7 @@ Used by: No resolved internal caller; may be a framework entry point or dynamic 
 
 ## StockRoute.selectedEditZone
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 551. ^s-b2add9c2a829
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 552. ^s-b2add9c2a829
 
 Calls / references: No resolved internal relationship.
 
@@ -330,7 +330,7 @@ Used by: No resolved internal caller; may be a framework entry point or dynamic 
 
 ## StockRoute.soonTotal
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 547. ^s-e878ca52dd23
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 548. ^s-e878ca52dd23
 
 Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-8111a0f8655c|isUseSoonItem]] (argument reference)
 
@@ -338,7 +338,7 @@ Used by: No resolved internal caller; may be a framework entry point or dynamic 
 
 ## StockRoute.stockedItems
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 544. ^s-33ca6f2d55ce
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 545. ^s-33ca6f2d55ce
 
 Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-8111a0f8655c|isUseSoonItem]] (call), [[Methods - apps-mobile-app-tabs-stock#^s-09d8d36c4b15|sortByExpiryAscending]] (call)
 
@@ -346,7 +346,7 @@ Used by: No resolved internal caller; may be a framework entry point or dynamic 
 
 ## StockRoute.updateDetailQuantity
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 600. ^s-117bb5ce412e
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 602. ^s-117bb5ce412e
 
 Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-0d5fbaed7663|formatQuantityValue]] (call)
 
@@ -354,7 +354,7 @@ Used by: [[Methods - apps-mobile-app-tabs-stock#^s-1849c9c0fb4a|StockRoute]] (ca
 
 ## StockRoute.useSoonItems
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 540. ^s-d4cab5fa9606
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 541. ^s-d4cab5fa9606
 
 Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-8111a0f8655c|isUseSoonItem]] (argument reference), [[Methods - apps-mobile-app-tabs-stock#^s-09d8d36c4b15|sortByExpiryAscending]] (call)
 
@@ -362,15 +362,15 @@ Used by: No resolved internal caller; may be a framework entry point or dynamic 
 
 ## StockRoute.validateEditFields
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 604. ^s-b0224354f251
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 606. ^s-b0224354f251
 
-Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-fe3ced3a2ec3|parseQuantityValue]] (call), [[Methods - packages-api-client-src-items#^s-f4e0ec0602f7|estimateExpiryDate]] (call)
+Calls / references: [[Methods - apps-mobile-app-tabs-stock#^s-fe3ced3a2ec3|parseQuantityValue]] (call), [[Methods - apps-mobile-lib-add-item-form#^s-34b94d3a6e03|isValidGregorianDate]] (call)
 
 Used by: [[Methods - apps-mobile-app-tabs-stock#^s-32ad3c9a6139|StockRoute.handleSaveItem]] (call)
 
 ## StockRoute.visibleCategoryChips
 
-TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 522. ^s-6b7a43d1556e
+TypeScript. [apps/mobile/app/(tabs)/stock.tsx](<../../../apps/mobile/app/(tabs)/stock.tsx>), line 523. ^s-6b7a43d1556e
 
 Calls / references: No resolved internal relationship.
 

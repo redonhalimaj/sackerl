@@ -22,7 +22,7 @@ TypeScript. [packages/api-client/src/recipes.ts](<../../../packages/api-client/s
 
 Calls / references: No resolved internal relationship.
 
-Used by: [[Methods - packages-api-client-src-recipes#^s-ab6f8df0d601|SackerlRecipesClient.today]] (call)
+Used by: [[Methods - apps-mobile-lib-add-item-form#^s-02e2e23c7256|estimateExpiryForHousehold]] (call), [[Methods - packages-api-client-src-recipes#^s-ab6f8df0d601|SackerlRecipesClient.today]] (call)
 
 ## compareRecipeSuggestions
 

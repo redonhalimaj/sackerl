@@ -27,12 +27,12 @@ stored or estimated date alone. See
 ## Calendar
 
 The shared recipes client derives today's date once per list/detail request from an injected clock
-and a required IANA `calendarTimeZone`. The mobile and web app factories currently pass
-`Europe/Vienna` visibly for the Austrian pilot.
-
-This is a temporary pilot assumption. SCKRL-406 should replace the fixed app factory timezone with a
-household calendar-timezone setting so recommendation eligibility follows the household rather than
-the deployed app default.
+and a required IANA `calendarTimeZone`. SCKRL-406 now supplies the loaded household calendar to
+Home, Suggestions, Recipe detail and the web suggestions endpoint. Factories cache clients per
+zone. Existing households default to `Europe/Vienna`, preserving the Austrian pilot boundary;
+owners can change the setting in household Settings. The scoring and eligibility rules above
+are unchanged. SCKRL-406's pending migration is required before these consumers run against the
+application database; it has not been applied in this session.
 
 ## Acceptance
 

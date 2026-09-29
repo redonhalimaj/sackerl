@@ -2,12 +2,19 @@
 
 ## Shared Codex / Claude Continuation
 
-Start with the **Current takeover checkpoint** in [status.md](status.md) and follow
+Start with the **Current work checkpoint** in [status.md](status.md) and follow
 [the handoff workflow](docs/agents/codex-claude-handoff.md). The owner authorizes continuation in
 either assistant. Use `TEAM.md`'s Claude profile in Claude and Codex profile in Codex; GPT-specific
 role assignments are not a barrier to Claude takeover. Record actual model identity when known,
 preserve existing staged/unstaged work, and keep one writer per file set. Save checkpoints after
 milestones and before limits; independent QA is still required before Done.
+
+Use the [Council workflow](docs/agents/council-workflow.md) for substantive decisions and final
+acceptance. **The Team** does detailed work with a **Deputy**; the **Chair** provides expert review.
+Deputy and participating specialists first reach unanimity, then hear the Chair's refinements and
+reconfirm the same final revision together. No silent assent or Chair override counts as consensus.
+TEAM.md defines the GPT-5.5 Deputy and preferred GPT-6 Astra Chair routes for Codex; the authorized
+Claude profile preserves these responsibilities using explicitly recorded available Claude models.
 
 ## Repo Context
 

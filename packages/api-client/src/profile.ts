@@ -12,6 +12,12 @@ export type HouseholdRole = 'member' | 'owner';
 export type HouseholdZoneId = string;
 
 export type Household = {
+  /**
+   * IANA calendar zone the household's day boundaries are evaluated in, for example
+   * `Europe/Vienna`. Recipe eligibility and expiry-day comparisons use it so a date does not
+   * flip a day early or late for the people living there.
+   */
+  readonly calendarTimeZone: string;
   readonly createdAt: string;
   readonly id: string;
   readonly name: string;
@@ -19,6 +25,9 @@ export type Household = {
   readonly role: HouseholdRole;
   readonly zones: readonly HouseholdZoneId[];
 };
+
+/** Fallback used when a household row predates the calendar column. */
+export const defaultHouseholdCalendarTimeZone = 'Europe/Vienna';
 
 export type AuthenticatedUserContext = {
   readonly accessToken: string | undefined;
@@ -48,6 +57,10 @@ export type UpdateHouseholdZonesInput = {
   readonly zones: readonly HouseholdZoneId[];
 };
 
+export type UpdateHouseholdCalendarInput = {
+  readonly calendarTimeZone: string;
+};
+
 export type EnsureHouseholdInput = {
   readonly name?: string | undefined;
 };
@@ -60,6 +73,7 @@ type DatabaseUserProfile = {
 };
 
 type DatabaseHousehold = {
+  readonly calendar_time_zone?: string | null | undefined;
   readonly created_at: string;
   readonly id: string;
   readonly name: string;
@@ -76,7 +90,7 @@ type DatabaseHouseholdMember = {
 type QueryValue = boolean | number | string;
 
 const userProfileSelect = 'id,email,locale,created_at';
-const householdSelect = 'id,owner_id,name,zones,created_at';
+const householdSelect = 'id,owner_id,name,zones,calendar_time_zone,created_at';
 const householdMemberSelect = 'household_id,user_id,role';
 
 export class ApiRequestError extends Error {
@@ -141,8 +155,33 @@ function mapUserProfile(row: DatabaseUserProfile): UserProfile {
   };
 }
 
+export function isIanaTimeZone(value: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: value });
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function normaliseCalendarTimeZone(value: string): string {
+  const calendarTimeZone = typeof value === 'string' ? value.trim() : '';
+
+  if (!calendarTimeZone) {
+    throw new ApiRequestError('Calendar time zone is required.', 400);
+  }
+
+  if (!isIanaTimeZone(calendarTimeZone)) {
+    throw new ApiRequestError('Calendar time zone must be a valid IANA time zone.', 400);
+  }
+
+  return calendarTimeZone;
+}
+
 function mapHousehold(row: DatabaseHousehold, role: HouseholdRole = 'owner'): Household {
   return {
+    calendarTimeZone: row.calendar_time_zone?.trim() || defaultHouseholdCalendarTimeZone,
     createdAt: row.created_at,
     id: row.id,
     name: row.name,
@@ -150,6 +189,10 @@ function mapHousehold(row: DatabaseHousehold, role: HouseholdRole = 'owner'): Ho
     role,
     zones: row.zones ?? [],
   };
+}
+
+function mapHouseholdForUser(row: DatabaseHousehold, userId: string): Household {
+  return mapHousehold(row, row.owner_id === userId ? 'owner' : 'member');
 }
 
 function normaliseHouseholdZones(zones: readonly HouseholdZoneId[]): readonly HouseholdZoneId[] {
@@ -255,15 +298,42 @@ export class SackerlProfileClient {
   }
 
   async getHousehold(context: AuthenticatedUserContext): Promise<Household | null> {
-    const rows = await this.requestRows<DatabaseHousehold>('households', context, {
+    const ownedRows = await this.requestRows<DatabaseHousehold>('households', context, {
       limit: 1,
       owner_id: `eq.${context.user.id}`,
       select: householdSelect,
     });
 
-    const row = firstRow(rows);
+    const ownedRow = firstRow(ownedRows);
 
-    return row ? mapHousehold(row) : null;
+    if (ownedRow) {
+      return mapHouseholdForUser(ownedRow, context.user.id);
+    }
+
+    const membershipRows = await this.requestRows<DatabaseHouseholdMember>(
+      'household_members',
+      context,
+      {
+        limit: 1,
+        order: 'household_id.asc',
+        select: householdMemberSelect,
+        user_id: `eq.${context.user.id}`,
+      },
+    );
+    const membership = firstRow(membershipRows);
+
+    if (!membership) {
+      return null;
+    }
+
+    const householdRows = await this.requestRows<DatabaseHousehold>('households', context, {
+      id: `eq.${membership.household_id}`,
+      limit: 1,
+      select: householdSelect,
+    });
+    const householdRow = firstRow(householdRows);
+
+    return householdRow ? mapHouseholdForUser(householdRow, context.user.id) : null;
   }
 
   async ensureHousehold(
@@ -362,6 +432,31 @@ export class SackerlProfileClient {
       { owner_id: `eq.${context.user.id}`, select: householdSelect },
       {
         body: { zones },
+        method: 'PATCH',
+        prefer: 'return=representation',
+      },
+    );
+
+    const row = firstRow(rows);
+
+    if (!row) {
+      throw new ApiRequestError('Household not found.', 404);
+    }
+
+    return mapHousehold(row);
+  }
+
+  async updateHouseholdCalendar(
+    context: AuthenticatedUserContext,
+    input: UpdateHouseholdCalendarInput,
+  ): Promise<Household> {
+    const calendarTimeZone = normaliseCalendarTimeZone(input.calendarTimeZone);
+    const rows = await this.requestRows<DatabaseHousehold>(
+      'households',
+      context,
+      { owner_id: `eq.${context.user.id}`, select: householdSelect },
+      {
+        body: { calendar_time_zone: calendarTimeZone },
         method: 'PATCH',
         prefer: 'return=representation',
       },

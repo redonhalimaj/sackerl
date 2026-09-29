@@ -36,6 +36,7 @@ For mobile:
 
 ```bash
 pnpm dev:mobile
+pnpm --filter @sackerl/mobile ios:simulator
 ```
 
 The Phase 1 design-system foundation is present locally through tokens, shared UI primitives, icon assets, the animated paper bag, brand logo utilities, and the mobile tab shell. Slice 1 now also includes Supabase Auth, profile/household persistence, storage-zone onboarding, the normalized item data model, and item CRUD API routes.

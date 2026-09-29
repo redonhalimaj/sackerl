@@ -4,12 +4,18 @@ tags: [code-map, receipts, pipeline]
 
 # Receipt Pipeline
 
-See [[Sackerl Code Map]], [[Mobile Navigation]], [[Authentication and Household]], [[Stock and Expiry]], and [[Maintenance]]. This note follows the implemented receipt path through SCKRL-302, SCKRL-303, and the locally accepted SCKRL-310 review contract.
+See [[Sackerl Code Map]], [[Mobile Navigation]], [[Authentication and Household]], [[Stock and Expiry]], and [[Maintenance]]. This note follows the implemented receipt path through SCKRL-302, SCKRL-303, and the locally accepted SCKRL-310 review contract and SCKRL-304 mobile review implementation (runtime QA pending).
 
 ```mermaid
 flowchart LR
   Scan[Mobile Scan screen] --> MCreate[createReceipt]
   MCreate --> Receipts[(Supabase receipts)]
+  MCreate --> MobileReview[Mobile receipt-review/:id]
+  MobileReview --> Snapshot[getReceiptReview]
+  Snapshot --> Draft[createReceiptReviewDraft]
+  Draft --> Validate[validateReceiptReviewDraft]
+  Validate --> Payload[buildSaveReceiptReviewInput]
+  Payload --> Save
   WebCreate[POST /receipts] --> WCreate[SackerlReceiptsClient]
   WCreate --> Receipts
   Parse[POST /receipts/:id/parse] --> Job[runReceiptParseJob]
@@ -30,16 +36,32 @@ flowchart LR
 | Parse                    | Web route only           | `POST /receipts/:id/parse` ([route](../../apps/web/app/receipts/[id]/parse/route.ts)), [`runReceiptParseJob`](../../apps/web/lib/receipt-parsing.ts)                                                                                                                    |
 | Deterministic parsing    | Server/shared package    | [`parseReceiptText`](../../packages/api-client/src/receipt-parsing.ts), [`confidenceLevelForScore`](../../packages/api-client/src/receipt-parsing.ts)                                                                                                                   |
 | Atomic promotion         | Shared client → Postgres | [`promoteReceiptParse`](../../packages/api-client/src/receipts.ts), `promote_receipt_parse` ([migration](../../supabase/migrations/20260911110000_sckrl_310_receipt_review_data.sql))                                                                                   |
-| Review snapshot          | Web route/client         | [`getReceiptReview`](../../packages/api-client/src/receipts.ts), `GET /receipts/:id/items` ([route](../../apps/web/app/receipts/[id]/items/route.ts))                                                                                                                   |
-| Corrections/manual lines | Web route → RPC          | [`saveReceiptReview`](../../packages/api-client/src/receipts.ts), `PUT /receipts/:id/items` ([route](../../apps/web/app/receipts/[id]/items/route.ts)), `save_receipt_review` ([migration](../../supabase/migrations/20260911110000_sckrl_310_receipt_review_data.sql)) |
+| Review snapshot          | Mobile and web           | [`getReceiptReview`](../../packages/api-client/src/receipts.ts), `GET /receipts/:id/items` ([route](../../apps/web/app/receipts/[id]/items/route.ts))                                                                                                                   |
+| Corrections/manual lines | Mobile/web → RPC         | [`saveReceiptReview`](../../packages/api-client/src/receipts.ts), `PUT /receipts/:id/items` ([route](../../apps/web/app/receipts/[id]/items/route.ts)), `save_receipt_review` ([migration](../../supabase/migrations/20260911110000_sckrl_310_receipt_review_data.sql)) |
 
 ## What actually runs
 
-The mobile scan screen still renders the camera-style shell. Capture, Gallery, and PDF actions call `createUploadedReceipt`, wait briefly, and create a receipt with a synthetic `sackerl://receipt/{source}/{timestamp}` URL. No camera, gallery, PDF binary upload, private media storage, or mobile receipt review screen is implemented. The successful message says the row is ready for parsing; mobile does not start the parse job.
+The mobile scan screen still renders the camera-style shell. Capture, Gallery, and PDF actions call `createUploadedReceipt`, wait briefly, and create a receipt with a synthetic `sackerl://receipt/{source}/{timestamp}` URL. Successful persistence pushes `/receipt-review/[id]` with the returned receipt ID. Capture is explicitly simulated; no binary upload or parse job starts. The review route offers refresh and manual grocery entry when there is no active generation.
 
 The web parse route loads the receipt, resolves `OCR_PROVIDER`, extracts text, parses it, rejects an empty item result, and calls `promoteReceiptParse` with the receipt's expected generation and revision. The default deterministic provider accepts an explicit text override or the synthetic mobile URL. Mindee and Vision provider names currently return `501`; other values are rejected. On failure, `markReceiptParseFailed` conditionally marks only an unpromoted receipt as failed and preserves the original parse error.
 
 SCKRL-310 keeps parser evidence (`inferred*`, raw text, confidence, parser version) separate from review values (`corrected*`, `included`, `reviewState`). Promotion creates a new generation atomically; review saves require the active generation, expected revision, every existing line exactly once, and stable `clientLineId` values for manual lines. Reprocessing after a saved review is rejected until an explicit reset/merge contract exists. Placement into stock and expiry assignment are future work; follow [[Stock and Expiry]].
+
+## Mobile review method relationships
+
+[`ReceiptReviewRoute`](../../apps/mobile/app/receipt-review/[id].tsx) resolves the current household
+and reads one snapshot with `getReceiptReview`. [`createReceiptReviewDraft`](../../apps/mobile/lib/receipt-review.ts)
+uses effective values, preserving parser evidence and explicit unresolved/reviewed state. Edits go
+through `updateDraftLine`, which requires re-review; inclusion and explicit approval have separate
+helpers. `validateReceiptReviewDraft` validates excluded rows too, because the save contract requires
+a complete payload. `buildSaveReceiptReviewInput` sends all persisted rows by database ID, new manual
+rows by stable client ID, and generation/revision from that same snapshot.
+
+`handleSaveReview` calls `saveReceiptReview` and adopts the returned snapshot. Request counters and
+session/receipt scope guards ignore stale responses and prevent a delayed lookup from starting a
+write after navigation/sign-out. Pending saves block edits and duplicate writes. Failures preserve the
+draft; reload requires an explicit discard choice. Confidence never approves an item. Save is active;
+placement is disabled until SCKRL-305/311. No stock write occurs in review.
 
 ## Source boundaries
 

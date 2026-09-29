@@ -380,9 +380,15 @@ and durable goods have materially different safety and lifecycle rules.
 the Codex defaults in program context. Its user-authorized Claude provider profile overrides
 GPT-specific routing during Claude continuation; the roles and stage gates below still apply.
 
+Routing updated 2026-09-28 for the [Council workflow](docs/agents/council-workflow.md). The specialist
+group is **The Team**; the Deputy coordinates detailed work, and the Chair contributes expert
+review. Unanimous Team/Deputy recommendations receive reciprocal Chair review and require final
+unanimous agreement. This changes the operating model, not product stages or delivery gates.
+
 | Role                     | Model          | Reasoning | Why this tier                                                                                                            |
 | ------------------------ | -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Orchestrator             | `gpt-5.6-sol`  | `xhigh`   | Highest cross-program reasoning, dependency management, conflict resolution, and final integration responsibility        |
+| Chair / Orchestrator     | `gpt-6-astra`  | `xhigh`   | Preferred expert review route; cross-program reasoning, reciprocal Council review and final integration                  |
+| Deputy                   | `gpt-5.5`      | `xhigh`   | Detailed work coordination, evidence synthesis, specialist assignments and unanimous recommendations                     |
 | Business Process Analyst | `gpt-5.6-luna` | `high`    | High-volume discovery synthesis and ticket refinement within Orchestrator-approved product boundaries                    |
 | Frontend                 | `gpt-5.6-luna` | `high`    | Bounded UI implementation and iteration after interaction rules and contracts are stable                                 |
 | Backend                  | `gpt-5.5`      | `xhigh`   | Complex schema evolution, transactional correctness, OCR/jobs, event data, and recommendation logic                      |
@@ -396,7 +402,7 @@ Routing policy:
 - No model substitution is silent. Record an unavailable model or effort as a delivery constraint and obtain an explicit routing decision.
 - Luna work must start from stable acceptance criteria and contracts. Escalate unresolved architecture, security, privacy, transactional integrity, health safety, or recommendation policy to a GPT-5.5 specialist and the Orchestrator.
 - GPT-5.5 specialists own complex reasoning in their domain but do not broaden product scope. Cross-domain tradeoffs return to the Orchestrator.
-- Sol performs integration and stage-gate judgment. It should delegate bounded specialist execution rather than absorb every implementation task.
+- The Chair performs expert refinement, integration and stage-gate judgment. The Deputy coordinates bounded specialist execution. Record the actual root model; a preferred route does not switch a running session.
 
 ### Orchestrator
 

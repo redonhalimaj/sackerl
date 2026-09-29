@@ -21,6 +21,7 @@ flowchart TD
   Zones[StorageZonesRoute] --> Profile[getMobileProfileClient]
   Profile --> Rest[Supabase REST: users / households]
   Provider --> Settings[SettingsRoute]
+  Settings -->|read / updateHouseholdCalendar| Profile
   Settings -->|signOut| Supabase
 ```
 
@@ -28,14 +29,20 @@ flowchart TD
 
 The storage-zone screen starts with four selected defaults, toggles built-in zones, slugifies custom names, and requires at least one selection. `handleContinue` sends signed-in users through `ensureHousehold` and `updateHouseholdZones`; signed-out users are pushed to auth with `returnTo: '/storage-zones'`. Source: [apps/mobile/app/storage-zones.tsx](../../apps/mobile/app/storage-zones.tsx).
 
-| Method or component | Source | Called by / calls |
-| --- | --- | --- |
-| `getMobileAuthClient` | [apps/mobile/lib/auth.ts](../../apps/mobile/lib/auth.ts) | `AuthSessionProvider` calls it; calls `createSackerlAuthClient` with AsyncStorage. |
-| `signInWithApple` | [apps/mobile/lib/auth.ts](../../apps/mobile/lib/auth.ts) | `AuthRoute.handleAppleSignIn` calls it; calls Apple Authentication and `signInWithAppleIdentityToken`. |
-| `AuthSessionProvider` | [apps/mobile/lib/auth-session.tsx](../../apps/mobile/lib/auth-session.tsx) | `RootLayout` calls it; calls `getSession`, `onAuthStateChange`, `signOut`. |
-| `SackerlProfileClient.getHousehold` | [packages/api-client/src/profile.ts](../../packages/api-client/src/profile.ts) | Mobile Home, Stock, Expiring, Suggestions, Recipe, Scan, and Shopping List call it; reads `households`. |
-| `SackerlProfileClient.ensureHousehold` | [packages/api-client/src/profile.ts](../../packages/api-client/src/profile.ts) | Storage Zones, Add Item, and Stock edits call it; calls `getHousehold`, `ensureMe`, and creates membership. |
-| `SackerlProfileClient.updateHouseholdZones` | [packages/api-client/src/profile.ts](../../packages/api-client/src/profile.ts) | `StorageZonesRoute.handleContinue` calls it; patches household `zones`. |
-| `SettingsRoute` | [apps/mobile/app/(tabs)/settings.tsx](../../apps/mobile/app/(tabs)/settings.tsx) | Tab router calls it; calls provider `signOut`. |
+| Method or component                         | Source                                                                             | Called by / calls                                                                                                                       |
+| ------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `getMobileAuthClient`                       | [apps/mobile/lib/auth.ts](../../apps/mobile/lib/auth.ts)                           | `AuthSessionProvider` calls it; calls `createSackerlAuthClient` with AsyncStorage.                                                      |
+| `signInWithApple`                           | [apps/mobile/lib/auth.ts](../../apps/mobile/lib/auth.ts)                           | `AuthRoute.handleAppleSignIn` calls it; calls Apple Authentication and `signInWithAppleIdentityToken`.                                  |
+| `AuthSessionProvider`                       | [apps/mobile/lib/auth-session.tsx](../../apps/mobile/lib/auth-session.tsx)         | `RootLayout` calls it; calls `getSession`, `onAuthStateChange`, `signOut`.                                                              |
+| `SackerlProfileClient.getHousehold`         | [packages/api-client/src/profile.ts](../../packages/api-client/src/profile.ts)     | Mobile Home, Stock, Expiring, Suggestions, Recipe, Scan, and Shopping List call it; reads `households`.                                 |
+| `SackerlProfileClient.ensureHousehold`      | [packages/api-client/src/profile.ts](../../packages/api-client/src/profile.ts)     | Storage Zones, Add Item, and Stock edits call it; calls `getHousehold`, `ensureMe`, and creates membership.                             |
+| `SackerlProfileClient.updateHouseholdZones` | [packages/api-client/src/profile.ts](../../packages/api-client/src/profile.ts)     | `StorageZonesRoute.handleContinue` calls it; patches household `zones`.                                                                 |
+| `SettingsRoute`                             | [apps/mobile/app/(tabs)/settings.tsx](<../../apps/mobile/app/(tabs)/settings.tsx>) | Tab router calls it; loads the household, lets owners save the calendar, shows members a read-only field, and calls provider `signOut`. |
+
+`getHousehold` first queries the caller's owned household. If absent, it reads the caller's
+membership and then that household. `mapHouseholdForUser` derives the role from `owner_id`, and
+`ensureHousehold` reuses the resolved household for a member. The pending SCKRL-406 migration adds
+member SELECT access; updates to the calendar remain owner-only. Settings calls
+`updateHouseholdCalendarTimeZone`, then recipe consumers use the saved calendar on reload.
 
 The household is the lookup boundary passed to stock, recipe, shopping-list, and receipt clients. There is no true authenticated web product shell in this mobile-oriented implementation; the web app currently supplies API routes and design pages rather than the equivalent signed-in product navigation. Follow [[Mobile Navigation]], [[Receipt Pipeline]], [[API and Database]], [[Sackerl Code Map]], [[Method Index]], and [[Maintenance]].

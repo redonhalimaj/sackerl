@@ -256,7 +256,7 @@ function assertCalendarTimeZone(value: string): string {
   return calendarTimeZone;
 }
 
-function calendarDateInTimeZone(date: Date, timeZone: string): string {
+export function calendarDateInTimeZone(date: Date, timeZone: string): string {
   if (Number.isNaN(date.getTime())) {
     throw new Error('clock must return a valid Date.');
   }

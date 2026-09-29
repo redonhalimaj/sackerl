@@ -33,18 +33,30 @@ The CI workflow ([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)) r
 
 ## Current test map
 
-| Layer             | Representative coverage                                                                                                                                                                                                  |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Shared API client | Auth, profile, items, receipts/review RPC payloads, receipt parser, recipes, shopping list ([tests](../../packages/api-client/src/receipts.test.ts)).                                                                    |
-| Web               | Household auth/route behavior, receipt parse orchestration, review payload validation, `GET/PUT /receipts/:id/items` ([test](../../apps/web/app/receipts/[id]/items/route.test.ts)).                                     |
-| Mobile            | Add-item normalization and mounted `ScreenScaffold` behavior; Scan remains a visual shell with simulated receipt persistence.                                                                                            |
-| Database          | SCKRL-310 migration replay, legacy preservation, command conflicts, snapshot consistency, manual-line provenance, immutable parser evidence, and denied direct mutations ([SQL README](../../supabase/tests/README.md)). |
+For local iPhone startup, use `pnpm --filter @sackerl/mobile ios:simulator` and follow the
+[iOS simulator guide](../qa/ios-simulator.md). This runs Expo Go with a local Metro listener;
+it does not supply the development-build journey automation required by SCKRL-908.
+
+| Layer             | Representative coverage                                                                                                                                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shared API client | Auth, profile, items, receipts/review RPC payloads, receipt parser, recipes, shopping list ([tests](../../packages/api-client/src/receipts.test.ts)).                                                                       |
+| Web               | Household auth/route behavior, receipt parse orchestration, review payload validation, `GET/PUT /receipts/:id/items` ([test](../../apps/web/app/receipts/[id]/items/route.test.ts)).                                        |
+| Mobile            | Add-item normalization, calendar Settings and ScreenScaffold; receipt-review draft/route tests and Scan-to-review entry cover conflicts, manual IDs, exclusion, session races and pending saves. Capture remains simulated. |
+| Database          | SCKRL-310 migration replay, legacy preservation, command conflicts, snapshot consistency, manual-line provenance, immutable parser evidence, and denied direct mutations ([SQL README](../../supabase/tests/README.md)).    |
 
 ## SCKRL-310 evidence
 
 The local acceptance recorded in `status.md` is 102 automated tests, workspace format/lint/typecheck, Next production build, clean and populated PostgreSQL replay, legacy assertions, and review/adversarial SQL command suites. SQL fixtures use a disposable database, synthetic rows, an `auth.uid()` stub, and Supabase-like grants. Command fixtures roll back their own writes; never point them at hosted or application data.
 
-The SCKRL-310 migration is not applied to dev Supabase. No hosted Supabase/Auth/PostgREST, real camera/gallery/PDF, private media upload, asynchronous OCR provider, mobile review UI, stock placement, expiry placement, or deployed CI run is covered by those local checks. SCKRL-310 review data is therefore a ready local contract, not a completed end-user receipt loop.
+Codex has not applied SCKRL-310; the owner’s hosted migration state is unverified. No hosted Supabase/Auth/PostgREST, real camera/gallery/PDF, private media upload, asynchronous OCR provider, mobile review UI, stock placement, expiry placement, or deployed CI run is covered by those local checks. SCKRL-310 review data is therefore a ready local contract, not a completed end-user receipt loop.
+
+## SCKRL-304 evidence boundary
+
+Focused review helpers, mounted review and Scan entry use mocked clients. Mobile tests, lint,
+typecheck and iOS bundle export are local source/build evidence, not connected PostgREST or native
+visual/accessibility acceptance. See [SCKRL-304 QA](../qa/sckrl-304-review.md) and `status.md` for
+current results. Adding a route may require Expo to regenerate ignored `.expo/types/router.d.ts`
+before typecheck; do not work around stale route types with an unsafe cast.
 
 ## Maintenance workflow
 

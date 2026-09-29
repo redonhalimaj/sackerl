@@ -254,7 +254,7 @@ TypeScript. [packages/api-client/src/receipts.ts](<../../../packages/api-client/
 
 Calls / references: [[Methods - packages-api-client-src-receipts#^s-e083c6e97671|mapReceiptReviewSnapshot]] (call), [[Methods - packages-api-client-src-receipts#^s-f9ea6594bd00|SackerlReceiptsClient.requestRpcJson]] (call), [[Methods - packages-api-client-src-receipts#^s-600360c42d86|validateHouseholdId]] (call), [[Methods - packages-api-client-src-receipts#^s-9121b322f8e5|validateReceiptId]] (call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-e61d34f22abd|get_receipt_review]] (RPC)
 
-Used by: [[Methods - apps-web-app-receipts-id-items-route#^s-c1f484f1c053|GET]] (call), [[Methods - packages-api-client-src-receipts#^s-ca084ff7a017|SackerlReceiptsClient.listReceiptItems]] (call)
+Used by: [[Methods - apps-mobile-app-receipt-review-id-#^s-6a1bc4b188f9|ReceiptReviewRoute.loadReview]] (call), [[Methods - apps-web-app-receipts-id-items-route#^s-c1f484f1c053|GET]] (call), [[Methods - packages-api-client-src-receipts#^s-ca084ff7a017|SackerlReceiptsClient.listReceiptItems]] (call)
 
 ## SackerlReceiptsClient.listReceiptItems
 
@@ -318,7 +318,7 @@ TypeScript. [packages/api-client/src/receipts.ts](<../../../packages/api-client/
 
 Calls / references: [[Methods - packages-api-client-src-profile#^s-c2ace5fd70e5|ApiRequestError.constructor]] (call), [[Methods - packages-api-client-src-receipts#^s-e083c6e97671|mapReceiptReviewSnapshot]] (call), [[Methods - packages-api-client-src-receipts#^s-f07f62c7381b|prepareReviewLineRow]] (argument reference), [[Methods - packages-api-client-src-receipts#^s-f9ea6594bd00|SackerlReceiptsClient.requestRpcJson]] (call), [[Methods - packages-api-client-src-receipts#^s-768e5ca919ad|validateClientLineId]] (call), [[Methods - packages-api-client-src-receipts#^s-83d079e2bbb8|validateGenerationId]] (call), [[Methods - packages-api-client-src-receipts#^s-600360c42d86|validateHouseholdId]] (call), [[Methods - packages-api-client-src-receipts#^s-9121b322f8e5|validateReceiptId]] (call), [[Methods - packages-api-client-src-receipts#^s-fe38f405ada0|validateReceiptItemId]] (call), [[Methods - packages-api-client-src-receipts#^s-9d81b2974936|validateReviewRevision]] (call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-c1a20c97846b|save_receipt_review]] (RPC)
 
-Used by: [[Methods - apps-web-app-receipts-id-items-route#^s-ac5010b53f7a|PUT]] (call)
+Used by: [[Methods - apps-mobile-app-receipt-review-id-#^s-1acc32fe1b86|ReceiptReviewRoute.handleSaveReview]] (call), [[Methods - apps-web-app-receipts-id-items-route#^s-ac5010b53f7a|PUT]] (call)
 
 ## SackerlReceiptsClient.updateReceipt
 

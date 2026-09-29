@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "1980f7371ed95810",
+        "id": "e92f7f377a425979",
         "type": "tabs",
         "children": [
           {
-            "id": "f44500b14c2be101",
+            "id": "60163992c8753aab",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -181,8 +181,10 @@
       "bases:Create new base": false
     }
   },
-  "active": "f44500b14c2be101",
+  "active": "60163992c8753aab",
   "lastOpenFiles": [
+    "generated/Methods - supabase-migrations-20260916100000-sckrl-406-expiry-provenance.md",
+    "Recipes and Shopping.md",
     "generated/Methods - apps-mobile-app-add-item.md"
   ]
 }

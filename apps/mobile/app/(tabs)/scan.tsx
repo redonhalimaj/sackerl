@@ -1,7 +1,7 @@
 import { colors, nativeFont, space } from '@sackerl/tokens';
 import type { AuthenticatedUserContext } from '@sackerl/api-client';
-import { useRouter } from 'expo-router';
-import { useState, type JSX } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useRef, useState, type JSX } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -145,21 +145,39 @@ export default function ScanRoute(): JSX.Element {
   const { session } = useAuthSession();
   const [scanState, setScanState] = useState<ScanState>('aligned');
   const [statusText, setStatusText] = useState('Align receipt inside frame - hold steady');
+  const captureInFlight = useRef(false);
+  const captureRequest = useRef(0);
   const captureDisabled = scanState === 'misaligned' || scanState === 'capturing';
 
+  useFocusEffect(
+    useCallback(() => {
+      captureRequest.current += 1;
+      captureInFlight.current = false;
+      setScanState('aligned');
+      return () => {
+        captureRequest.current += 1;
+        captureInFlight.current = false;
+      };
+    }, [session?.access_token, session?.user?.id]),
+  );
+
   async function createUploadedReceipt(source: ReceiptCaptureSource) {
-    if (captureDisabled) {
+    if (captureDisabled || captureInFlight.current) {
       return;
     }
 
+    captureInFlight.current = true;
+    const request = ++captureRequest.current;
     setScanState('capturing');
 
     try {
       setStatusText(source === 'camera' ? 'Capturing receipt...' : 'Preparing receipt upload...');
       await wait(220);
+      if (request !== captureRequest.current) return;
 
       const context = buildContext(session);
       const household = await getMobileProfileClient().getHousehold(context);
+      if (request !== captureRequest.current) return;
 
       if (!household) {
         throw new Error('Household not found.');
@@ -172,11 +190,17 @@ export default function ScanRoute(): JSX.Element {
         status: 'uploaded',
       });
 
-      setStatusText(`Receipt uploaded. ID ${receipt.id.slice(0, 8)} is ready for parsing.`);
+      if (request !== captureRequest.current) return;
+      setStatusText('Receipt saved. Opening review...');
+      router.push({ pathname: '/receipt-review/[id]', params: { id: receipt.id } });
     } catch (error) {
+      if (request !== captureRequest.current) return;
       setStatusText(error instanceof Error ? error.message : 'Unable to upload receipt.');
     } finally {
-      setScanState('aligned');
+      if (request === captureRequest.current) {
+        captureInFlight.current = false;
+        setScanState('aligned');
+      }
     }
   }
 
@@ -244,11 +268,14 @@ export default function ScanRoute(): JSX.Element {
           />
           <Text style={styles.statusText}>{statusText}</Text>
         </View>
+        <Text style={styles.statusText}>Capture is simulated. No photo is uploaded yet.</Text>
 
         <View style={styles.bottomActions}>
           <Pressable
             accessibilityLabel="Import receipt from gallery"
             accessibilityRole="button"
+            accessibilityState={{ disabled: captureDisabled }}
+            disabled={captureDisabled}
             onPress={() => {
               handleImport('gallery');
             }}
@@ -276,6 +303,8 @@ export default function ScanRoute(): JSX.Element {
           <Pressable
             accessibilityLabel="Import receipt PDF"
             accessibilityRole="button"
+            accessibilityState={{ disabled: captureDisabled }}
+            disabled={captureDisabled}
             onPress={() => {
               handleImport('pdf');
             }}

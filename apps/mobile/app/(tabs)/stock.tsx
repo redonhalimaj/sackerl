@@ -1,6 +1,6 @@
 import { colors, nativeFont, nativeTypography, space } from '@sackerl/tokens';
 import {
-  estimateExpiryDate,
+  ApiRequestError,
   itemCategories,
   itemQuantityUnits,
   type AuthenticatedUserContext,
@@ -29,6 +29,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { useAuthSession } from '../../lib/auth-session';
+import { buildEditItemMutation, isValidGregorianDate } from '../../lib/add-item-form';
 import { getMobileItemsClient } from '../../lib/items';
 import { getMobileProfileClient } from '../../lib/profile';
 
@@ -65,7 +66,6 @@ const fontFamily =
       ? nativeFont.android
       : nativeFont.fallback;
 
-const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const defaultZoneKeys = ['fridge', 'pantry', 'basement', 'freezer'] as const;
 const itemPageSize = 100;
 
@@ -430,6 +430,7 @@ export default function StockRoute(): JSX.Element {
   const [editCategoryId, setEditCategoryId] = useState<ItemCategoryId>('produce');
   const [editErrors, setEditErrors] = useState<ItemEditErrors>({});
   const [editExpiryInput, setEditExpiryInput] = useState('');
+  const [editExpiryTouched, setEditExpiryTouched] = useState(false);
   const [editName, setEditName] = useState('');
   const [editQuantityInput, setEditQuantityInput] = useState('1');
   const [editQuantityUnit, setEditQuantityUnit] = useState<ItemQuantityUnit>('pcs');
@@ -594,6 +595,7 @@ export default function StockRoute(): JSX.Element {
     setEditCategoryId(item.categoryId);
     setEditZoneKey(itemZone.key);
     setEditExpiryInput(item.expiresOn ?? '');
+    setEditExpiryTouched(false);
     setIsMoveMode(false);
   }
 
@@ -625,8 +627,8 @@ export default function StockRoute(): JSX.Element {
       nextErrors.zone = 'This storage zone is not ready yet. Save storage setup again.';
     }
 
-    if (trimmedExpiry && !datePattern.test(trimmedExpiry)) {
-      nextErrors.expiry = 'Use YYYY-MM-DD or leave it blank.';
+    if (trimmedExpiry && !isValidGregorianDate(trimmedExpiry)) {
+      nextErrors.expiry = 'Enter a real date in YYYY-MM-DD format, or leave it blank.';
     }
 
     setEditErrors(nextErrors);
@@ -635,16 +637,7 @@ export default function StockRoute(): JSX.Element {
       return null;
     }
 
-    return {
-      expiresOn:
-        trimmedExpiry ||
-        estimateExpiryDate({
-          categoryId: editCategoryId,
-          zoneKey: selectedEditZone.key,
-        }),
-      qtyValue,
-      zone: selectedEditZone,
-    };
+    return { expiresOn: trimmedExpiry || null, qtyValue, zone: selectedEditZone };
   }
 
   function removeItemFromList(itemId: string) {
@@ -659,22 +652,40 @@ export default function StockRoute(): JSX.Element {
     if (!context || !selectedItem || !validFields || isDetailSaving) {
       return;
     }
+    const zoneId = validFields.zone.id;
+
+    if (!zoneId) {
+      return;
+    }
 
     setIsDetailSaving(true);
     setDetailErrorMessage(undefined);
 
     try {
       const household = await getMobileProfileClient().ensureHousehold(context);
-      const updatedItem = await getMobileItemsClient().updateItem(context, {
+      const mutation = buildEditItemMutation({
         categoryId: editCategoryId,
-        expiresOn: validFields.expiresOn,
-        householdId: household.id,
-        id: selectedItem.id,
+        expiryInput: editExpiryInput,
+        expiryTouched: editExpiryTouched,
         name: editName.trim(),
         qtyUnit: editQuantityUnit,
         qtyValue: validFields.qtyValue,
-        zoneId: validFields.zone.id,
+        selectedItem,
+        zoneId,
       });
+      const updatedItem =
+        mutation.kind === 'clear'
+          ? await getMobileItemsClient().clearItemExpiry(context, {
+              changes: mutation.changes,
+              expectedFactId: mutation.expectedFactId,
+              householdId: household.id,
+              id: selectedItem.id,
+            })
+          : await getMobileItemsClient().updateItem(context, {
+              ...mutation.changes,
+              householdId: household.id,
+              id: selectedItem.id,
+            });
 
       if (validFields.zone.key === activeZone.key) {
         setItems((current) =>
@@ -689,7 +700,13 @@ export default function StockRoute(): JSX.Element {
 
       closeItemDetail({ force: true });
     } catch (error) {
-      setDetailErrorMessage(error instanceof Error ? error.message : 'Unable to save item.');
+      setDetailErrorMessage(
+        error instanceof ApiRequestError && error.status === 409
+          ? 'This item changed elsewhere. Your draft is still here. Reload the item before saving.'
+          : error instanceof Error
+            ? error.message
+            : 'Unable to save item.',
+      );
     } finally {
       setIsDetailSaving(false);
     }
@@ -1206,6 +1223,7 @@ export default function StockRoute(): JSX.Element {
                   editable={!isDetailSaving}
                   keyboardType="numbers-and-punctuation"
                   onChangeText={(value) => {
+                    setEditExpiryTouched(true);
                     setEditExpiryInput(value);
                     if (editErrors.expiry) {
                       setEditErrors((current) => ({ ...current, expiry: undefined }));
@@ -1217,8 +1235,7 @@ export default function StockRoute(): JSX.Element {
                   value={editExpiryInput}
                 />
                 <Text style={styles.detailMeta}>
-                  Leave blank to use the estimate for {categoryMeta[editCategoryId].label} in{' '}
-                  {selectedEditZone?.label ?? activeZone.label}.
+                  Type a date to confirm it, or leave blank to clear this expiry date.
                 </Text>
                 {editErrors.expiry ? (
                   <Text style={styles.detailError}>{editErrors.expiry}</Text>
