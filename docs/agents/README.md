@@ -4,11 +4,23 @@ This folder contains role briefs for the Sackerl agent workflow.
 
 The canonical roster, model-routing rules, delegation contract, and handoff contract live in [TEAM.md](../../TEAM.md).
 
-## Model Matrix
+The [Council workflow](council-workflow.md) combines **The Team**, a **Deputy**, and the root
+**Chair**. It requires explicit Team/Deputy consensus, reciprocal Chair review, and unanimous final
+agreement while preserving independent QA. Preferred routes below do not change an active model.
+
+The active continuation is [the GPT/Codex session handover](codex-next-work-package.md).
+The owner superseded the planned Claude handover on 2026-09-29.
+
+Use [Codex ↔ Claude handoff](codex-claude-handoff.md) when changing assistants. `TEAM.md`'s provider
+profiles take precedence over GPT-specific model wording in these role briefs; role ownership and
+review requirements apply in both providers.
+
+## Model Matrix (Codex Defaults)
 
 | Role                     | Model          | Reasoning |
 | ------------------------ | -------------- | --------- |
-| Orchestrator             | `gpt-5.6-sol`  | `xhigh`   |
+| Chair / Orchestrator     | `gpt-6-astra`  | `xhigh`   |
+| Deputy                   | `gpt-5.5`      | `xhigh`   |
 | Business Process Analyst | `gpt-5.6-luna` | `high`    |
 | Frontend                 | `gpt-5.6-luna` | `high`    |
 | Backend                  | `gpt-5.5`      | `xhigh`   |
@@ -20,6 +32,8 @@ The Orchestrator must use this matrix when the runtime supports explicit model r
 
 ## Roles
 
+- [council-workflow.md](council-workflow.md)
+- [deputy.md](deputy.md)
 - [orchestrator.md](orchestrator.md)
 - [business-process-analyst.md](business-process-analyst.md)
 - [frontend.md](frontend.md)

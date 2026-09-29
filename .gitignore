@@ -18,6 +18,7 @@ coverage/
 .DS_Store
 *.swp
 *.sql
+!supabase/tests/*.sql
 !supabase/migrations/*.sql
 
 .mcp.json

@@ -10,6 +10,8 @@ The foundation scaffold, Phase 1 design-system implementation, Slice 1 auth/prof
 
 - [PROGRAM.md](PROGRAM.md): long-term product direction, capability review, staged delivery program, and agent ownership. It does not replace live ticket status or accepted ticket scope.
 - [TEAM.md](TEAM.md): canonical team composition, model assignment, delegation contract, escalation rules, and handoff workflow.
+- [Council workflow](docs/agents/council-workflow.md): The Team and GPT-5.5 Deputy prepare unanimous recommendations, followed by reciprocal Chair review and unanimous final decisions.
+- [Codex ↔ Claude handoff](docs/agents/codex-claude-handoff.md): conditional handover or parallel-work workflow; use the current work checkpoint in `status.md` first.
 - [epic.md](epic.md): product epics and high-level delivery map.
 - [features.md](features.md): feature index and feature-document rules.
 - [status.md](status.md): live Scrum ticket status.
@@ -28,7 +30,7 @@ The foundation scaffold, Phase 1 design-system implementation, Slice 1 auth/prof
 - The repo uses pnpm workspaces with Turborepo.
 - `apps/web` is a Next.js App Router scaffold.
 - `apps/web` exposes authenticated API route handlers for profile, household, stock, receipts, receipt parsing, recipes, and shopping lists.
-- `apps/mobile` is an Expo SDK 54 + Expo Router app with auth-gated onboarding, storage-zone setup, stock and expiry flows, recipe suggestions, shopping lists, and a simulated receipt-capture foundation.
+- `apps/mobile` is an Expo SDK 57 + Expo Router app with auth-gated onboarding, storage-zone setup, stock and expiry flows, recipe suggestions, shopping lists, and a simulated receipt-capture foundation.
 - `packages/tokens` and `packages/ui` contain the Phase 1 design-system foundation, including the animated paper bag and tab-shell UI assets.
 - `packages/api-client` contains shared Supabase-backed auth, profile/household, stock, receipt, recipe, and shopping-list clients.
 - `.env*` files are ignored local files and must not be tracked in Git.
@@ -45,20 +47,26 @@ Default Slice 1 provider recommendation: Supabase Auth plus Supabase/Postgres un
 
 `TEAM.md` is authoritative for model assignments and routing. This table is the repository-startup summary.
 
-| Agent                    | Model          | Reasoning | Primary Ownership                                                                                                               |
-| ------------------------ | -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Agent Orchestrator       | `gpt-5.6-sol`  | `xhigh`   | Plans work, routes models, coordinates subagents, resolves conflicts, integrates results, and enforces program stage gates.     |
-| Business Process Analyst | `gpt-5.6-luna` | `high`    | Turns product goals into journeys, business rules, metrics, acceptance criteria, open decisions, and SCKRL tickets.             |
-| Frontend                 | `gpt-5.6-luna` | `high`    | Implements scoped mobile/web UI, accessibility, correction flows, drag/tap alternatives, and visible prediction uncertainty.    |
-| Backend                  | `gpt-5.5`      | `xhigh`   | Owns domain models, transactional APIs, receipt/OCR workflows, event history, notifications, and recommendation logic.          |
-| Infrastructure           | `gpt-5.5`      | `xhigh`   | Owns architecture, privacy, persistence, media, jobs, environments, external services, reliability, and provider boundaries.    |
-| DevOps                   | `gpt-5.6-luna` | `high`    | Owns scoped CI/CD, build tooling, environment automation, observability wiring, release checks, and deployment mechanics.       |
-| QA                       | `gpt-5.5`      | `high`    | Owns stage-gate validation, integration and journey coverage, accessibility, data quality, recommendation evaluation, and risk. |
+| Agent                      | Model          | Reasoning | Primary Ownership                                                                                                               |
+| -------------------------- | -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Chair / Agent Orchestrator | `gpt-6-astra`  | `xhigh`   | Expert refinement, reciprocal Council review, final integration and program stage gates.                                        |
+| Deputy                     | `gpt-5.5`      | `xhigh`   | Coordinates The Team's detailed work, synthesizes evidence and obtains explicit unanimous recommendations.                      |
+| Business Process Analyst   | `gpt-5.6-luna` | `high`    | Turns product goals into journeys, business rules, metrics, acceptance criteria, open decisions, and SCKRL tickets.             |
+| Frontend                   | `gpt-5.6-luna` | `high`    | Implements scoped mobile/web UI, accessibility, correction flows, drag/tap alternatives, and visible prediction uncertainty.    |
+| Backend                    | `gpt-5.5`      | `xhigh`   | Owns domain models, transactional APIs, receipt/OCR workflows, event history, notifications, and recommendation logic.          |
+| Infrastructure             | `gpt-5.5`      | `xhigh`   | Owns architecture, privacy, persistence, media, jobs, environments, external services, reliability, and provider boundaries.    |
+| DevOps                     | `gpt-5.6-luna` | `high`    | Owns scoped CI/CD, build tooling, environment automation, observability wiring, release checks, and deployment mechanics.       |
+| QA                         | `gpt-5.5`      | `high`    | Owns stage-gate validation, integration and journey coverage, accessibility, data quality, recommendation evaluation, and risk. |
 
 ## Model Routing Rules
 
+The roster above lists Codex defaults. The user-authorized Claude
+profile in `TEAM.md` overrides GPT-specific routing when Claude takes over. Preserve the same role
+ownership, escalation and independent QA gates; record actual provider/model and file ownership in
+`status.md`. Checkpoint at milestones so either assistant can recover after an abrupt limit.
+
 - Use the exact model and reasoning effort in the roster when the runtime supports explicit agent selection. Do not silently substitute another model.
-- Use `gpt-5.6-sol` at `xhigh` for program integration, dependency resolution, conflicting evidence, final review, and work spanning multiple specialist roles.
+- The Council Chair's preferred route is `gpt-6-astra` at `xhigh`; the root session remains Chair and must record its actual runtime model when exposed rather than claim a model switch. The `gpt-5.5` Deputy at `xhigh` coordinates the detailed work.
 - Use `gpt-5.5` for the highest-risk specialist reasoning: schemas and transactions, architecture and privacy, asynchronous workflows, recommendation logic, and QA or safety evaluation.
 - Use `gpt-5.6-luna` for well-scoped, high-volume work with stable contracts: ticket refinement, UI implementation, CI wiring, documentation, and focused validation.
 - A Luna-owned task must be escalated to the Orchestrator before it expands into unresolved cross-layer architecture, destructive migration design, authentication or RLS policy, health safety, or recommendation-policy decisions.
@@ -82,6 +90,12 @@ Ticket states:
 | Merged      | Work is merged into `main` and docs are updated.       |
 
 ## Delivery Flow
+
+Use the [Council workflow](docs/agents/council-workflow.md) around substantive decisions and final
+acceptance. The specialist group is **The Team**. Deputy and required Team members explicitly
+endorse one recommendation before Chair review; after discussion, all participants including the
+Chair endorse the same final revision. Preserve independent QA, visible dissent and bounded review
+rounds. Routine implementation continues under the accepted decision without repeated votes.
 
 1. The Agent Orchestrator checks the applicable `PROGRAM.md` stage and gate, then assigns one primary owner with the roster model and reasoning effort.
 2. The Business Process Analyst resolves product ambiguity and refines the outcome, rules, metrics, edge cases, and acceptance criteria.

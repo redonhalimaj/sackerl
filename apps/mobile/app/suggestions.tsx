@@ -216,11 +216,14 @@ export default function SuggestionsRoute(): JSX.Element {
             return;
           }
 
-          const result = await getMobileRecipesClient().listSuggestions(context, {
-            householdId: household.id,
-            limit: 50,
-            minScore: 0.2,
-          });
+          const result = await getMobileRecipesClient(household.calendarTimeZone).listSuggestions(
+            context,
+            {
+              householdId: household.id,
+              limit: 50,
+              minScore: 0.2,
+            },
+          );
 
           if (isActive) {
             setSuggestions(result.suggestions);

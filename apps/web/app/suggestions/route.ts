@@ -21,7 +21,7 @@ export async function GET(request: Request): Promise<Response> {
     const searchParams = new URL(request.url).searchParams;
     const limit = readOptionalIntegerParam(searchParams, 'limit');
     const minScore = readOptionalNumberParam(searchParams, 'min_score');
-    const result = await getWebRecipesClient().listSuggestions(context, {
+    const result = await getWebRecipesClient(household.calendarTimeZone).listSuggestions(context, {
       householdId: household.id,
       ...(limit !== undefined ? { limit } : {}),
       ...(minScore !== undefined ? { minScore } : {}),

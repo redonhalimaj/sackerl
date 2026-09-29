@@ -126,7 +126,9 @@ export default function RecipeDetailRoute(): JSX.Element {
             throw new Error('Household not found.');
           }
 
-          const nextSuggestion = await getMobileRecipesClient().getSuggestion(context, {
+          const nextSuggestion = await getMobileRecipesClient(
+            household.calendarTimeZone,
+          ).getSuggestion(context, {
             householdId: household.id,
             recipeId,
           });

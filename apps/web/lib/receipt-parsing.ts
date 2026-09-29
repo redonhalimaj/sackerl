@@ -5,6 +5,7 @@ import {
   type ParsedReceiptDocument,
   type Receipt,
   type ReceiptItem,
+  type ReceiptReview,
 } from '@sackerl/api-client';
 
 import { getWebReceiptsClient } from './receipts';
@@ -17,6 +18,7 @@ export type ReceiptParseJobResult = {
   readonly items: readonly ReceiptItem[];
   readonly provider: string;
   readonly receipt: Receipt;
+  readonly review: ReceiptReview;
 };
 
 type ReceiptTextProviderInput = {
@@ -55,6 +57,8 @@ const deterministicProvider: ReceiptTextProvider = {
   id: 'deterministic',
 };
 
+const parserVersion = 'deterministic-rules-v1';
+
 export function readReceiptParseJobBody(body: unknown): ReceiptParseJobInput {
   if (body == null) {
     return {};
@@ -90,43 +94,31 @@ export async function runReceiptParseJob(
 
   try {
     receipt = await client.getReceipt(context, { householdId, id: receiptId });
-    await client.updateReceipt(context, {
-      householdId,
-      id: receiptId,
-      parsedAt: null,
-      status: 'parsing',
-    });
 
     const text = await provider.extractText({ receipt, text: input.text });
     const parsed = parseReceiptText(text);
 
     assertParsedItems(parsed);
 
-    const items = await client.replaceReceiptItems(context, {
+    const review = await client.promoteReceiptParse(context, {
+      expectedActiveParseGenerationId: receipt.activeParseGenerationId,
+      expectedReviewRevision: receipt.reviewRevision,
       householdId,
-      items: parsed.items,
+      parsed,
+      parserVersion,
+      provider: provider.id,
       receiptId,
-    });
-    const parsedAt = new Date().toISOString();
-    const parsedReceipt = await client.updateReceipt(context, {
-      currency: parsed.currency,
-      householdId,
-      id: receiptId,
-      parsedAt,
-      purchasedOn: parsed.purchasedOn,
-      status: 'parsed',
-      storeName: parsed.storeName,
-      totalCents: parsed.totalCents,
     });
 
     return {
-      items,
+      items: review.items,
       provider: provider.id,
-      receipt: parsedReceipt,
+      receipt: review.receipt,
+      review,
     };
   } catch (error) {
     if (receipt) {
-      await markReceiptFailed(context, householdId, receiptId);
+      await markReceiptFailed(context, householdId, receiptId, receipt);
     }
 
     throw error;
@@ -137,13 +129,14 @@ async function markReceiptFailed(
   context: AuthenticatedUserContext,
   householdId: string,
   receiptId: string,
+  receipt: Receipt,
 ): Promise<void> {
   try {
-    await getWebReceiptsClient().updateReceipt(context, {
+    await getWebReceiptsClient().markReceiptParseFailed(context, {
+      expectedActiveParseGenerationId: receipt.activeParseGenerationId,
+      expectedReviewRevision: receipt.reviewRevision,
       householdId,
-      id: receiptId,
-      parsedAt: null,
-      status: 'failed',
+      receiptId,
     });
   } catch {
     // Preserve the original parse error for the route response.

@@ -14,6 +14,7 @@
 > - [docs/environment.md](docs/environment.md) - environment variable setup
 > - [docs/design](docs/design) - active design handoff pointers
 > - [docs/agents](docs/agents) - detailed agent role briefs
+> - [Code map](docs/code-map/Sackerl%20Code%20Map.md) - Obsidian-friendly flows, methods, callers, and database relationships
 
 ## Quick Start
 
@@ -35,6 +36,7 @@ For mobile:
 
 ```bash
 pnpm dev:mobile
+pnpm --filter @sackerl/mobile ios:simulator
 ```
 
 The Phase 1 design-system foundation is present locally through tokens, shared UI primitives, icon assets, the animated paper bag, brand logo utilities, and the mobile tab shell. Slice 1 now also includes Supabase Auth, profile/household persistence, storage-zone onboarding, the normalized item data model, and item CRUD API routes.
@@ -63,6 +65,8 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm format:check
+pnpm code:map
+pnpm code:map:check
 
 pnpm typecheck:web
 pnpm typecheck:mobile
@@ -74,7 +78,7 @@ pnpm --filter @sackerl/mobile build
 
 - **Monorepo**: pnpm workspaces + Turborepo
 - **Web**: Next.js App Router + React + TypeScript
-- **Mobile**: Expo SDK 54 + Expo Router + React Native + TypeScript
+- **Mobile**: Expo SDK 57 + Expo Router + React Native + TypeScript
 - **Shared packages**: tokens, UI, and Supabase-backed API client boundaries
 - **Default Slice 1 providers**: Supabase Auth + Supabase Postgres, unless explicitly changed
 - **Quality gates**: ESLint, Prettier, TypeScript strict mode, Vitest
