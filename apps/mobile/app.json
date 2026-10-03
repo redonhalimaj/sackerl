@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Sackerl",
+    "slug": "sackerl",
+    "scheme": "sackerl",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "app.sackerl.mobile",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "app.sackerl.mobile"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

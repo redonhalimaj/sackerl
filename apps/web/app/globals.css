@@ -1,0 +1,27 @@
+@import '@sackerl/tokens/css-vars.css';
+@import '@sackerl/ui/primitives.css';
+
+:root {
+  color-scheme: light;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  margin: 0;
+  min-height: 100vh;
+}
+
+main {
+  display: grid;
+  min-height: 100vh;
+  place-content: center;
+  padding: 24px;
+}

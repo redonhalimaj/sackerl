@@ -1,0 +1,23 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+build/
+.next/
+.expo/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# local env files
+.env
+.env.*
+
+# OS/editor
+.DS_Store
+*.swp
+*.sql
+!supabase/migrations/*.sql
+
+.mcp.json

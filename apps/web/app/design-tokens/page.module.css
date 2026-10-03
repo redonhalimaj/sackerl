@@ -1,0 +1,106 @@
+.page {
+  align-content: start;
+  display: grid;
+  gap: 32px;
+  min-height: 100vh;
+  padding: 40px;
+}
+
+.header {
+  display: grid;
+  gap: 10px;
+  max-width: 760px;
+}
+
+.eyebrow {
+  color: var(--mute);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.copy {
+  color: var(--ink-soft);
+  font-size: 16px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.swatch {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  height: 82px;
+}
+
+.meta {
+  display: grid;
+  gap: 7px;
+}
+
+.nameRow {
+  align-items: baseline;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.name {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.cssVar {
+  color: var(--mute);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.detail {
+  color: var(--ink-soft);
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  gap: 8px;
+  justify-content: space-between;
+  line-height: 1.4;
+}
+
+.label {
+  color: var(--mute);
+}
+
+.value {
+  text-align: right;
+}
+
+.role {
+  color: var(--mute);
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 2px 0 0;
+}

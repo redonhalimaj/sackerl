@@ -1,0 +1,16 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "paths": {
+      "@sackerl/api-client": ["packages/api-client/src/index.ts"],
+      "@sackerl/tokens": ["packages/tokens/src/index.ts"],
+      "@sackerl/ui": ["packages/ui/src/index.ts"]
+    },
+    "strict": true
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "exclude": ["node_modules"]
+}
