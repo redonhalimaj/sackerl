@@ -5,10 +5,13 @@ import {
   createManualReceiptReviewLine,
   createReceiptReviewDraft,
   includedLineCount,
+  normaliseReceiptExpiryDate,
+  formatReceiptExpiryDate,
   reviewNeedsAttention,
   setDraftLineIncluded,
   setDraftLineReviewState,
   updateDraftLine,
+  updateDraftLineExpiry,
   validateReceiptReviewDraft,
 } from './receipt-review';
 
@@ -20,6 +23,48 @@ const snapshot = {
 };
 
 describe('receipt review draft contract', () => {
+  it('defaults expiry to unknown, validates Gregorian date-only values, and formats without TZ shift', () => {
+    const draft = createReceiptReviewDraft(receiptReview());
+    expect(draft[0]).toMatchObject({ expiryState: 'unknown', expiryDateInput: '' });
+    expect(normaliseReceiptExpiryDate('2024-02-29')).toBe('2024-02-29');
+    expect(normaliseReceiptExpiryDate('2023-02-29')).toBeNull();
+    expect(normaliseReceiptExpiryDate('2024-04-31')).toBeNull();
+    expect(normaliseReceiptExpiryDate('2024-2-09')).toBeNull();
+    expect(formatReceiptExpiryDate('2024-02-29', 'en-GB')).toBe('29 February 2024');
+  });
+
+  it('serializes each expiry state and requires a real date for dated', () => {
+    const base = createReceiptReviewDraft(receiptReview());
+    const dated = updateDraftLineExpiry(base, 'line-1', 'dated', '2026-10-01');
+    expect(dated[0]?.reviewState).toBe('unresolved');
+    expect(buildSaveReceiptReviewInput({ ...snapshot, draft: dated }).lines[0]?.expiry).toEqual({
+      date: '2026-10-01',
+      state: 'dated',
+    });
+    expect(
+      buildSaveReceiptReviewInput({
+        ...snapshot,
+        draft: updateDraftLineExpiry(base, 'line-1', 'no_date'),
+      }).lines[0]?.expiry,
+    ).toEqual({ date: null, state: 'no_date' });
+    expect(() =>
+      buildSaveReceiptReviewInput({
+        ...snapshot,
+        draft: updateDraftLineExpiry(base, 'line-1', 'dated', '2026-02-30'),
+      }),
+    ).toThrow('real date');
+  });
+
+  it('does not reset review state for an unchanged expiry or expiry changes on excluded lines', () => {
+    const reviewed = createReceiptReviewDraft(
+      receiptReview([reviewItem({ reviewState: 'reviewed', included: false })]),
+    );
+    expect(updateDraftLineExpiry(reviewed, 'line-1', 'unknown')[0]?.reviewState).toBe('reviewed');
+    expect(updateDraftLineExpiry(reviewed, 'line-1', 'dated', '2026-10-01')[0]?.reviewState).toBe(
+      'reviewed',
+    );
+  });
+
   it('uses effective values without approving confident parser output or mutating evidence', () => {
     const review = receiptReview();
     const draft = createReceiptReviewDraft(review);

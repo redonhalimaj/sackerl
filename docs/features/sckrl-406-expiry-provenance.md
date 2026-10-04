@@ -315,10 +315,12 @@ the old constant, SCKRL-506's eligibility results are byte-identical after this 
 - It does not implement warning UI, colour, copy or overdue interaction (SCKRL-407).
 - It does not implement snooze or reminder state (SCKRL-408); snooze must be a separate column or
   table and must never write an expiry fact.
-- It does not implement receipt placement (SCKRL-311). Placement will supply a declaration per
-  created item exactly like Add Item does — `{ source: 'printed', printedMarking, confirm: true }`
-  for a reviewed printed date, `{ source: 'estimated', estimatorVersion }` for a filled estimate —
-  and needs no further schema from this ticket.
+- It does not implement receipt placement (SCKRL-311). The later
+  [SCKRL-312 receipt contract](sckrl-312-receipt-line-expiry.md) makes the initial placement
+  mapping receipt-specific: an entered date becomes a declared `user` fact with `confirm: false`,
+  an explicit no-date choice becomes an unconfirmed user null-date fact, and an unknown date
+  creates no fact. Initial receipt placement does not estimate dates or claim printed evidence.
+  Manual Add/Edit retains this ticket's accepted behavior.
 - It does not enable model-derived provenance. `source: 'model'` is reserved and rejected.
 - It does not change SCKRL-506 recipe eligibility behaviour.
 

@@ -34,6 +34,34 @@ describe('receipt review request boundary', () => {
     expect(readSaveReceiptReviewBody(input)).toEqual(input);
   });
 
+  it.each([
+    { date: null, state: 'unknown' },
+    { date: null, state: 'no_date' },
+    { date: '2024-02-29', state: 'dated' },
+  ])('preserves an explicit expiry choice while omitted expiry stays absent', (expiry) => {
+    const input = { ...body, lines: [{ ...line, expiry }] };
+    expect(readSaveReceiptReviewBody(input)).toEqual(input);
+    expect(readSaveReceiptReviewBody(body).lines[0]).not.toHaveProperty('expiry');
+  });
+
+  it.each([
+    { expiry: null },
+    { expiry: [] },
+    { expiry: { state: 'unknown' } },
+    { expiry: { date: '2026-04-31', state: 'dated' } },
+    { expiry: { date: '2026-09-30', state: 'no_date' } },
+    { expiry: { date: null, state: 'no_date', changedBy: 'forged-user' } },
+    { expiry: { date: '2026-09-30', state: 'dated', source: 'printed' } },
+    { expiryChangedBy: 'forged-user' },
+    { expiryChangedAt: '2026-09-01T00:00:00Z' },
+    { expiry_changed_by: 'forged-user' },
+    { expiry_changed_at: '2026-09-01T00:00:00Z' },
+  ])('rejects invalid expiry or caller-owned expiry attribution', (invalid) => {
+    expect(() =>
+      readSaveReceiptReviewBody({ ...body, lines: [{ ...line, ...invalid }] }),
+    ).toThrow();
+  });
+
   it.each([null, [], { ...body, lines: {} }, { ...body, expectedReviewRevision: '2' }])(
     'rejects malformed request structure',
     (input) => {

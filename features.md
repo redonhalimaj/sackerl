@@ -537,7 +537,7 @@ state. This is a QA aid, not real acquisition/OCR. See
 - Sage chip "N confident" + amber chip "M needs review" at the top.
 - Per-row: edit name, qty, unit, category.
 - Add missing item via dashed CTA at the bottom.
-- "Continue to placement" only enabled when no items are flagged `needs review`.
+- Saving is available when the full review is valid; placement remains unavailable until SCKRL-305 and SCKRL-311 are implemented. The saved-review exit and resume behavior follows SCKRL-312.
 
 **Depends on.** SCKRL-020, SCKRL-310
 
@@ -559,20 +559,23 @@ visual/accessibility checks; it does not acquire a circular dependency on comple
 - Matches `ScreenPlacement`.
 - Default zone suggested per category, for example Dairy -> Fridge, Pantry -> Pantry.
 - User can override; "Auto-sort" button accepts all suggestions.
-- "Save & set reminders" calls the idempotent SCKRL-311 placement command and navigates to the dashboard with a toast only after the transaction succeeds.
+- "Add to stock" calls the idempotent SCKRL-311 placement command and navigates to the dashboard with a toast only after the transaction succeeds. A later reminder-enabled control may mention reminders only when scheduling commits.
 - A complete tap-based placement path is available in addition to drag and drop.
+- SCKRL-312 first provides **Done for now** to Home for a clean saved review, with **Review saved. Items are not in stock yet.** Home has a bounded, authenticated pending-review entry that resumes the same receipt after app restart. Placement later integrates this path. Unsaved, failed, conflicted or uncertain saves keep the user in review with drafts preserved and offer keep editing, save/reconcile or explicit discard.
+- Placement validation failures preserve recoverable state and identify the field; stale review requires reconciliation; an already-placed result opens the committed result. Uncertain command responses never claim failure or success and recover with the same idempotency key and input. Only confirmed transaction success reports items as placed; copy does not claim reminders were scheduled unless that capability committed.
 
-**Depends on.** SCKRL-304, SCKRL-311
+**Depends on.** SCKRL-304, SCKRL-311, SCKRL-312
 
 ## SCKRL-306 - Receipt history
 
-**Summary.** A list of past receipts, tap to view the parsed result and image.
+**Summary.** A list of past receipts, tap to view the parsed result and image. Unplaced saved reviews are resumable from Home; placement is never repeated from history.
 
 **Acceptance criteria**
 
 - Sortable by date descending.
 - Filter by store.
-- Tap re-opens Review screen for re-edit. It cannot re-place; new items would have to be added manually.
+- Pending reviews resume through the authenticated Home entry and reopen their same receipt ID after restart; this bounded entry is not full receipt history.
+- A committed receipt is read-only in history and cannot be re-placed. Post-placement correction/re-edit is deferred until a separate contract defines receipt snapshot and stock-lineage behavior; any resulting new stock must be added through the normal item flow.
 
 **Depends on.** SCKRL-304, SCKRL-308, SCKRL-310
 
@@ -649,13 +652,44 @@ visual/accessibility checks; it does not acquire a circular dependency on comple
 - Command requires an idempotency key and validates authenticated household membership.
 - Every included receipt line is reviewed and has a valid household storage zone before placement.
 - Stock rows link uniquely to their source receipt lines and use `source: receipt`.
-- Stock creation, active expiry facts, acquisition events, and receipt placement state commit or roll back together.
-- Retrying a completed command returns the prior result without creating duplicate stock or events.
-- Injected validation and persistence failures leave reviewed receipt data and existing stock unchanged.
+- The command reads the locked, persisted SCKRL-312 expiry choice; clients cannot supply or override expiry/provenance in placement input. `unknown` creates no expiry fact; `dated` creates a declared `user` fact with unknown printed marking and `confirm:false`; `no_date` creates a declared `user` null-date fact with unknown marking and `confirm:false`. Receipt-line reviewer attribution remains on the source line; SCKRL-406 records the authenticated placer as fact writer and does not inherit confirmation.
+- Stock creation, applicable expiry facts, acquisition events, and immutable receipt placement result commit or roll back together.
+- Retrying the same idempotency key and identical normalized input returns the prior result before stale-token checks. The same key with different input conflicts; a second key cannot place an already placed receipt and returns an authenticated canonical result.
+- Timeout recovery checks canonical receipt/key status and retries only the same key and input; an unplaced read alone does not prove that a command is not in flight. Membership is checked before cached replay.
+- Injected validation and persistence failures leave reviewed receipt data and existing stock unchanged. After placement, review saves and parse promotion/failure reject under the receipt lock; the initial review is read-only.
 
-**Depends on.** SCKRL-202, SCKRL-310, SCKRL-406
+**Depends on.** SCKRL-202, SCKRL-310, SCKRL-312, SCKRL-406
 
-**Notes.** Implement the transaction defined by ADR-0001. Do not extend this ticket into later product normalization or full event sourcing.
+**Notes.** Implement the transaction defined by ADR-0001 and its SCKRL-312 addendum. The initial placement has no expiry confirmation control; the existing stock confirmation flow may later confirm a dated fact as the acting user. Post-placement correction and SCKRL-306 re-edit remain deferred until a separate contract defines source snapshot and stock-lineage semantics. Do not extend this ticket into later product normalization or full event sourcing.
+
+## SCKRL-312 - Receipt-line expiry entry and post-save continuation
+
+**Classification:** usability gap / product contract refinement. **Priority:** P1 alpha trust.
+**Proposed primary implementation owner:** Frontend, with Backend, Infrastructure and QA review.
+**Status:** contract ratified by [COUNCIL-20260930-01 v2](docs/agents/council-decisions/COUNCIL-20260930-01.md); Frontend owns implementation, Backend owns schema/command/client prerequisites, Infrastructure reviews the ADR-0001 addendum, and independent QA owns acceptance. See the [SCKRL-312 contract](docs/features/sckrl-312-receipt-line-expiry.md) for the complete rules and gates.
+
+**Summary.** Let a household review optional expiry information for receipt lines and leave a saved
+review when placement is not yet available. The owner reached the receipt editor and reported that
+its edit sheet has no expiry date control, then reported being stuck after a successful review save
+because placement is disabled. This scope carries those observations into an explicit contract; it
+does not claim that receipt parsing detects package expiry dates.
+
+**Acceptance criteria**
+
+- Each receipt line stores exactly one expiry choice: `unknown` (no assertion), `dated` (a valid Gregorian `YYYY-MM-DD`), or `no_date` (an intentional no-expiry record). “No expiry date” helper and accessibility copy distinguish that deliberate choice from “Unknown”; removing a date returns to `unknown`.
+- Expiry is persisted with the full generation/revision-guarded SCKRL-310 review save. Omission preserves existing values and defaults new lines to `unknown`, protecting old clients from erasing expiry. Invalid state/date combinations and client-supplied actor/time values are rejected atomically. Expiry metadata changes only when the state/date changes, and expiry edits on included lines require explicit review again. An optional unknown or no-date choice is valid and never blocks review.
+- A stale generation/revision conflict or save failure preserves the visible local draft and never overwrites a newer review. Excluded lines may retain expiry choices, but placement creates no stock, expiry facts or acquisition events for them.
+- A clean saved review offers **Done for now** to Home with **Review saved. Items are not in stock yet.** Home has a bounded authenticated pending-review entry that resumes the same receipt after restart; it does not implement full receipt history. Unsaved, failed, conflicted or uncertain saves preserve drafts and require keep editing, save/reconcile or explicit discard before leaving.
+- Calendar dates preserve year/month/day across locale, device/household time zones and DST; locale controls display only. Validate real dates including leap days and allow past dates with ordinary date display.
+- SCKRL-311 consumes the persisted expiry choice. `unknown` creates no fact; `dated` creates a declared `user` fact with unknown printed marking and `confirm:false`; `no_date` creates a declared user null-date fact with unknown marking and `confirm:false`. No reviewer confirmation is inherited; no placement confirmation control is included. The existing stock flow can later confirm a dated fact as the acting user.
+- Receipt review does not automatically estimate unknown expiry. The receipt-specific exception to SCKRL-405 is documented there; purchase date and parser confidence are never expiry evidence. Any later estimate needs an accepted contract for its date basis, category/zone/version policy, preview consistency and confirmation.
+- SCKRL-311 atomically commits stock, applicable expiry facts, acquisition events, unique receipt-line lineage and an immutable placement result. It validates authenticated household membership and the reviewed line/zone set. Identical idempotency retries return the prior result; a different payload under the same key conflicts; another key cannot place an already placed receipt. Uncertain responses recover through canonical status and the same key/input; an unplaced read alone is not proof that placement is not in flight.
+- Placement validation failures preserve a recoverable state and identify the field; stale review requires reconciliation; already-placed status opens the committed result. Only confirmed transaction success reports stock creation, and copy does not claim reminders without a committed reminder capability. Post-placement review is read-only; correction/re-edit is deferred pending a separate source-snapshot and stock-lineage contract.
+
+**Depends on.** SCKRL-304, SCKRL-310, SCKRL-406. Implement the ratified contract before SCKRL-311,
+then implement SCKRL-305 after SCKRL-311.
+
+**Notes.** The contract is ratified for implementation planning only; it does not close SCKRL-312 or the independent SCKRL-304/SCKRL-406 connected and native QA gates. Before implementation, record persistence, attribution, placement freeze and idempotency in an ADR-0001 addendum and update affected contracts. Required migration replay and connected/native checks remain subject to existing authorization restrictions. SCKRL-308 remains an independent private-media workstream and does not resolve this sample-review continuation gap.
 
 ---
 
@@ -684,6 +718,12 @@ visual/accessibility checks; it does not acquire a circular dependency on comple
 - User can override on Add Item or Edit.
 
 **Depends on.** SCKRL-201
+
+**Receipt-flow exception (SCKRL-312).** Unknown receipt-line expiry remains unknown through
+placement: do not estimate from `purchased_on`, the placement day, parser confidence, category or
+zone in this increment. Manual Add/Edit retains this ticket's accepted estimate behavior. A later
+receipt-estimation change needs an explicit date basis, category/zone/version policy, consistent
+preview and confirmation contract.
 
 ## SCKRL-406 - Expiry provenance and confirmation
 

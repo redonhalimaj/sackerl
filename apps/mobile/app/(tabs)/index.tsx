@@ -1,6 +1,7 @@
 import { colors, nativeFont, nativeTypography, space } from '@sackerl/tokens';
 import type {
   AuthenticatedUserContext,
+  Receipt,
   RecipeSuggestion,
   StockItem,
   StorageZone,
@@ -26,6 +27,7 @@ import { useAuthSession } from '../../lib/auth-session';
 import { getMobileItemsClient } from '../../lib/items';
 import { getMobileProfileClient } from '../../lib/profile';
 import { getMobileRecipesClient } from '../../lib/recipes';
+import { getMobileReceiptsClient } from '../../lib/receipts';
 
 type DashboardLoadState = 'error' | 'loading' | 'ready';
 
@@ -310,12 +312,28 @@ export default function HomeRoute(): JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { session } = useAuthSession();
+  const authScope = `${session?.user?.id ?? ''}:${session?.access_token ?? ''}`;
+  const authScopeRef = useRef(authScope);
+  authScopeRef.current = authScope;
   const scrollViewRef = useRef<ScrollView>(null);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const [expiringItems, setExpiringItems] = useState<readonly ExpiringSummaryItem[]>([]);
   const [expiringTotal, setExpiringTotal] = useState(0);
   const [itemCount, setItemCount] = useState(0);
   const [loadState, setLoadState] = useState<DashboardLoadState>('loading');
+  const [pendingReviews, setPendingReviews] = useState<readonly Receipt[]>([]);
+  const [pendingReviewError, setPendingReviewError] = useState(false);
+  const [pendingReviewPage, setPendingReviewPage] = useState(1);
+  const [pendingReviewTotal, setPendingReviewTotal] = useState(0);
+  const [pendingReviewLoadingMore, setPendingReviewLoadingMore] = useState(false);
+  const [openingReceiptId, setOpeningReceiptId] = useState<string | null>(null);
+  const [pendingReviewRefreshing, setPendingReviewRefreshing] = useState(false);
+  const focusRef = useRef({ active: false, epoch: 0 });
+  const pendingRequestSequenceRef = useRef(0);
+  const pendingPageRequestRef = useRef<number | null>(null);
+  const pendingRefreshRequestRef = useRef<number | null>(null);
+  const openingReceiptRequestRef = useRef<number | null>(null);
+  const pendingHouseholdRef = useRef<{ authScope: string; householdId: string } | null>(null);
   const [recipeSuggestion, setRecipeSuggestion] = useState<RecipeSuggestion | undefined>();
   const [storageCards, setStorageCards] = useState<readonly StorageSummaryCard[]>([]);
 
@@ -325,53 +343,134 @@ export default function HomeRoute(): JSX.Element {
     expiringTotal === 1 ? '1 item expiring soon' : `${expiringTotal} items expiring soon`;
   const recipeIngredientChips = recipeSuggestion ? suggestionIngredientChips(recipeSuggestion) : [];
 
+  const isCurrentFocus = useCallback((epoch: number, scope: string): boolean => {
+    return (
+      focusRef.current.active && focusRef.current.epoch === epoch && authScopeRef.current === scope
+    );
+  }, []);
+
+  const refreshPendingReviews = useCallback(
+    async (
+      context: AuthenticatedUserContext,
+      epoch: number,
+      scope: string,
+      knownHousehold?: { readonly id: string },
+    ) => {
+      if (!isCurrentFocus(epoch, scope) || pendingRefreshRequestRef.current !== null) return;
+      const requestId = ++pendingRequestSequenceRef.current;
+      pendingRefreshRequestRef.current = requestId;
+      // A fresh page-one read supersedes any older paging/open request in this focus.
+      pendingPageRequestRef.current = null;
+      openingReceiptRequestRef.current = null;
+      setPendingReviewLoadingMore(false);
+      setOpeningReceiptId(null);
+      setPendingReviewRefreshing(true);
+      const isCurrentRequest = () =>
+        isCurrentFocus(epoch, scope) && pendingRefreshRequestRef.current === requestId;
+      try {
+        const household = knownHousehold ?? (await getMobileProfileClient().getHousehold(context));
+        if (!isCurrentRequest()) return;
+        if (!household) {
+          pendingHouseholdRef.current = null;
+          setPendingReviews([]);
+          setPendingReviewPage(1);
+          setPendingReviewTotal(0);
+          setPendingReviewError(false);
+          return;
+        }
+        const priorHousehold = pendingHouseholdRef.current;
+        if (
+          priorHousehold &&
+          (priorHousehold.authScope !== scope || priorHousehold.householdId !== household.id)
+        ) {
+          setPendingReviews([]);
+          setPendingReviewPage(1);
+          setPendingReviewTotal(0);
+        }
+        const binding = { authScope: scope, householdId: household.id };
+        pendingHouseholdRef.current = binding;
+        const result = await getMobileReceiptsClient().listPendingReceiptReviews(context, {
+          householdId: household.id,
+          pageSize: 3,
+        });
+        if (!isCurrentRequest() || pendingHouseholdRef.current !== binding) return;
+        if (result.receipts.some((entry) => entry.householdId !== binding.householdId))
+          throw new Error('Saved review household changed.');
+        setPendingReviews(result.receipts);
+        setPendingReviewPage(result.pagination.page);
+        setPendingReviewTotal(result.pagination.total ?? result.receipts.length);
+        setPendingReviewError(false);
+      } catch {
+        if (isCurrentRequest()) setPendingReviewError(true);
+      } finally {
+        if (isCurrentRequest()) {
+          pendingRefreshRequestRef.current = null;
+          setPendingReviewRefreshing(false);
+        }
+      }
+    },
+    [isCurrentFocus],
+  );
+
   useFocusEffect(
     useCallback(() => {
-      let isActive = true;
+      const epoch = focusRef.current.epoch + 1;
+      const scope = authScope;
+      focusRef.current = { active: true, epoch };
+      const isCurrentRequest = () => isCurrentFocus(epoch, scope);
+      pendingPageRequestRef.current = null;
+      pendingRefreshRequestRef.current = null;
+      openingReceiptRequestRef.current = null;
+      setPendingReviewLoadingMore(false);
+      setPendingReviewRefreshing(false);
+      setOpeningReceiptId(null);
+      if (pendingHouseholdRef.current?.authScope !== scope) {
+        pendingHouseholdRef.current = null;
+        setPendingReviews([]);
+        setPendingReviewPage(1);
+        setPendingReviewTotal(0);
+        setPendingReviewError(false);
+      }
       const restoreScrollTimeout =
         homeScrollOffsetY > 0
           ? setTimeout(() => {
-              scrollViewRef.current?.scrollTo({ animated: false, y: homeScrollOffsetY });
+              if (isCurrentRequest())
+                scrollViewRef.current?.scrollTo({ animated: false, y: homeScrollOffsetY });
             }, 80)
           : undefined;
 
       async function loadDashboardHero() {
-        if (!session?.user) {
-          return;
-        }
-
+        if (!session?.user) return;
         setLoadState((current) => (current === 'ready' ? current : 'loading'));
         setErrorMessage(undefined);
-
+        let pendingReadStarted = false;
         try {
-          const context = {
+          const context: AuthenticatedUserContext = {
             accessToken: session.access_token,
-            user: {
-              email: session.user.email,
-              id: session.user.id,
-            },
+            user: { email: session.user.email, id: session.user.id },
           };
           const household = await getMobileProfileClient().getHousehold(context);
-
+          if (!isCurrentRequest()) return;
           if (!household) {
-            if (isActive) {
-              setExpiringItems([]);
-              setExpiringTotal(0);
-              setItemCount(0);
-              setRecipeSuggestion(undefined);
-              setStorageCards(defaultDashboardZoneKeys.map(storageCardFromZoneKey));
-              setLoadState('ready');
-            }
+            pendingHouseholdRef.current = null;
+            setExpiringItems([]);
+            setExpiringTotal(0);
+            setItemCount(0);
+            setRecipeSuggestion(undefined);
+            setStorageCards(defaultDashboardZoneKeys.map(storageCardFromZoneKey));
+            setPendingReviews([]);
+            setPendingReviewError(false);
+            setPendingReviewPage(1);
+            setPendingReviewTotal(0);
+            setLoadState('ready');
             return;
           }
-
+          pendingReadStarted = true;
+          void refreshPendingReviews(context, epoch, scope, household);
           const itemsClient = getMobileItemsClient();
           const recipesClient = getMobileRecipesClient(household.calendarTimeZone);
           const [countResult, expiringResult, zones, suggestionsResult] = await Promise.all([
-            itemsClient.listItems(context, {
-              householdId: household.id,
-              pageSize: 1,
-            }),
+            itemsClient.listItems(context, { householdId: household.id, pageSize: 1 }),
             itemsClient.listItems(context, {
               expiresWithinDays: 7,
               householdId: household.id,
@@ -384,7 +483,7 @@ export default function HomeRoute(): JSX.Element {
               minScore: 0.7,
             }),
           ]);
-
+          if (!isCurrentRequest()) return;
           const labelsById = zoneLabelsById(zones);
           const storageSummaryCards = await loadStorageCards(
             context,
@@ -392,33 +491,170 @@ export default function HomeRoute(): JSX.Element {
             zones,
             household.zones,
           );
-
-          if (isActive) {
-            setExpiringItems(expiringResult.items.map((item) => mapExpiringItem(item, labelsById)));
-            setExpiringTotal(expiringResult.pagination.total ?? expiringResult.items.length);
-            setItemCount(countResult.pagination.total ?? countResult.items.length);
-            setRecipeSuggestion(suggestionsResult.suggestions[0]);
-            setStorageCards(storageSummaryCards);
-            setLoadState('ready');
-          }
+          if (!isCurrentRequest()) return;
+          setExpiringItems(expiringResult.items.map((item) => mapExpiringItem(item, labelsById)));
+          setExpiringTotal(expiringResult.pagination.total ?? expiringResult.items.length);
+          setItemCount(countResult.pagination.total ?? countResult.items.length);
+          setRecipeSuggestion(suggestionsResult.suggestions[0]);
+          setStorageCards(storageSummaryCards);
+          setLoadState('ready');
         } catch (error) {
-          if (isActive) {
+          if (isCurrentRequest()) {
+            if (!pendingReadStarted) setPendingReviewError(true);
             setErrorMessage(error instanceof Error ? error.message : 'Unable to load stock.');
             setLoadState('error');
           }
         }
       }
-
       void loadDashboardHero();
-
       return () => {
-        isActive = false;
-        if (restoreScrollTimeout) {
-          clearTimeout(restoreScrollTimeout);
+        if (focusRef.current.epoch === epoch) {
+          focusRef.current.active = false;
+          pendingPageRequestRef.current = null;
+          pendingRefreshRequestRef.current = null;
+          openingReceiptRequestRef.current = null;
         }
+        if (restoreScrollTimeout) clearTimeout(restoreScrollTimeout);
       };
-    }, [session]),
+    }, [authScope, isCurrentFocus, refreshPendingReviews, session]),
   );
+
+  async function retryPendingReviews() {
+    if (!session?.user) return;
+    await refreshPendingReviews(
+      {
+        accessToken: session.access_token,
+        user: { email: session.user.email, id: session.user.id },
+      },
+      focusRef.current.epoch,
+      authScope,
+    );
+  }
+
+  async function resumeReceiptReview(receipt: Receipt) {
+    const epoch = focusRef.current.epoch;
+    const scope = authScope;
+    if (
+      !session?.user ||
+      !isCurrentFocus(epoch, scope) ||
+      openingReceiptRequestRef.current !== null ||
+      pendingRefreshRequestRef.current !== null
+    )
+      return;
+    const requestId = ++pendingRequestSequenceRef.current;
+    openingReceiptRequestRef.current = requestId;
+    setOpeningReceiptId(receipt.id);
+    const isCurrentRequest = () =>
+      isCurrentFocus(epoch, scope) && openingReceiptRequestRef.current === requestId;
+    try {
+      const context: AuthenticatedUserContext = {
+        accessToken: session.access_token,
+        user: { email: session.user.email, id: session.user.id },
+      };
+      const currentHousehold = await getMobileProfileClient().getHousehold(context);
+      if (!isCurrentRequest()) return;
+      if (!currentHousehold || currentHousehold.id !== receipt.householdId) {
+        pendingHouseholdRef.current = null;
+        setPendingReviews([]);
+        setPendingReviewPage(1);
+        setPendingReviewTotal(0);
+        setPendingReviewError(true);
+        return;
+      }
+      const review = await getMobileReceiptsClient().getReceiptReview(context, {
+        householdId: currentHousehold.id,
+        receiptId: receipt.id,
+      });
+      if (!isCurrentRequest()) return;
+      if (
+        review.receipt.id !== receipt.id ||
+        review.receipt.householdId !== currentHousehold.id ||
+        !review.receipt.activeParseGenerationId ||
+        review.receipt.reviewRevision < 1
+      ) {
+        setPendingReviews((current) => current.filter((entry) => entry.id !== receipt.id));
+        setPendingReviewTotal((current) => Math.max(0, current - 1));
+        return;
+      }
+      // SCKRL-311 will add canonical placement state; exclude placed receipts here once it ships.
+      router.push({ pathname: '/receipt-review/[id]', params: { id: review.receipt.id } });
+    } catch {
+      if (isCurrentRequest()) setPendingReviewError(true);
+    } finally {
+      if (isCurrentRequest()) {
+        openingReceiptRequestRef.current = null;
+        setOpeningReceiptId(null);
+      }
+    }
+  }
+
+  async function loadMorePendingReviews() {
+    const epoch = focusRef.current.epoch;
+    const scope = authScope;
+    const binding = pendingHouseholdRef.current;
+    if (
+      !session?.user ||
+      !binding ||
+      binding.authScope !== scope ||
+      !isCurrentFocus(epoch, scope) ||
+      pendingPageRequestRef.current !== null ||
+      pendingRefreshRequestRef.current !== null
+    )
+      return;
+    const requestId = ++pendingRequestSequenceRef.current;
+    pendingPageRequestRef.current = requestId;
+    setPendingReviewLoadingMore(true);
+    const isCurrentRequest = () =>
+      isCurrentFocus(epoch, scope) &&
+      pendingPageRequestRef.current === requestId &&
+      pendingHouseholdRef.current === binding;
+    try {
+      const context: AuthenticatedUserContext = {
+        accessToken: session.access_token,
+        user: { email: session.user.email, id: session.user.id },
+      };
+      const household = await getMobileProfileClient().getHousehold(context);
+      if (!isCurrentRequest()) return;
+      if (!household || household.id !== binding.householdId) {
+        pendingHouseholdRef.current = null;
+        setPendingReviews([]);
+        setPendingReviewPage(1);
+        setPendingReviewTotal(0);
+        setPendingReviewError(true);
+        // Clear this request before invalidating its household binding.
+        pendingPageRequestRef.current = null;
+        setPendingReviewLoadingMore(false);
+        return;
+      }
+      const result = await getMobileReceiptsClient().listPendingReceiptReviews(context, {
+        householdId: binding.householdId,
+        page: pendingReviewPage + 1,
+        pageSize: 3,
+      });
+      if (!isCurrentRequest()) return;
+      if (result.receipts.some((entry) => entry.householdId !== binding.householdId))
+        throw new Error('Saved review household changed.');
+      setPendingReviews((current) => {
+        const seen = new Set(current.map((entry) => entry.id));
+        const additions = result.receipts.filter((entry) => {
+          if (seen.has(entry.id)) return false;
+          seen.add(entry.id);
+          return true;
+        });
+        return [...current, ...additions];
+      });
+      setPendingReviewPage(result.pagination.page);
+      setPendingReviewTotal(result.pagination.total ?? pendingReviewTotal);
+      setPendingReviewError(false);
+    } catch {
+      if (isCurrentRequest()) setPendingReviewError(true);
+    } finally {
+      if (isCurrentRequest()) {
+        pendingPageRequestRef.current = null;
+        setPendingReviewLoadingMore(false);
+      }
+    }
+  }
 
   function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
     homeScrollOffsetY = event.nativeEvent.contentOffset.y;
@@ -518,6 +754,80 @@ export default function HomeRoute(): JSX.Element {
             <PaperBag animated={loadState === 'ready'} height={158} width={144} />
           </View>
         </Pressable>
+
+        {pendingReviews.length || pendingReviewError || pendingReviewRefreshing ? (
+          <View accessibilityLiveRegion="polite" style={styles.pendingReviewCard}>
+            <Text style={styles.pendingReviewTitle}>Continue a saved review</Text>
+            {pendingReviewError ? (
+              <>
+                <Text style={styles.pendingReviewBody}>
+                  Saved reviews are temporarily unavailable. You can retry or open an existing
+                  review.
+                </Text>
+                <Pressable
+                  accessibilityLabel="Retry saved reviews"
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: pendingReviewRefreshing }}
+                  disabled={pendingReviewRefreshing}
+                  onPress={() => void retryPendingReviews()}
+                  style={styles.pendingReviewMore}
+                >
+                  <Text style={styles.pendingReviewMoreText}>Retry saved reviews</Text>
+                </Pressable>
+              </>
+            ) : null}
+            {pendingReviewRefreshing ? (
+              <Text style={styles.pendingReviewBody}>Loading saved reviews…</Text>
+            ) : null}
+            {pendingReviews.map((receipt) => (
+              <Pressable
+                accessibilityHint="Reopens this saved receipt review. Its items are not in stock yet."
+                accessibilityLabel={`Resume ${receipt.storeName ?? 'receipt'} review`}
+                accessibilityRole="button"
+                accessibilityState={{
+                  disabled: openingReceiptId !== null || pendingReviewRefreshing,
+                }}
+                disabled={openingReceiptId !== null || pendingReviewRefreshing}
+                key={receipt.id}
+                onPress={() => void resumeReceiptReview(receipt)}
+                style={({ pressed }) => [
+                  styles.pendingReviewAction,
+                  pressed ? styles.pendingReviewPressed : null,
+                ]}
+              >
+                <View style={styles.pendingReviewCopy}>
+                  <Text style={styles.pendingReviewItemTitle}>
+                    {receipt.storeName ?? 'Receipt'}
+                  </Text>
+                  <Text style={styles.pendingReviewBody}>Review saved · not in stock yet</Text>
+                </View>
+                {openingReceiptId === receipt.id ? (
+                  <ActivityIndicator color={colors.sageDeep} />
+                ) : (
+                  <ChevronRightIcon />
+                )}
+              </Pressable>
+            ))}
+            {pendingReviews.length < pendingReviewTotal ? (
+              <Pressable
+                accessibilityLabel="Show more saved reviews"
+                accessibilityRole="button"
+                accessibilityState={{
+                  disabled: pendingReviewLoadingMore || pendingReviewRefreshing,
+                }}
+                disabled={pendingReviewLoadingMore || pendingReviewRefreshing}
+                onPress={() => void loadMorePendingReviews()}
+                style={styles.pendingReviewMore}
+              >
+                {pendingReviewLoadingMore ? (
+                  <ActivityIndicator color={colors.sageDeep} size="small" />
+                ) : (
+                  <Text style={styles.pendingReviewMoreText}>Show more saved reviews</Text>
+                )}
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
 
         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
@@ -691,6 +1001,58 @@ export default function HomeRoute(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  pendingReviewAction: {
+    alignItems: 'center',
+    borderTopColor: colors.borderSoft,
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    minHeight: 58,
+    paddingVertical: space[2],
+  },
+  pendingReviewBody: {
+    color: colors.mute,
+    fontFamily: fontFamily.sans,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  pendingReviewCard: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderRadius: 18,
+    borderWidth: 1,
+    marginTop: space[4],
+    paddingHorizontal: space[4],
+    paddingTop: space[3],
+  },
+  pendingReviewCopy: { flex: 1, gap: 2 },
+  pendingReviewItemTitle: {
+    color: colors.ink,
+    fontFamily: fontFamily.sans,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  pendingReviewMore: {
+    alignItems: 'center',
+    borderTopColor: colors.borderSoft,
+    borderTopWidth: 1,
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  pendingReviewMoreText: {
+    color: colors.sageDeep,
+    fontFamily: fontFamily.sans,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  pendingReviewPressed: { opacity: 0.75 },
+  pendingReviewTitle: {
+    color: colors.ink,
+    fontFamily: fontFamily.sans,
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: space[2],
+  },
   bagFrame: {
     alignItems: 'center',
     alignSelf: 'flex-end',

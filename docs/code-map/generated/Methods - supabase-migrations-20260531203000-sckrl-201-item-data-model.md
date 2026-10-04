@@ -14,7 +14,7 @@ SQL function. [supabase/migrations/20260531203000_sckrl_201_item_data_model.sql]
 
 Calls / references: No resolved internal relationship.
 
-Used by: [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-e61d34f22abd|get_receipt_review]] (SQL call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-738e1e5b0211|mark_receipt_parse_failed]] (SQL call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-76aaed087c14|promote_receipt_parse]] (SQL call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-c1a20c97846b|save_receipt_review]] (SQL call)
+Used by: [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-e61d34f22abd|get_receipt_review]] (SQL call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-738e1e5b0211|mark_receipt_parse_failed]] (SQL call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-76aaed087c14|promote_receipt_parse]] (SQL call), [[Methods - supabase-migrations-20260930100000-sckrl-312-receipt-expiry#^s-699b33ebb017|save_receipt_review]] (SQL call)
 
 ## is_household_owner
 

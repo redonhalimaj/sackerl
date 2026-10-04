@@ -14,7 +14,7 @@ SQL function. [supabase/migrations/20260911110000_sckrl_310_receipt_review_data.
 
 Calls / references: [[Methods - supabase-migrations-20260531203000-sckrl-201-item-data-model#^s-113273a3193b|is_household_member]] (SQL call)
 
-Used by: [[Methods - packages-api-client-src-receipts#^s-b931771335be|SackerlReceiptsClient.getReceiptReview]] (RPC), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-738e1e5b0211|mark_receipt_parse_failed]] (SQL call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-76aaed087c14|promote_receipt_parse]] (SQL call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-c1a20c97846b|save_receipt_review]] (SQL call)
+Used by: [[Methods - packages-api-client-src-receipts#^s-b931771335be|SackerlReceiptsClient.getReceiptReview]] (RPC), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-738e1e5b0211|mark_receipt_parse_failed]] (SQL call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-76aaed087c14|promote_receipt_parse]] (SQL call), [[Methods - supabase-migrations-20260930100000-sckrl-312-receipt-expiry#^s-699b33ebb017|save_receipt_review]] (SQL call)
 
 ## mark_receipt_parse_failed
 
@@ -31,11 +31,3 @@ SQL function. [supabase/migrations/20260911110000_sckrl_310_receipt_review_data.
 Calls / references: [[Methods - supabase-migrations-20260531203000-sckrl-201-item-data-model#^s-113273a3193b|is_household_member]] (SQL call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-e61d34f22abd|get_receipt_review]] (SQL call)
 
 Used by: [[Methods - packages-api-client-src-receipts#^s-81753287320b|SackerlReceiptsClient.promoteReceiptParse]] (RPC)
-
-## save_receipt_review
-
-SQL function. [supabase/migrations/20260911110000_sckrl_310_receipt_review_data.sql](<../../../supabase/migrations/20260911110000_sckrl_310_receipt_review_data.sql>), line 715. ^s-c1a20c97846b
-
-Calls / references: [[Methods - supabase-migrations-20260531203000-sckrl-201-item-data-model#^s-113273a3193b|is_household_member]] (SQL call), [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data#^s-e61d34f22abd|get_receipt_review]] (SQL call)
-
-Used by: [[Methods - packages-api-client-src-receipts#^s-b0c76619a982|SackerlReceiptsClient.saveReceiptReview]] (RPC)

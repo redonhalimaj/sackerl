@@ -140,6 +140,7 @@ export type {
 export {
   SackerlReceiptsClient,
   createSackerlReceiptsClient,
+  isReceiptItemExpiryState,
   isReceiptItemReviewState,
   isReceiptItemSource,
   isReceiptReviewStatus,
@@ -148,9 +149,11 @@ export {
   mapReceiptReviewSnapshot,
   mapReceiptRow,
   receiptItemReviewStates,
+  receiptItemExpiryStates,
   receiptItemSources,
   receiptReviewStatuses,
   receiptStatuses,
+  validateReceiptLineExpiry,
 } from './receipts';
 export type {
   CreateReceiptInput,
@@ -166,9 +169,11 @@ export type {
   PromoteReceiptParseInput,
   Receipt,
   ReceiptItem,
+  ReceiptItemExpiryState,
   ReceiptItemMoneyFields,
   ReceiptItemReviewState,
   ReceiptItemSource,
+  ReceiptLineExpiry,
   ReceiptPagination,
   ReceiptReview,
   ReceiptReviewStatus,

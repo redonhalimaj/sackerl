@@ -6,7 +6,7 @@ tags: [code-map, generated]
 
 [[Sackerl Code Map]] · [[Maintenance]]
 
-Generated from 79 runtime TypeScript files and 11 SQL migrations: **649 named callables**, **1177 resolved relationships**, **82 module notes**.
+Generated from 79 runtime TypeScript files and 12 SQL migrations: **671 named callables**, **1231 resolved relationships**, **83 module notes**.
 
 Open a module to see each method, its source line, what it calls and what uses it. In Obsidian, open its Local graph to explore connected modules.
 
@@ -29,14 +29,14 @@ Open a module to see each method, its source line, what it calls and what uses i
 | [[Methods - apps-mobile-app-layout\|apps/mobile/app/_layout.tsx]] | 1 |
 | [[Methods - apps-mobile-app-tabs-layout\|apps/mobile/app/(tabs)/_layout.tsx]] | 3 |
 | [[Methods - apps-mobile-app-tabs-expiring\|apps/mobile/app/(tabs)/expiring.tsx]] | 26 |
-| [[Methods - apps-mobile-app-tabs-index\|apps/mobile/app/(tabs)/index.tsx]] | 24 |
+| [[Methods - apps-mobile-app-tabs-index\|apps/mobile/app/(tabs)/index.tsx]] | 33 |
 | [[Methods - apps-mobile-app-tabs-scan\|apps/mobile/app/(tabs)/scan.tsx]] | 16 |
 | [[Methods - apps-mobile-app-tabs-settings\|apps/mobile/app/(tabs)/settings.tsx]] | 3 |
 | [[Methods - apps-mobile-app-tabs-stock\|apps/mobile/app/(tabs)/stock.tsx]] | 51 |
 | [[Methods - apps-mobile-app-add-item\|apps/mobile/app/add-item.tsx]] | 19 |
 | [[Methods - apps-mobile-app-auth\|apps/mobile/app/auth.tsx]] | 3 |
 | [[Methods - apps-mobile-app-onboarding\|apps/mobile/app/onboarding.tsx]] | 2 |
-| [[Methods - apps-mobile-app-receipt-review-id-\|apps/mobile/app/receipt-review/[id].tsx]] | 21 |
+| [[Methods - apps-mobile-app-receipt-review-id-\|apps/mobile/app/receipt-review/[id].tsx]] | 26 |
 | [[Methods - apps-mobile-app-recipe-id-\|apps/mobile/app/recipe/[id].tsx]] | 10 |
 | [[Methods - apps-mobile-app-shopping-list\|apps/mobile/app/shopping-list.tsx]] | 17 |
 | [[Methods - apps-mobile-app-storage-zones\|apps/mobile/app/storage-zones.tsx]] | 12 |
@@ -48,7 +48,7 @@ Open a module to see each method, its source line, what it calls and what uses i
 | [[Methods - apps-mobile-lib-items\|apps/mobile/lib/items.ts]] | 1 |
 | [[Methods - apps-mobile-lib-profile\|apps/mobile/lib/profile.ts]] | 1 |
 | [[Methods - apps-mobile-lib-receipt-review-fixtures\|apps/mobile/lib/receipt-review.fixtures.ts]] | 2 |
-| [[Methods - apps-mobile-lib-receipt-review\|apps/mobile/lib/receipt-review.ts]] | 15 |
+| [[Methods - apps-mobile-lib-receipt-review\|apps/mobile/lib/receipt-review.ts]] | 19 |
 | [[Methods - apps-mobile-lib-receipts\|apps/mobile/lib/receipts.ts]] | 1 |
 | [[Methods - apps-mobile-lib-recipes\|apps/mobile/lib/recipes.ts]] | 1 |
 | [[Methods - apps-mobile-lib-sample-receipt\|apps/mobile/lib/sample-receipt.ts]] | 2 |
@@ -90,7 +90,7 @@ Open a module to see each method, its source line, what it calls and what uses i
 | [[Methods - packages-api-client-src-items\|packages/api-client/src/items.ts]] | 64 |
 | [[Methods - packages-api-client-src-profile\|packages/api-client/src/profile.ts]] | 24 |
 | [[Methods - packages-api-client-src-receipt-parsing\|packages/api-client/src/receipt-parsing.ts]] | 22 |
-| [[Methods - packages-api-client-src-receipts\|packages/api-client/src/receipts.ts]] | 55 |
+| [[Methods - packages-api-client-src-receipts\|packages/api-client/src/receipts.ts]] | 59 |
 | [[Methods - packages-api-client-src-recipes\|packages/api-client/src/recipes.ts]] | 33 |
 | [[Methods - packages-api-client-src-shopping-list\|packages/api-client/src/shopping-list.ts]] | 34 |
 | [[Methods - packages-tokens-src-index\|packages/tokens/src/index.ts]] | 1 |
@@ -106,5 +106,6 @@ Open a module to see each method, its source line, what it calls and what uses i
 | [[Methods - supabase-migrations-20260612100000-sckrl-511-shopping-list\|supabase/migrations/20260612100000_sckrl_511_shopping_list.sql]] | 1 |
 | [[Methods - supabase-migrations-20260621110000-sckrl-302-receipts\|supabase/migrations/20260621110000_sckrl_302_receipts.sql]] | 1 |
 | [[Methods - supabase-migrations-20260804100000-sckrl-303-receipt-parsing\|supabase/migrations/20260804100000_sckrl_303_receipt_parsing.sql]] | 1 |
-| [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data\|supabase/migrations/20260911110000_sckrl_310_receipt_review_data.sql]] | 4 |
+| [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data\|supabase/migrations/20260911110000_sckrl_310_receipt_review_data.sql]] | 3 |
 | [[Methods - supabase-migrations-20260916100000-sckrl-406-expiry-provenance\|supabase/migrations/20260916100000_sckrl_406_expiry_provenance.sql]] | 4 |
+| [[Methods - supabase-migrations-20260930100000-sckrl-312-receipt-expiry\|supabase/migrations/20260930100000_sckrl_312_receipt_expiry.sql]] | 1 |

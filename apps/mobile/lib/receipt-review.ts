@@ -5,6 +5,7 @@ import {
   type ItemQuantityUnit,
   type ReceiptItem,
   type ReceiptItemReviewState,
+  type ReceiptLineExpiry,
   type ReceiptReview,
   type SaveReceiptReviewInput,
 } from '@sackerl/api-client';
@@ -14,6 +15,8 @@ export type ReceiptReviewDraftLine = {
   readonly clientLineId: string | null;
   readonly confidence: number | null;
   readonly confidenceLevel: ReceiptItem['confidenceLevel'];
+  readonly expiryDateInput: string;
+  readonly expiryState: ReceiptLineExpiry['state'];
   readonly id: string | null;
   readonly included: boolean;
   readonly name: string;
@@ -25,7 +28,7 @@ export type ReceiptReviewDraftLine = {
 };
 
 export type ReceiptReviewDraftError = {
-  readonly field: 'categoryId' | 'name' | 'qtyUnit' | 'qtyValue';
+  readonly field: 'categoryId' | 'expiry' | 'name' | 'qtyUnit' | 'qtyValue';
   readonly lineKey: string;
   readonly message: string;
 };
@@ -49,6 +52,8 @@ export function createReceiptReviewDraft(review: ReceiptReview): ReceiptReviewDr
     clientLineId: item.clientLineId,
     confidence: item.confidence,
     confidenceLevel: item.confidenceLevel,
+    expiryDateInput: item.expiry.date ?? '',
+    expiryState: item.expiry.state,
     id: item.id,
     included: item.included,
     name: item.effectiveName ?? '',
@@ -66,6 +71,8 @@ export function createManualReceiptReviewLine(clientLineId: string): ReceiptRevi
     clientLineId,
     confidence: null,
     confidenceLevel: null,
+    expiryDateInput: '',
+    expiryState: 'unknown',
     id: null,
     included: true,
     name: '',
@@ -99,6 +106,34 @@ function quantityValue(value: string): number | null {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
+/** Validates a date-only Gregorian value without timezone or timestamp conversion. */
+export function normaliseReceiptExpiryDate(value: string): string | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (year < 1 || year > 9999 || month < 1 || month > 12 || day < 1 || day > 31) return null;
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+  return day <= (daysInMonth ?? 0) ? value.trim() : null;
+}
+
+export function formatReceiptExpiryDate(value: string, locale: string): string {
+  const isoDate = normaliseReceiptExpiryDate(value);
+  if (!isoDate) return value;
+  const [year, month, day] = isoDate.split('-').map(Number);
+  const date = new Date(0);
+  date.setUTCHours(12, 0, 0, 0);
+  date.setUTCFullYear(year ?? 0, (month ?? 1) - 1, day ?? 1);
+  return new Intl.DateTimeFormat(locale, {
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'UTC',
+    year: 'numeric',
+  }).format(date);
+}
+
 export function validateReceiptReviewDraft(
   lines: readonly ReceiptReviewDraftLine[],
 ): ReceiptReviewDraftValidation {
@@ -121,6 +156,13 @@ export function validateReceiptReviewDraft(
     }
     if (!validCategory(line.categoryId)) {
       errors.push({ field: 'categoryId', lineKey: key, message: 'Choose a category.' });
+    }
+    if (line.expiryState === 'dated' && !normaliseReceiptExpiryDate(line.expiryDateInput)) {
+      errors.push({
+        field: 'expiry',
+        lineKey: key,
+        message: 'Enter a real date in YYYY-MM-DD format.',
+      });
     }
   }
 
@@ -159,6 +201,7 @@ export function buildSaveReceiptReviewInput(options: {
       return line.id
         ? {
             categoryId: line.categoryId,
+            expiry: expiryForDraftLine(line),
             id: line.id,
             included: line.included,
             name: line.name.trim(),
@@ -168,6 +211,7 @@ export function buildSaveReceiptReviewInput(options: {
           }
         : {
             categoryId: line.categoryId,
+            expiry: expiryForDraftLine(line),
             clientLineId: line.clientLineId ?? lineKey(line),
             included: line.included,
             name: line.name.trim(),
@@ -180,6 +224,15 @@ export function buildSaveReceiptReviewInput(options: {
   };
 }
 
+function expiryForDraftLine(line: ReceiptReviewDraftLine): ReceiptLineExpiry {
+  if (line.expiryState !== 'dated') {
+    return { date: null, state: line.expiryState };
+  }
+  const date = normaliseReceiptExpiryDate(line.expiryDateInput);
+  if (!date) throw new Error('Enter a real date in YYYY-MM-DD format.');
+  return { date, state: 'dated' };
+}
+
 export function updateDraftLine(
   lines: readonly ReceiptReviewDraftLine[],
   key: string,
@@ -188,6 +241,25 @@ export function updateDraftLine(
   return lines.map((line) =>
     lineKey(line) === key ? { ...line, ...patch, reviewState: 'unresolved' } : line,
   );
+}
+
+export function updateDraftLineExpiry(
+  lines: readonly ReceiptReviewDraftLine[],
+  key: string,
+  state: ReceiptLineExpiry['state'],
+  dateInput?: string,
+): ReceiptReviewDraftLine[] {
+  return lines.map((line) => {
+    if (lineKey(line) !== key) return line;
+    const nextDate = state === 'dated' ? (dateInput ?? line.expiryDateInput) : '';
+    const changed = line.expiryState !== state || line.expiryDateInput !== nextDate;
+    return {
+      ...line,
+      expiryDateInput: nextDate,
+      expiryState: state,
+      ...(changed && line.included ? { reviewState: 'unresolved' as const } : {}),
+    };
+  });
 }
 
 export function setDraftLineReviewState(

@@ -18,11 +18,16 @@ export const receiptStatuses = ['uploaded', 'parsing', 'parsed', 'failed'] as co
 export const receiptReviewStatuses = ['not_started', 'needs_review', 'reviewed'] as const;
 export const receiptItemReviewStates = ['unresolved', 'reviewed'] as const;
 export const receiptItemSources = ['parser', 'manual'] as const;
+export const receiptItemExpiryStates = ['unknown', 'dated', 'no_date'] as const;
 
 export type ReceiptStatus = (typeof receiptStatuses)[number];
 export type ReceiptReviewStatus = (typeof receiptReviewStatuses)[number];
 export type ReceiptItemReviewState = (typeof receiptItemReviewStates)[number];
 export type ReceiptItemSource = (typeof receiptItemSources)[number];
+export type ReceiptItemExpiryState = (typeof receiptItemExpiryStates)[number];
+export type ReceiptLineExpiry =
+  | { readonly date: string; readonly state: 'dated' }
+  | { readonly date: null; readonly state: 'unknown' | 'no_date' };
 export type ReceiptReviewUnresolvedField =
   | 'categoryId'
   | 'name'
@@ -97,6 +102,9 @@ export type ReceiptItem = {
   readonly effectiveName: string | null;
   readonly effectiveQtyUnit: ItemQuantityUnit | null;
   readonly effectiveQtyValue: number | null;
+  readonly expiry: ReceiptLineExpiry;
+  readonly expiryChangedAt: string | null;
+  readonly expiryChangedBy: string | null;
   readonly generationId: string;
   readonly householdId: string;
   readonly id: string;
@@ -133,6 +141,10 @@ export type DatabaseReceiptItemRow = {
   readonly corrected_qty_unit: ItemQuantityUnit | null;
   readonly corrected_qty_value: number | string | null;
   readonly created_at: string;
+  readonly expiry_changed_at: string | null;
+  readonly expiry_changed_by: string | null;
+  readonly expiry_date: string | null;
+  readonly expiry_state: ReceiptItemExpiryState;
   readonly generation_id: string;
   readonly household_id: string;
   readonly id: string;
@@ -233,6 +245,7 @@ export type ReplaceReceiptItemsInput = {
 
 type SaveReceiptReviewLineBaseInput = {
   readonly categoryId: ItemCategoryId;
+  readonly expiry?: ReceiptLineExpiry | undefined;
   readonly included: boolean;
   readonly name: string;
   readonly qtyUnit: ItemQuantityUnit;
@@ -329,6 +342,7 @@ type ParsedReceiptItemPromotionRow = {
 type ReceiptReviewLineMutationRow = {
   category_id: ItemCategoryId;
   client_line_id?: string;
+  expiry?: ReceiptLineExpiry;
   id?: string;
   included: boolean;
   name: string;
@@ -358,6 +372,58 @@ export function isReceiptItemReviewState(value: unknown): value is ReceiptItemRe
 
 export function isReceiptItemSource(value: unknown): value is ReceiptItemSource {
   return typeof value === 'string' && receiptItemSources.includes(value as ReceiptItemSource);
+}
+
+export function isReceiptItemExpiryState(value: unknown): value is ReceiptItemExpiryState {
+  return (
+    typeof value === 'string' && receiptItemExpiryStates.includes(value as ReceiptItemExpiryState)
+  );
+}
+
+function isGregorianExpiryDate(value: string): boolean {
+  if (!datePattern.test(value)) {
+    return false;
+  }
+
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(5, 7));
+  const day = Number(value.slice(8, 10));
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  return year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= (daysInMonth[month - 1] ?? 0);
+}
+
+/** Validate the strict review choice without converting its calendar date to a timestamp. */
+export function validateReceiptLineExpiry(value: unknown): ReceiptLineExpiry {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new ApiRequestError('Receipt expiry must be a state/date object.', 400);
+  }
+
+  const record = value as Record<string, unknown>;
+
+  if (
+    Object.keys(record).some((key) => key !== 'state' && key !== 'date') ||
+    !Object.prototype.hasOwnProperty.call(record, 'state') ||
+    !Object.prototype.hasOwnProperty.call(record, 'date') ||
+    !isReceiptItemExpiryState(record.state)
+  ) {
+    throw new ApiRequestError('Receipt expiry requires only a valid state and date.', 400);
+  }
+
+  if (record.state === 'dated') {
+    if (typeof record.date !== 'string' || !isGregorianExpiryDate(record.date)) {
+      throw new ApiRequestError('Receipt expiry must be a real date in YYYY-MM-DD format.', 400);
+    }
+
+    return { date: record.date, state: 'dated' };
+  }
+
+  if (record.date !== null) {
+    throw new ApiRequestError('Unknown or no-date receipt expiry requires a null date.', 400);
+  }
+
+  return { date: null, state: record.state };
 }
 
 export function mapReceiptRow(row: DatabaseReceiptRow): Receipt {
@@ -404,6 +470,9 @@ export function mapReceiptItemRow(row: DatabaseReceiptItemRow): ReceiptItem {
     effectiveName,
     effectiveQtyUnit,
     effectiveQtyValue,
+    expiry: validateReceiptLineExpiry({ date: row.expiry_date, state: row.expiry_state }),
+    expiryChangedAt: row.expiry_changed_at,
+    expiryChangedBy: row.expiry_changed_by,
     generationId: row.generation_id,
     householdId: row.household_id,
     id: row.id,
@@ -723,6 +792,14 @@ function prepareParsedReceiptItemRow(item: ParsedReceiptLineItem): ParsedReceipt
 }
 
 function prepareReviewLineRow(line: SaveReceiptReviewLineInput): ReceiptReviewLineMutationRow {
+  if (
+    ['expiryChangedBy', 'expiryChangedAt', 'expiry_changed_by', 'expiry_changed_at'].some(
+      (key) => key in line,
+    )
+  ) {
+    throw new ApiRequestError('Receipt expiry attribution is server-owned.', 400);
+  }
+
   const hasPersistedId = typeof line.id === 'string';
   const hasClientLineId = typeof line.clientLineId === 'string';
 
@@ -748,6 +825,10 @@ function prepareReviewLineRow(line: SaveReceiptReviewLineInput): ReceiptReviewLi
 
   if (hasClientLineId) {
     row.client_line_id = validateClientLineId(line.clientLineId);
+  }
+
+  if (line.expiry !== undefined) {
+    row.expiry = validateReceiptLineExpiry(line.expiry);
   }
 
   return row;
@@ -892,6 +973,43 @@ export class SackerlReceiptsClient {
     }
 
     return mapReceiptRow(receipt);
+  }
+
+  /**
+   * Discover saved active reviews for durable Home resume, scoped by the current session and household.
+   * SCKRL-311 must add its authoritative unplaced filter when placement metadata becomes available.
+   */
+  async listPendingReceiptReviews(
+    context: AuthenticatedUserContext,
+    input: Pick<ListReceiptsInput, 'householdId' | 'page' | 'pageSize'>,
+  ): Promise<ListReceiptsResult> {
+    const householdId = validateHouseholdId(input.householdId);
+    const page = parsePositiveInteger(input.page, 1);
+    const pageSize = clampPageSize(input.pageSize);
+    const offset = (page - 1) * pageSize;
+    const result = await this.request<DatabaseReceiptRow>(
+      'receipts',
+      context,
+      {
+        active_parse_generation_id: 'not.is.null',
+        household_id: `eq.${householdId}`,
+        order: 'updated_at.desc,id.desc',
+        review_revision: 'gt.0',
+        select: receiptSelect,
+      },
+      {
+        count: true,
+        range: {
+          from: offset,
+          to: offset + pageSize - 1,
+        },
+      },
+    );
+
+    return {
+      pagination: { page, pageSize, total: result.total },
+      receipts: result.rows.map(mapReceiptRow),
+    };
   }
 
   async listReceipts(

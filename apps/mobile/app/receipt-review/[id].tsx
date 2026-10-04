@@ -7,7 +7,8 @@ import {
   type ReceiptReview,
 } from '@sackerl/api-client';
 import { categoryMeta } from '@sackerl/ui';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { usePreventRemove } from 'expo-router/react-navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, type JSX } from 'react';
 import {
   ActivityIndicator,
@@ -33,12 +34,15 @@ import {
   createReceiptReviewDraft,
   includedLineCount,
   lineKey,
+  formatReceiptExpiryDate,
+  normaliseReceiptExpiryDate,
   reviewNeedsAttention,
   setDraftLineIncluded,
   setDraftLineReviewState,
   type ReceiptReviewDraftLine,
   type ReceiptReviewDraftError,
   updateDraftLine,
+  updateDraftLineExpiry,
   validateReceiptReviewDraft,
 } from '../../lib/receipt-review';
 import { getMobileProfileClient } from '../../lib/profile';
@@ -90,6 +94,19 @@ function formatTotal(review: ReceiptReview): string {
   }).format(review.receipt.totalCents / 100);
 }
 
+function expirySummary(line: ReceiptReviewDraftLine): string {
+  if (line.expiryState === 'no_date') return 'no expiry date';
+  if (line.expiryState === 'dated') {
+    return normaliseReceiptExpiryDate(line.expiryDateInput)
+      ? formatReceiptExpiryDate(
+          line.expiryDateInput,
+          Intl.DateTimeFormat().resolvedOptions().locale,
+        )
+      : 'date needs checking';
+  }
+  return 'expiry unknown';
+}
+
 function ChevronLeftIcon(): JSX.Element {
   return <Text style={styles.chevron}>‹</Text>;
 }
@@ -116,6 +133,7 @@ function DraftErrorText({
 export default function ReceiptReviewRoute(): JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const navigation = useNavigation();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const receiptId = useMemo(() => paramValue(params.id), [params.id]);
   const { session, status: authStatus } = useAuthSession();
@@ -123,7 +141,11 @@ export default function ReceiptReviewRoute(): JSX.Element {
     () => contextFromSession(session),
     [session?.access_token, session?.user?.id, session?.user?.email],
   );
-  const scope = `${session?.user?.id ?? ''}:${session?.access_token ?? ''}:${receiptId}`;
+  const scope = `${session?.user?.id ?? ''}:${receiptId}`;
+  const token = session?.access_token ?? '';
+  const tokenRef = useRef(token);
+  tokenRef.current = token;
+  const initializedScopeRef = useRef<string | null>(null);
   const scopeRef = useRef(scope);
   scopeRef.current = scope;
   const requestRef = useRef(0);
@@ -139,6 +161,10 @@ export default function ReceiptReviewRoute(): JSX.Element {
   const [selectedLineKey, setSelectedLineKey] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | undefined>();
   const [validationErrors, setValidationErrors] = useState<readonly ReceiptReviewDraftError[]>([]);
+  const [uncertainSave, setUncertainSave] = useState(false);
+  const savedDraftRef = useRef('');
+  const draftSnapshot = JSON.stringify(draft);
+  const hasUnsavedChanges = Boolean(draft.length) && draftSnapshot !== savedDraftRef.current;
 
   const loadReview = useCallback(async () => {
     if (savingRef.current) return;
@@ -147,7 +173,8 @@ export default function ReceiptReviewRoute(): JSX.Element {
       return;
     }
     const requestId = ++requestRef.current;
-    const current = () => requestId === requestRef.current && scopeRef.current === scope;
+    const current = () =>
+      requestId === requestRef.current && scopeRef.current === scope && tokenRef.current === token;
     setLoadState('loading');
     setStatusMessage(undefined);
     try {
@@ -160,11 +187,14 @@ export default function ReceiptReviewRoute(): JSX.Element {
       });
       if (!current()) return;
       setReview(nextReview);
-      setDraft(createReceiptReviewDraft(nextReview));
+      const nextDraft = createReceiptReviewDraft(nextReview);
+      setDraft(nextDraft);
+      savedDraftRef.current = JSON.stringify(nextDraft);
       setLoadedScope(scope);
       setSelectedLineKey(null);
       setValidationErrors([]);
       setConflict(false);
+      setUncertainSave(false);
       setLoadState('ready');
     } catch (error) {
       if (!current()) return;
@@ -173,10 +203,63 @@ export default function ReceiptReviewRoute(): JSX.Element {
         error instanceof Error ? error.message : 'Unable to load this receipt review.',
       );
     }
-  }, [context, receiptId, scope]);
+  }, [context, receiptId, scope, token]);
+
+  useEffect(() => {
+    navigation.setOptions({ headerBackButtonMenuEnabled: false });
+  }, [navigation]);
+
+  usePreventRemove(
+    loadedScope === scope &&
+      (hasUnsavedChanges || uncertainSave || conflict || saveState === 'saving'),
+    ({ data }) => {
+      if (savingRef.current) {
+        Alert.alert('Saving review', 'Please wait for the save result before leaving.');
+        return;
+      }
+      const reloadLatestOnExit = () => {
+        if (scopeRef.current === scope) void loadReview();
+      };
+      const discardForExit = () => {
+        if (scopeRef.current === scope && !savingRef.current) navigation.dispatch(data.action);
+      };
+      Alert.alert(
+        'Leave this review?',
+        'Your latest receipt review changes are not confirmed saved.',
+        [
+          { text: 'Keep editing', style: 'cancel' },
+          {
+            text: 'Reload latest',
+            onPress: reloadLatestOnExit,
+          },
+          {
+            text: 'Discard changes',
+            style: 'destructive',
+            // Re-dispatch the original action; usePreventRemove permits this action to continue.
+            onPress: discardForExit,
+          },
+        ],
+      );
+    },
+  );
 
   useEffect(() => {
     ++requestRef.current;
+    if (initializedScopeRef.current === scope && reviewRef.current && context) {
+      if (savingRef.current) {
+        setUncertainSave(true);
+        setStatusMessage(
+          'Your session refreshed during the save. Your edits are still here. Reload latest to reconcile before leaving.',
+        );
+      }
+      savingRef.current = false;
+      setSaveState('idle');
+      setLoadState('ready');
+      return () => {
+        ++requestRef.current;
+      };
+    }
+    initializedScopeRef.current = scope;
     savingRef.current = false;
     setSaveState('idle');
     setReview(null);
@@ -184,6 +267,8 @@ export default function ReceiptReviewRoute(): JSX.Element {
     setLoadedScope(null);
     setSelectedLineKey(null);
     setConflict(false);
+    setUncertainSave(false);
+    savedDraftRef.current = '';
     setValidationErrors([]);
     if (authStatus === 'loading') setLoadState('loading');
     else if (!context || !receiptId) {
@@ -193,7 +278,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
     return () => {
       ++requestRef.current;
     };
-  }, [authStatus, context, receiptId, loadReview]);
+  }, [authStatus, context, receiptId, loadReview, scope]);
 
   function reloadReview() {
     if (savingRef.current) return;
@@ -233,6 +318,17 @@ export default function ReceiptReviewRoute(): JSX.Element {
     setValidationErrors([]);
   }
 
+  function updateLineExpiry(
+    key: string,
+    state: ReceiptReviewDraftLine['expiryState'],
+    dateInput?: string,
+  ) {
+    if (savingRef.current) return;
+    setDraft((lines) => updateDraftLineExpiry(lines, key, state, dateInput));
+    setValidationErrors((errors) => errors.filter((error) => error.lineKey !== key));
+    setStatusMessage(undefined);
+  }
+
   function handleAddManualLine() {
     if (!canAddManualLine || savingRef.current) return;
     const id = createManualClientLineId();
@@ -268,11 +364,13 @@ export default function ReceiptReviewRoute(): JSX.Element {
       return;
     }
     const requestId = ++requestRef.current;
-    const current = () => requestRef.current === requestId && scopeRef.current === scope;
+    const current = () =>
+      requestRef.current === requestId && scopeRef.current === scope && tokenRef.current === token;
     savingRef.current = true;
     setSaveState('saving');
     setStatusMessage(undefined);
     setConflict(false);
+    setUncertainSave(false);
     try {
       const household = await getMobileProfileClient().getHousehold(context);
       if (!current()) return;
@@ -287,9 +385,12 @@ export default function ReceiptReviewRoute(): JSX.Element {
       const saved = await getMobileReceiptsClient().saveReceiptReview(context, payload);
       if (!current()) return;
       setReview(saved);
-      setDraft(createReceiptReviewDraft(saved));
+      const nextDraft = createReceiptReviewDraft(saved);
+      setDraft(nextDraft);
+      savedDraftRef.current = JSON.stringify(nextDraft);
       setValidationErrors([]);
-      setStatusMessage('Review saved. Placement will be available in a later step.');
+      setUncertainSave(false);
+      setStatusMessage('Review saved. Items are not in stock yet.');
     } catch (error) {
       if (!current()) return;
       if (error instanceof ApiRequestError && error.status === 409) {
@@ -298,10 +399,9 @@ export default function ReceiptReviewRoute(): JSX.Element {
           'This receipt changed elsewhere. Your edits are still here; reload to see the latest review.',
         );
       } else {
+        setUncertainSave(true);
         setStatusMessage(
-          error instanceof Error
-            ? error.message
-            : 'Unable to save this review. Your edits are still here.',
+          `${error instanceof Error ? error.message : 'Unable to save this review.'} Your edits are still here. Reload latest to reconcile before leaving.`,
         );
       }
     } finally {
@@ -318,6 +418,22 @@ export default function ReceiptReviewRoute(): JSX.Element {
   ): ReceiptReviewDraftError | undefined {
     return validationErrors.find((error) => error.lineKey === key && error.field === field);
   }
+
+  function handleDoneForNow() {
+    if (!canDoneForNow || savingRef.current) return;
+    router.replace('/(tabs)');
+  }
+
+  const canDoneForNow = Boolean(
+    review &&
+    loadedScope === scope &&
+    loadState === 'ready' &&
+    review.receipt.reviewRevision > 0 &&
+    !hasUnsavedChanges &&
+    !uncertainSave &&
+    !conflict &&
+    saveState === 'idle',
+  );
 
   if (
     authStatus === 'loading' ||
@@ -452,7 +568,11 @@ export default function ReceiptReviewRoute(): JSX.Element {
             </Pressable>
           </View>
         ) : null}
-        {statusMessage && !conflict ? <Text style={styles.statusText}>{statusMessage}</Text> : null}
+        {statusMessage && !conflict ? (
+          <Text accessibilityLiveRegion="polite" style={styles.statusText}>
+            {statusMessage}
+          </Text>
+        ) : null}
 
         {draft.length === 0 ? (
           <View style={styles.emptyCard}>
@@ -498,7 +618,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
                       </Text>
                       <Text style={styles.lineMeta}>
                         {line.qtyValueText || '—'} {line.qtyUnit ?? 'unit'} ·{' '}
-                        {line.included ? 'included' : 'excluded'}
+                        {line.included ? 'included' : 'excluded'} · {expirySummary(line)}
                       </Text>
                     </View>
                   </Pressable>
@@ -608,6 +728,16 @@ export default function ReceiptReviewRoute(): JSX.Element {
             ? 'Review each included line before placement.'
             : 'Your corrections will be saved to this receipt.'}
         </Text>
+        {canDoneForNow ? (
+          <Pressable
+            accessibilityHint="Returns to Home. This receipt is saved, but its items are not in stock."
+            accessibilityRole="button"
+            onPress={handleDoneForNow}
+            style={styles.doneForNowButton}
+          >
+            <Text style={styles.doneForNowText}>Done for now</Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <Modal
@@ -710,12 +840,85 @@ export default function ReceiptReviewRoute(): JSX.Element {
                 </Pressable>
               ))}
             </ScrollView>
+            <Text style={styles.fieldLabel}>Expiry</Text>
+            <Text style={styles.expiryHelp}>
+              Optional. Add a date only if you know it. Receipt purchase dates do not set expiry.
+            </Text>
+            <View
+              accessibilityLabel="Expiry date choice"
+              accessibilityRole="radiogroup"
+              style={styles.expiryChoices}
+            >
+              {(
+                [
+                  ['unknown', 'Unknown'],
+                  ['dated', 'Has a date'],
+                  ['no_date', 'No expiry date'],
+                ] as const
+              ).map(([state, label]) => (
+                <Pressable
+                  accessibilityHint={
+                    state === 'no_date'
+                      ? 'Record this item with no expiry date. If you do not know the date or have not checked it, choose Unknown.'
+                      : state === 'unknown'
+                        ? 'The date has not been entered or is not known.'
+                        : 'Enter a calendar date for this item.'
+                  }
+                  accessibilityLabel={label}
+                  accessibilityRole="radio"
+                  accessibilityState={{
+                    checked: selectedLine?.expiryState === state,
+                    selected: selectedLine?.expiryState === state,
+                  }}
+                  key={state}
+                  onPress={() => selectedLine && updateLineExpiry(lineKey(selectedLine), state)}
+                  style={[
+                    styles.expiryChoice,
+                    selectedLine?.expiryState === state ? styles.expiryChoiceSelected : null,
+                  ]}
+                >
+                  <Text style={styles.expiryChoiceText}>{label}</Text>
+                </Pressable>
+              ))}
+            </View>
+            {selectedLine?.expiryState === 'no_date' ? (
+              <Text style={styles.expiryHelp}>
+                Record this item with no expiry date. If you do not know the date or have not
+                checked it, choose Unknown.
+              </Text>
+            ) : null}
+            {selectedLine?.expiryState === 'dated' ? (
+              <>
+                <TextInput
+                  accessibilityHint="Enter a real calendar date as four digit year, two digit month, and two digit day. Past dates are allowed."
+                  accessibilityLabel="Optional expiry date, year month day"
+                  autoCapitalize="none"
+                  keyboardType="numbers-and-punctuation"
+                  onChangeText={(value) =>
+                    selectedLine && updateLineExpiry(lineKey(selectedLine), 'dated', value)
+                  }
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={colors.muteSoft}
+                  style={styles.input}
+                  value={selectedLine.expiryDateInput}
+                />
+                {normaliseReceiptExpiryDate(selectedLine.expiryDateInput) ? (
+                  <Text style={styles.expiryHelp}>
+                    {formatReceiptExpiryDate(
+                      selectedLine.expiryDateInput,
+                      Intl.DateTimeFormat().resolvedOptions().locale,
+                    )}
+                  </Text>
+                ) : null}
+              </>
+            ) : null}
             {selectedLine ? (
               <View style={styles.modalErrors}>
                 <DraftErrorText error={errorFor(lineKey(selectedLine), 'name')} />
                 <DraftErrorText error={errorFor(lineKey(selectedLine), 'qtyValue')} />
                 <DraftErrorText error={errorFor(lineKey(selectedLine), 'qtyUnit')} />
                 <DraftErrorText error={errorFor(lineKey(selectedLine), 'categoryId')} />
+                <DraftErrorText error={errorFor(lineKey(selectedLine), 'expiry')} />
               </View>
             ) : null}
             <View style={styles.modalActions}>
@@ -840,6 +1043,53 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   categoryRow: { paddingBottom: 4 },
+  doneForNowButton: {
+    alignItems: 'center',
+    borderColor: colors.sageDeep,
+    borderRadius: 999,
+    borderWidth: 1,
+    justifyContent: 'center',
+    marginTop: 10,
+    minHeight: 46,
+  },
+  doneForNowText: {
+    color: colors.sageDeep,
+    fontFamily: fontFamily.sans,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  expiryChoice: {
+    alignItems: 'center',
+    backgroundColor: colors.bgWarm,
+    borderColor: colors.border,
+    borderRadius: 12,
+    borderWidth: 1,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 48,
+    paddingHorizontal: 7,
+    paddingVertical: 8,
+  },
+  expiryChoiceSelected: {
+    backgroundColor: colors.sageSoft,
+    borderColor: colors.sageDeep,
+    borderWidth: 2,
+  },
+  expiryChoices: { flexDirection: 'row', gap: 7, marginBottom: 8 },
+  expiryChoiceText: {
+    color: colors.ink,
+    fontFamily: fontFamily.sans,
+    fontSize: 11,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  expiryHelp: {
+    color: colors.mute,
+    fontFamily: fontFamily.sans,
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 8,
+  },
   categoryTile: {
     alignItems: 'center',
     borderRadius: 11,

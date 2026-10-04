@@ -1,5 +1,6 @@
 import {
   ApiRequestError,
+  validateReceiptLineExpiry,
   type ItemCategoryId,
   type ItemQuantityUnit,
   type ReceiptItemReviewState,
@@ -66,6 +67,14 @@ function readOptionalString(record: JsonRecord, key: string): string | undefined
 }
 
 function readRequiredLine(record: JsonRecord): SaveReceiptReviewLineInput {
+  if (
+    ['expiryChangedBy', 'expiryChangedAt', 'expiry_changed_by', 'expiry_changed_at'].some(
+      (key) => key in record,
+    )
+  ) {
+    throw new ApiRequestError('Receipt expiry attribution is server-owned.', 400);
+  }
+
   const id = readOptionalString(record, 'id');
   const clientLineId = readOptionalString(record, 'clientLineId');
   const base = {
@@ -75,6 +84,9 @@ function readRequiredLine(record: JsonRecord): SaveReceiptReviewLineInput {
     qtyUnit: readRequiredString(record, 'qtyUnit') as ItemQuantityUnit,
     qtyValue: readRequiredNumber(record, 'qtyValue'),
     reviewState: readRequiredString(record, 'reviewState') as ReceiptItemReviewState,
+    ...(Object.prototype.hasOwnProperty.call(record, 'expiry')
+      ? { expiry: validateReceiptLineExpiry(record.expiry) }
+      : {}),
   };
 
   if ((id === undefined) === (clientLineId === undefined)) {

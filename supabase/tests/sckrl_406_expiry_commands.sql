@@ -417,6 +417,7 @@ begin
   -- 13. A soft removal leaves provenance untouched.
   ---------------------------------------------------------------------------
   select count(*) into v_count from public.item_expiry_facts where item_id = v_item;
+  select * into strict v_fact from public.item_expiry_facts where item_id = v_item and is_active;
   update public.items set removed_on = current_date, removal_reason = 'used' where id = v_item;
 
   select * into strict v_row from public.items where id = v_item;

@@ -4,6 +4,7 @@ import type { ApiRequestError, AuthenticatedUserContext } from './profile';
 import type { ParsedReceiptLineItem } from './receipt-parsing';
 import {
   createSackerlReceiptsClient,
+  isReceiptItemExpiryState,
   isReceiptItemReviewState,
   isReceiptItemSource,
   isReceiptReviewStatus,
@@ -12,12 +13,15 @@ import {
   mapReceiptReviewSnapshot,
   mapReceiptRow,
   receiptItemReviewStates,
+  receiptItemExpiryStates,
   receiptItemSources,
   receiptReviewStatuses,
   receiptStatuses,
+  validateReceiptLineExpiry,
   type DatabaseReceiptItemRow,
   type DatabaseReceiptReviewSnapshot,
   type DatabaseReceiptRow,
+  type ReceiptLineExpiry,
 } from './receipts';
 
 const config = {
@@ -65,6 +69,10 @@ const baseItemRow = {
   corrected_qty_unit: null,
   corrected_qty_value: null,
   created_at: '2026-06-21T17:00:02Z',
+  expiry_changed_at: null,
+  expiry_changed_by: null,
+  expiry_date: null,
+  expiry_state: 'unknown',
   generation_id: 'generation-123',
   household_id: 'household-123',
   id: 'receipt-item-123',
@@ -141,6 +149,7 @@ describe('receipts API client', () => {
     expect(receiptReviewStatuses).toEqual(['not_started', 'needs_review', 'reviewed']);
     expect(receiptItemReviewStates).toEqual(['unresolved', 'reviewed']);
     expect(receiptItemSources).toEqual(['parser', 'manual']);
+    expect(receiptItemExpiryStates).toEqual(['unknown', 'dated', 'no_date']);
     expect(isReceiptStatus('uploaded')).toBe(true);
     expect(isReceiptStatus('queued')).toBe(false);
     expect(isReceiptReviewStatus('needs_review')).toBe(true);
@@ -149,6 +158,73 @@ describe('receipts API client', () => {
     expect(isReceiptItemReviewState('high')).toBe(false);
     expect(isReceiptItemSource('manual')).toBe(true);
     expect(isReceiptItemSource('receipt')).toBe(false);
+    expect(isReceiptItemExpiryState('no_date')).toBe(true);
+    expect(isReceiptItemExpiryState('cleared')).toBe(false);
+  });
+
+  it.each(['0001-01-01', '2024-02-29', '2000-02-29', '2026-09-30', '9999-12-31'])(
+    'retains a real expiry calendar date exactly: %s',
+    (date) => {
+      expect(validateReceiptLineExpiry({ date, state: 'dated' })).toEqual({ date, state: 'dated' });
+    },
+  );
+
+  it.each([
+    null,
+    [],
+    {},
+    { state: 'unknown' },
+    { date: null },
+    { date: null, state: 'cleared' },
+    { date: '2026-09-30', state: 'unknown' },
+    { date: '', state: 'no_date' },
+    { date: null, state: 'dated' },
+    { date: '0000-01-01', state: 'dated' },
+    { date: '1900-02-29', state: 'dated' },
+    { date: '2026-02-29', state: 'dated' },
+    { date: '2026-04-31', state: 'dated' },
+    { date: '2026-13-01', state: 'dated' },
+    { date: '2026-09-00', state: 'dated' },
+    { date: '2026-9-30', state: 'dated' },
+    { date: '2026-09-30T00:00:00Z', state: 'dated' },
+    { date: '2026-09-30', source: 'printed', state: 'dated' },
+    { changedBy: 'forged', date: null, state: 'no_date' },
+  ])('rejects invalid dates, shapes and caller-owned expiry provenance', (expiry) => {
+    expect(() => validateReceiptLineExpiry(expiry)).toThrow();
+  });
+
+  it('maps expiry state and its editor independently of review and parser metadata', () => {
+    expect(
+      mapReceiptItemRow(
+        itemRow({
+          expiry_changed_at: '2026-09-30T12:00:00Z',
+          expiry_changed_by: 'expiry-editor',
+          expiry_date: '2026-10-03',
+          expiry_state: 'dated',
+          reviewed_by: 'another-reviewer',
+          review_state: 'reviewed',
+        }),
+      ),
+    ).toMatchObject({
+      expiry: { date: '2026-10-03', state: 'dated' },
+      expiryChangedAt: '2026-09-30T12:00:00Z',
+      expiryChangedBy: 'expiry-editor',
+      reviewedBy: 'another-reviewer',
+      unresolvedFields: [],
+    });
+
+    for (const state of ['unknown', 'no_date'] as const) {
+      expect(
+        mapReceiptItemRow(itemRow({ expiry_state: state, review_state: 'reviewed' })),
+      ).toMatchObject({
+        expiry: { date: null, state },
+        unresolvedFields: [],
+      });
+    }
+  });
+
+  it('reports missing expiry schema instead of treating an unmigrated row as unknown', () => {
+    expect(() => mapReceiptItemRow(itemRow({ expiry_state: undefined as never }))).toThrow();
   });
 
   it('maps receipt database rows into API model shape with review metadata', () => {
@@ -305,6 +381,72 @@ describe('receipts API client', () => {
       image_url: 'sackerl://receipt/mock-camera',
       status: 'uploaded',
     });
+  });
+
+  it('discovers saved active receipt reviews on the server for bounded Home resume', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      jsonResponse([receiptRow({ review_revision: 3, review_status: 'reviewed' })], {
+        headers: { 'Content-Range': '3-3/7' },
+      }),
+    );
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+
+    await expect(
+      client.listPendingReceiptReviews(context, {
+        householdId: 'household-123',
+        page: 2,
+        pageSize: 3,
+      }),
+    ).resolves.toMatchObject({
+      pagination: { page: 2, pageSize: 3, total: 7 },
+      receipts: [
+        { id: 'receipt-123', activeParseGenerationId: 'generation-123', reviewRevision: 3 },
+      ],
+    });
+
+    const url = new URL(requireString(fetchMock.mock.calls[0]?.[0]));
+    expect(url.pathname).toBe('/rest/v1/receipts');
+    expect(url.searchParams.get('household_id')).toBe('eq.household-123');
+    expect(url.searchParams.get('active_parse_generation_id')).toBe('not.is.null');
+    expect(url.searchParams.get('review_revision')).toBe('gt.0');
+    expect(url.searchParams.get('order')).toBe('updated_at.desc,id.desc');
+    expect(url.searchParams.get('status')).toBeNull();
+    expect(fetchMock.mock.calls[0]?.[1]?.headers).toMatchObject({
+      Authorization: 'Bearer access-token',
+      Prefer: 'count=exact',
+      Range: '3-5',
+    });
+  });
+
+  it('returns an empty pending review result without inventing a resumable receipt', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse([], { headers: { 'Content-Range': '*/0' } }));
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+    await expect(
+      client.listPendingReceiptReviews(context, { householdId: 'household-123' }),
+    ).resolves.toEqual({ pagination: { page: 1, pageSize: 25, total: 0 }, receipts: [] });
+    expect(fetchMock.mock.calls[0]?.[1]?.headers).toMatchObject({ Range: '0-24' });
+  });
+
+  it('caps pending review discovery and requires authenticated household scope', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(jsonResponse([]));
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+    await expect(
+      client.listPendingReceiptReviews(context, { householdId: 'household-123', pageSize: 999 }),
+    ).resolves.toMatchObject({ pagination: { page: 1, pageSize: 100 } });
+    expect(fetchMock.mock.calls[0]?.[1]?.headers).toMatchObject({ Range: '0-99' });
+
+    await expect(
+      client.listPendingReceiptReviews(
+        { ...context, accessToken: '' },
+        { householdId: 'household-123' },
+      ),
+    ).rejects.toMatchObject({ status: 401 });
+    await expect(
+      client.listPendingReceiptReviews(context, { householdId: ' ' }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('lists receipts with pagination and review metadata', async () => {
@@ -547,6 +689,76 @@ describe('receipts API client', () => {
       ],
       p_receipt_id: 'receipt-123',
     });
+  });
+
+  it.each([
+    { date: null, state: 'unknown' },
+    { date: null, state: 'no_date' },
+    { date: '2024-02-29', state: 'dated' },
+  ] satisfies ReceiptLineExpiry[])(
+    'forwards an explicit expiry choice through the guarded save',
+    async (expiry) => {
+      const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(jsonResponse(snapshot()));
+      const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+
+      await client.saveReceiptReview(context, {
+        expectedReviewRevision: 3,
+        generationId: 'generation-123',
+        householdId: 'household-123',
+        lines: [
+          {
+            categoryId: 'dairy',
+            expiry,
+            id: 'receipt-item-123',
+            included: true,
+            name: 'Milk',
+            qtyUnit: 'l',
+            qtyValue: 1,
+            reviewState: 'unresolved',
+          },
+        ],
+        receiptId: 'receipt-123',
+      });
+
+      expect(JSON.parse(requireString(fetchMock.mock.calls[0]?.[1]?.body))).toMatchObject({
+        p_expected_review_revision: 3,
+        p_generation_id: 'generation-123',
+        p_lines: [{ expiry, review_state: 'unresolved' }],
+      });
+    },
+  );
+
+  it.each([
+    { expiry: null },
+    { expiry: { date: '2026-02-29', state: 'dated' } },
+    { expiry: { confirmedBy: 'forged', date: '2026-10-01', state: 'dated' } },
+    { expiryChangedBy: 'forged' },
+    { expiry_changed_at: '2026-01-01T00:00:00Z' },
+  ])('rejects invalid expiry intent or forged attribution before fetching', async (invalid) => {
+    const fetchMock = vi.fn<typeof fetch>();
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+
+    await expect(
+      client.saveReceiptReview(context, {
+        expectedReviewRevision: 0,
+        generationId: 'generation-123',
+        householdId: 'household-123',
+        lines: [
+          {
+            categoryId: 'dairy',
+            id: 'receipt-item-123',
+            included: true,
+            name: 'Milk',
+            qtyUnit: 'l',
+            qtyValue: 1,
+            reviewState: 'reviewed',
+            ...invalid,
+          } as never,
+        ],
+        receiptId: 'receipt-123',
+      }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('keeps replaceReceiptItems as an optimistic promotion compatibility wrapper', async () => {

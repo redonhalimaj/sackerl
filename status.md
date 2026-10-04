@@ -2,17 +2,264 @@
 
 ## Session Handoff
 
-Last updated: 2026-09-29
+Last updated: 2026-10-04
+
+### Active branch closeout — feature/SCKRL-ASTRA
+
+Owner direction, 2026-10-03: finish the implemented work and its outstanding validation on
+**this branch only**. Additional feature implementation belongs to a later branch. The program
+backlog below is retained for planning; deferred tickets are not requirements for closing this
+branch. This scope freeze does not waive the acceptance gates of implemented tickets.
+
+**Publication target:** `feature/SCKRL-ASTRA` → `dev`. Read-only GitHub verification on
+2026-10-04 confirms [PR #4](https://github.com/redonhalimaj/sackerl/pull/4) is **open and draft**,
+with head `d550bd12ad18b4f9fe7e3acedb57370bc51b1dea`. Update this PR with the local SCKRL-312
+increment and current evidence instead of creating a duplicate. Local changes remain uncommitted.
+PR creation/publication and ticket Done/merge readiness are separate checkpoints; a draft can
+record open gates, while a completed branch cannot claim those gates have passed.
+
+| In-branch work                                                                | Current state    | Remaining branch-closeout work                                                                                                                                                           |
+| ----------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SCKRL-310 review data, SCKRL-906 harness and existing branch foundations/docs | Accepted locally | Development receipt prerequisites verified; preserve accepted source and legacy regressions.                                                                                             |
+| SCKRL-506 recipe expiry eligibility                                           | Done locally     | Preserve included recipe eligibility/calendar regression coverage; no new recipe features.                                                                                               |
+| SCKRL-304 receipt review and labelled development sample                      | Review           | Connected shared-client save/correction/reload/conflicts passed; native editor/keyboard/accessibility and final acceptance remain.                                                       |
+| SCKRL-406 expiry provenance, Add/Edit/calendar settings                       | Review           | SQL/concurrency and connected L2 passed; bounded native Add/Edit/Settings passed; full native/accessibility and final acceptance remain.                                                 |
+| SCKRL-312 receipt expiry and saved Home exit/resume                           | Review           | SQL, development installation and connected L2 passed; native saved restart/back passed; swipe, dirty account change, recovery and final acceptance remain.                              |
+| SCKRL-908 current mobile journey smoke coverage                               | In Progress      | Only the journeys exercised by this branch; broader Stage 1 coverage stays in the backlog.                                                                                               |
+| Branch integration and publication                                            | Pending          | Final independent QA/Council closeout, current source/check/map/doc consistency, scoped commit/push, update PR #4 and check its CI. No merge or release is performed by this scope note. |
+
+**Deferred to another branch:** SCKRL-311 atomic placement, SCKRL-305 placement UI,
+SCKRL-308 private media, SCKRL-307 real acquisition, SCKRL-309 provider OCR, SCKRL-306 history,
+new notifications/reminders, SCKRL-407/408 and other unimplemented product work. Their documented
+contracts and dependencies remain visible; do not implement them or make completion of Stage 1
+a condition of this branch's bounded acceptance. Keep placement unavailable and receipt capture
+honestly labelled under the current implementation boundary.
+
+**Owner input received:** the development `DATABASE_URL` is configured in ignored root `.env`.
+Read-only preflight on 2026-10-03 verified the development target, encrypted client connection and
+accepted SCKRL-310 prerequisites. The installed four receipt RPC bodies match accepted source
+byte for byte; SCKRL-312 was absent at preflight and is now installed. No further credential input is needed for the bounded upgrade.
+The operational Council unanimously ratified the bounded run; root applied only SCKRL-312 on
+2026-10-04 with successful COMMIT and fresh read-only installation/preservation verification. Unexpected prerequisites or partial upgrade still stop execution;
+do not silently run other migrations or repair migration history.
+
+Codex handles scoped QA, branch fixes, evidence, checks and PR preparation. After connected
+validation, schedule a short owner acceptance pass of the visible receipt/expiry/exit-resume
+behavior. Native login/device access may be needed if agents cannot operate an authenticated
+simulator; agents prepare isolated QA fixtures/accounts and validation. No additional product
+feature decision or credential disclosure is needed to prepare the draft.
+
+Historical checkpoints below explain how this branch reached its current state; this closeout
+scope supersedes their next-feature suggestions. Ticket states remain unchanged until actual
+acceptance. Production, deployment, merge and unrelated hosted changes remain outside scope.
 
 ### Current work checkpoint
 
-- **Owner sample-entry check — 2026-09-29:** the next simulator screenshot still lacks the sample
-  button. The running Metro development bundle contains the button and its environment is `dev`;
-  the Expo manifest requests `dev=true`. A stale loaded bundle is suspected, not established.
-  Direct visual inspection is unavailable because Computer Use permissions are not granted.
-  Next check: reload Expo in the simulator and verify **Load sample receipt** appears before
-  attempting connected review QA. Do not treat the earlier successful source tests/export as
-  proof that the owner has reached this entry point.
+- **Owner future-enhancement feedback — 2026-10-04:** documentation-only Council triage
+  records EN/DE receipt brand/product categorization, a shopping session with purchase tracking,
+  alternative product-photo recognition, personalized intake options, private friend recipe
+  collections and mutually verified family household invitations with proposed geolocation
+  validation in [feedback.md](feedback.md). These remain later-branch discovery; no existing
+  feature contract, ticket state or program gate changes. Deputy owns feedback wording;
+  Infrastructure reviews privacy/security and QA independently reviews completeness/scope.
+  Preferred Deputy/Infrastructure/QA routes are unavailable: actual retained fallbacks are
+  `gpt-6.1-sol` xhigh/xhigh/high respectively; root runtime identity/effort is not exposed.
+  Backend/Frontend/DevOps are not required for this internal feedback record because no
+  implementation, data contract, provider, architecture or deployment decision is made.
+  Deputy, Infrastructure, independent QA and Chair unanimously supported documentation v1
+  after preliminary consensus, reciprocal Chair review and fresh final votes. Accepted full-file
+  `feedback.md` SHA-256: `adfe24cede605012a1c95b0ff789674f80b6754c4903290344cf216dc2d8cf70`.
+  Existing-ticket overlap was challenged and resolved by explicit discovery-only wording and
+  the broader photo-intake/shopping-session boundaries. Acceptance covers this feedback record
+  only; implementation and security/privacy choices remain unapproved and pending refinement.
+- **Authenticated native continuation — 2026-10-04:** the owner explicitly approved using
+  generated synthetic logins against development Supabase; this authorization supersedes the
+  setup-only checkpoint below. Independent [native QA](docs/qa/sckrl-304-406-312-native-review.md)
+  supports bounded receipt correction/save, dated/no-date/unknown handling, invalid-date blocking,
+  dirty Back/Keep editing, clean Done for now and saved Home resume after a cold Expo Go restart.
+  Ordinary authenticated readbacks confirm metadata-only Edit preserves expiry evidence and
+  retyping the same date creates user-confirmed provenance without moving the date. A fresh
+  supplementary run confirms member expiry clearing with retained history, untouched estimated
+  Add remaining unconfirmed, owner London calendar persistence and member read-only Settings;
+  a clean screenshot supports the member Settings boundary. Both authenticated fixture processes
+  exited zero with exact cleanup, and only their temporary QA simulators were removed; the
+  original simulator remains booted. The earlier run's expired final-readback gap is preserved,
+  not relabelled as a pass. Remaining gates include native edge-swipe, dirty account switching,
+  in-flight/failed/conflicted/uncertain save recovery, full keyboard/VoiceOver/accessibility,
+  Next.js middleware and final independent/Council acceptance. Tickets remain Review/In Progress.
+  No product source, publication, merge or deployment changed during these native runs.
+  Owner profile-page/account-icon and `Hello, <account name>` requests are recorded in
+  [feedback.md](feedback.md) as proposed later-branch work, outside this closeout.
+- **Branch QA continuation — 2026-10-04:** corrected SCKRL-406 command fixture now captures
+  the same item's active fact before checking soft removal (one added line; no product/migration
+  change). Root ran the populated suites before and after 312 plus two-session guarded/unguarded
+  races; all 26 recorded steps pass and the disposable server stopped. Independent QA accepted
+  [database evidence](docs/qa/sckrl-406-database-review.md). Original failed evidence is preserved.
+  Development Auth-admin/schema read-only probe passes. The final isolated connected run
+  `sckrl-qa-20261004081439810-1f570395` passed all 22 stages and exact cleanup of two synthetic
+  households/three test users (process exit zero). This covers real Auth/PostgREST/shared SDK,
+  receipt expiry/save/omission/corrections/pagination/conflicts/rollback/isolation, stock provenance,
+  confirmation/clear/idempotency/history and owner/member calendar permissions. Prior three failed
+  harness runs and their verified cleanup remain recorded separately; no product fix was required.
+  Independent QA accepted the [connected evidence](docs/qa/sckrl-304-406-312-connected-review.md).
+  Next-route middleware and native flows remain separate gates.
+  Original iPhone 17/iOS 26.5 with Metro is running. Native saved-review open, expiry states/help,
+  invalid-date save blocking, dirty-back/Keep editing/discard and clean Done for now were observed.
+  Only the agent's temporary local draft was discarded; existing saved receipt/stock data was not
+  changed. Native coverage is partial, not accepted. Deputy/Infrastructure are preparing a fresh
+  separate simulator and isolated native fixtures; preserve the original device/session. Further
+  gestures/restart/Add/Edit/Settings/accessibility and final independent/Council review remain open.
+- **Isolated native setup — 2026-10-04:** Deputy and independent QA explicitly supported the
+  exact prepared device/fixture lifecycle before execution. Root created fresh iPhone 17/iOS 26.5
+  `Sackerl QA 44541f02f0` (`A1FDF6D3-CD23-4E4D-8939-FF5724CEF3EE`), installed only the existing
+  Expo Go app binary and verified the actual running Auth configuration targets development.
+  Original device/session/data remain intact. The previous Metro process had stopped; only the
+  local server was restarted, without `--ios`. Synthetic fixture run
+  `sckrl-native-20261004085221557-f9d77650` holds two generated accounts, one household, a saved
+  three-row unknown-expiry sample and one unconfirmed estimate. Private login file is 0600 inside
+  0700 temporary storage; no real credentials are requested. The fresh app is at its signed-out
+  login form. Specific GUI transmission approval is pending, as required by the Computer Use
+  skill; no credentials have been entered and no native acceptance is claimed. Root requested the reviewed offline finish signal while awaiting approval. The held process
+  completed with exit zero; its final records verify household/both-user cleanup and removal of
+  the private login file. Guarded device cleanup completed with exit zero and verifies QA-device
+  absence and original-device booted state. Fresh original Home still shows the original session,
+  one stock item and saved sample. No native login or product mutation was performed. Repeat the
+  reviewed isolated setup after explicit GUI-login authorization. Independent QA accepted the
+  setup-only cleanup evidence; cleanup is complete for this run.
+- **SCKRL-312 development installation — 2026-10-04:**
+  [COUNCIL-20261003-01 v1](docs/agents/council-decisions/COUNCIL-20261003-01.md) was unanimously
+  ratified with fresh final votes after Chair review. Root immediately verified all four reviewed
+  artifact hashes, then executed only the prepared 312 migration in one locked, bounded transaction.
+  Baseline recheck, original-column fingerprints/counts, legacy defaults and schema/security
+  assertions passed; explicit COMMIT and exit zero were confirmed. A fresh read-only connection
+  verifies the installed enum, four columns, validated constraints, exact save function and
+  preserved RLS/grants/unrelated receipt functions. All 15 receipts and 3 lines are preserved.
+  PostgREST schema reload was notified on commit. No other migration, hosted fixture, migration
+  history change, deployment, merge or publication occurred. Independent QA accepted the inspected execution log and postcommit metadata;
+  connected/native/406 behavior and Done gates remain open. See
+  [execution evidence](docs/qa/sckrl-312-development-migration-plan.md).
+- **Development access/preflight — 2026-10-03:** owner added `DATABASE_URL` to ignored `.env`.
+  Target binding, client TLSv1.3, accepted SCKRL-310 schema/security and byte-exact receipt RPC
+  bodies passed read-only inspection. Initial checksum mismatch was newline trimming in the local
+  check, not hosted drift. The SCKRL-312 enum/columns/constraints were absent before installation.
+  No credentials or receipt contents were printed.
+- **SCKRL-312 disposable replay — 2026-10-01:** root executed 49 successful SQL steps in
+  three disposable PostgreSQL 14.20 databases: populated pre-312 upgrade with legacy preservation
+  and expiry command assertions; clean replay of all twelve migrations; and populated SCKRL-310
+  legacy/command/adversarial regressions against the post-312 schema. Sandbox shared-memory and
+  socket restrictions required approved local execution. The server uses only a temporary Unix
+  socket, with no TCP listener; no hosted operations occurred. Independent QA2 accepted the
+  runner, all logs and unchanged source hashes in [database QA](docs/qa/sckrl-312-database-review.md).
+  The disposable server was stopped on 2026-10-02. This closes the local replay prerequisite;
+  hosted/connected/native gates remain open. The source acceptance snapshot is unchanged.
+  Development access, read-only preflight and bounded installation now pass. See
+  [the execution plan](docs/qa/sckrl-312-development-migration-plan.md). SCKRL-312 stays Review;
+  connected and native gates remain open.
+- **SCKRL-312 migration follow-up authorized — 2026-10-01:** the owner asks Codex to do
+  point 1 (apply the prepared development migration after disposable testing). This supersedes
+  the earlier no-replay/no-application restriction only for this bounded 312 validation and dev
+  upgrade, subject to successful preflight and verified development target. Independent QA2 owns
+  disposable local replay; root inspects hosted access/target and owns execution/status. Existing
+  local app configs point at the same dev project. At that authorization checkpoint, no real
+  database URL was configured and Browser discovery found no session; the owner supplied access
+  on 2026-10-03 as recorded above. Production, unrelated migrations,
+  deployment, publication and merge remain outside scope. SCKRL-312 stays Review.
+- **SCKRL-312 source accepted — 2026-10-01:** all seven Council participants cast fresh
+  **Support** votes on [COUNCIL-20261001-01 v1](docs/agents/council-decisions/COUNCIL-20261001-01.md),
+  the unchanged 22-file snapshot after reciprocal Chair review. SCKRL-312 moves to **Review**,
+  not Done. Receipt review now saves optional unknown/dated/no-date expiry, requires re-review of
+  changed included lines, and offers **Done for now** from a clean saved snapshot. Home discovers
+  persisted saved reviews with pagination, authenticated same-ID revalidation and explicit Retry.
+  Independent [source QA](docs/qa/sckrl-312-review.md) passed 49 focused and 85 mobile tests;
+  integration passed 314 workspace tests, all five lint/typecheck gates, formatting, diff and
+  code-map checks (671 callables, 1,231 relationships, 83 modules, zero stale artifacts).
+  iOS export passed with 1,289 modules. These are source/bundle checks only.
+- **Remaining gates and next action:** development SCKRL-312 is now installed. Local clean/
+  populated replay and SCKRL-310 regressions pass; independent local database QA accepted that
+  evidence. Close connected date/no-date/save/old-client omission/reload and household authorization,
+  then native date/keyboard/accessibility/back-swipe and same-receipt app-restart QA. Complete the
+  remaining SCKRL-406 connected/native gates and bounded SCKRL-304/908 validation. Placement,
+  conversion/idempotency/placed freeze and canonical placed exclusion remain deferred SCKRL-311
+  work. SCKRL-304/406/312 stay Review; SCKRL-908 stays In Progress. Actual fallback models are
+  recorded in Council decisions; root runtime model/effort was not exposed. Local work remains
+  uncommitted at `d550bd1` on `feature/SCKRL-ASTRA`; no deployment, merge or new publication occurred.
+- **SCKRL-312 integrated source checks — 2026-10-01:** receipt expiry UI, clean saved Home
+  exit and authenticated paginated same-receipt resume are written. Independent review corrections
+  preserve unsaved expiry across session refresh, prevent leaving during a save/conflict, use the
+  native-stack-supported removal hook, retain Home entries with Retry, and reject stale account,
+  focus and household responses. Workspace tests pass **314** (161 client, 57 web, 85 mobile,
+  8 UI and 3 tokens); all five lint/typecheck tasks pass and full format check passes. Final
+  independent QA and exact Council source votes remain pending, so SCKRL-312 stays **In Progress**.
+  No SQL replay/application, connected/native acceptance or publication is implied.
+- **SCKRL-312 resumed with Council — 2026-10-01:** root continued the saved mobile
+  implementation after Frontend reached its runtime usage limit. Independent QA and Deputy
+  identified saved-exit/navigation, stale Home request and visible-helper/copy blockers. Root
+  owns receipt route/tests integration; Backend `gpt-6.1-sol` `xhigh` owns only Home route/tests
+  corrections. Receipt screen's 17 source tests pass after switching to native-stack-supported
+  removal prevention and blocking safe exit during saves/conflicts. Home corrections and final
+  independent source QA/Council acceptance are still underway. SCKRL-312 remains **In Progress**.
+  No migration application/replay, hosted write, deployment or publication occurred.
+- **SCKRL-312 contract ratified — 2026-09-30:** the owner asked to continue. Backend,
+  Infrastructure, Frontend, Product, independent QA, Deputy and Chair unanimously supported
+  [Council v2](docs/agents/council-decisions/COUNCIL-20260930-01.md) after Product/QA's v1
+  wording objection was resolved. The contract persists unknown/dated/no-date receipt choices
+  through the guarded review save, transfers entered dates to unconfirmed stock facts, defers
+  automatic receipt estimates, and pairs a saved-review Home exit with durable same-receipt
+  resume. [ADR-0001](docs/architecture/adr-0001-reliable-food-loop.md), [the product contract](docs/features/sckrl-312-receipt-line-expiry.md)
+  and `features.md` now carry the decision; independent documentation QA accepted the corrected
+  contracts and focused formatting/link checks pass. SCKRL-304/406 remain Review and SCKRL-308 remains Ready. Preferred specialist
+  routes were unavailable; actual configured models and replacements are in the Council record.
+  No migration application/replay, hosted write or deployment occurred. Design acceptance does
+  not complete SCKRL-312 implementation or its runtime QA.
+- **SCKRL-312 implementation ownership — 2026-09-30:** ticket moved to **In Progress** with
+  Frontend as primary. Backend `gpt-6.1-sol` `xhigh` owns a bounded additive receipt-line
+  persistence, shared-client and web-payload prerequisite; root owns integration/status and will
+  start dependent mobile UI only after that contract stabilizes. Independent QA remains separate.
+  Historical migrations must remain untouched, and no migration application or replay is allowed.
+- **SCKRL-312 Backend source handoff — 2026-09-30:** the additive migration, strict client/web
+  expiry payload, old-client omission behavior, SQL fixture source and authenticated pending-review
+  list client are written. Backend's focused client/web tests, lint, typecheck and formatting pass;
+  independent QA found no blocking source defect and accepted this prerequisite for integration.
+  SQL fixtures have **not** been replayed and the migration has not been applied; connected
+  correctness remains unverified. Frontend now owns only the mobile review/Home implementation.
+  SCKRL-311 must add authoritative placed-state exclusion to pending review discovery before
+  placement ships. SCKRL-312 remains **In Progress**, not Review or Done.
+- **Codex continuation / Council — 2026-09-29:** the owner asked to continue and explicitly use
+  the Council, superseding the prior documentation-only pause for the simulator findings. The
+  [ratified priority decision](docs/agents/council-decisions/COUNCIL-20260929-02.md) selects a
+  bounded BPA refinement of receipt-line expiry (provisional SCKRL-312) and the SCKRL-305
+  post-save exit/return journey. That documentation is complete in [the product brief](docs/features/sckrl-312-receipt-line-expiry.md)
+  and `features.md`, with independent documentation QA. The next action is a
+  Backend/Infrastructure/Frontend/Product/QA contract
+  Council. That later Council must settle date states, guarded-save versus placement ownership,
+  and stock expiry provenance before SCKRL-311 implementation; SCKRL-311 precedes SCKRL-305.
+  SCKRL-308 remains Ready as a separate private-media lane before SCKRL-307/309. Council votes
+  were unanimous on sequencing only; no application, schema, hosted or migration work was
+  authorized or accepted by this decision. Preferred Deputy/Product/QA model routes were not
+  available; explicit `gpt-6-sol`/`gpt-6-luna` fallbacks are recorded in the decision.
+- **Latest owner simulator test — 2026-09-29, 18:43–18:45:** three owner-supplied screenshots
+  show the labelled sample in **Review 3 items**, the Milk edit sheet, and all three rows marked
+  **Reviewed** with **0 needs review** and the message **Review saved. Placement will be available
+  in a later step.** The previous sample-entry obstacle is superseded: the owner reached the editor.
+  This is owner-observed runtime evidence of sample loading, opening the editor, marking rows
+  reviewed and a UI-reported successful save. Persistence after reload/reopening and independent
+  end-to-end verification have not been demonstrated; no field-value correction is evidenced.
+- **Open findings from this test:** the owner likes the edit interaction but considers it incomplete.
+  The edit sheet exposes name, quantity/unit and category, but **no expiration date**. Expiry entry
+  is an important owner requirement and remains an unresolved receipt-flow product gap; do not
+  equate the existing SCKRL-406 stock Add/Edit expiry support with receipt-editor coverage.
+  After saving, the owner reports being **stuck**: **Continue to placement** is disabled and the
+  screen says storage placement is unavailable. This matches the current SCKRL-304 boundary and
+  unimplemented SCKRL-305 continuation, but the receipt-to-stock journey remains incomplete.
+  The scrolled screenshot also shows content beneath the status/Dynamic Island area; retain this
+  as a visual observation for later validation, without claiming its cause is established.
+- **Earlier test disposition (superseded for planning by the continuation above):** update
+  **only `status.md`**; do not fix or implement anything from those findings in that pass. No new
+  tests, database operations or application edits were performed for that documentation update.
+  SCKRL-304 and SCKRL-406 remain **Review**;
+  SCKRL-908 remains **In Progress**. Later QA still needs save persistence after reload, correction
+  and failure/conflict coverage, and native keyboard/accessibility/layout checks. Resolve receipt
+  expiry entry and the placement continuation scope before claiming a complete receipt journey.
 - **Development sample receipt — 2026-09-29:** the owner's development database has no parsed
   receipt available for editor QA. Council [COUNCIL-20260929-01](docs/agents/council-decisions/COUNCIL-20260929-01.md)
   ratified a bounded SCKRL-304/908 addition: development-only **Scan → Load sample receipt**.
@@ -24,7 +271,8 @@ Last updated: 2026-09-29
   supports Review, with 16 focused tests, lint and typecheck independently passed. Final mobile
   suite: 55 tests pass. Code map: 649 callables, 1,177 relationships, 82 modules; zero stale files. iOS export
   passes (1,287 modules). Expo restarted on iPhone 17 Pro at `exp://127.0.0.1:8081`.
-  Connected sample creation/review/save and native layout/accessibility remain unverified.
+  The latest owner screenshots above provide partial connected review/save and native rendering
+  evidence; independent connected validation, reload persistence and full accessibility remain open.
   Retries retain the same attempt/receipt within the mounted Scan session; reopening preserves
   edits. An uncertain create is reconciled by its marker and never automatically repeated.
   Restarting the app loses this in-memory recovery state. No migrations, hosted configuration,
@@ -74,10 +322,11 @@ Last updated: 2026-09-29
   formatting, diff checks and iOS export (1,286 modules) pass. The Obsidian map has 645 callables,
   1,164 relationships and 81 modules; zero stale files. Workspace-wide checks from the earlier 406
   checkpoint remain historical; only mobile code changed for 304 and those checks were not rerun.
-- **304 remaining gates:** connected authenticated review read/save, stale conflicts and generation
-  behavior after migrations are available, plus native/device visual and accessibility review
-  (modal, keyboard, touch targets, empty/error states). No screenshot/native interaction evidence
-  is claimed. This does not make SCKRL-304 depend on finishing placement ticket SCKRL-305.
+- **304 remaining gates:** independently validated connected review persistence, stale conflicts and
+  generation behavior, plus native/device visual and accessibility review (modal, keyboard, touch
+  targets, empty/error states). September 29 owner screenshots now show sample loading, the edit
+  sheet and a save-success message, but do not close these gates. This does not make SCKRL-304
+  depend on finishing placement ticket SCKRL-305; the complete receipt journey still needs placement.
 - **Next assistant package:** [future GPT/Codex session](docs/agents/codex-next-work-package.md).
   It carries source evidence, simulator findings, notification/product requests, SCKRL-308's local
   foundation scope and a resume prompt. Future sessions must keep this package, status and the
@@ -137,12 +386,17 @@ Last updated: 2026-09-29
 - **Stage 0 is complete locally:** product truth, journeys, architecture and measurement are
   recorded; the Obsidian code overview is maintained alongside implementation.
 - **Stage 1 — reliable food loop is in progress:** the foundation and prototype exist;
-  SCKRL-310 review data and SCKRL-506 recipe eligibility are Done locally. SCKRL-406 expiry
-  provenance and SCKRL-304 review UI are Review. SCKRL-908 simulator/device coverage remains In Progress.
-- **Next delivery milestones:** triage the latest simulator findings, close 406 and 304
-  runtime/native QA, and advance the ready SCKRL-308 private-media foundation in Codex; follow the accepted dependencies into SCKRL-311 atomic
-  placement, real capture/OCR and receipt-to-stock coverage. Warnings, snooze and reminders remain
-  separate tickets. SCKRL-304 source is implemented; SCKRL-308 implementation has not started.
+  SCKRL-310 review data and SCKRL-506 recipe eligibility are Done locally. SCKRL-304 review UI,
+  SCKRL-406 expiry provenance and SCKRL-312 receipt expiry/saved continuation are Review.
+  SCKRL-312 has unanimous Council source acceptance, 314 passing workspace tests and accepted
+  disposable SQL replay evidence and verified development installation. Connected/native QA remain open;
+  SCKRL-908 simulator/device coverage remains In Progress.
+- **Next delivery milestones:** close connected/native
+  review/expiry/exit/restart QA for 312 and the independent 304/406 gates. On later branches, advance
+  SCKRL-311 atomic placement and SCKRL-305 mobile placement. Their expiry/provenance/continuation
+  design is already ratified; placement implementation is not complete. SCKRL-308 private media
+  remains Ready in a separate lane before SCKRL-307 real capture and SCKRL-309 provider OCR.
+  Warnings, snooze and reminders remain separate tickets. SCKRL-308 has not started.
 - **The internal mobile alpha is not yet complete.** Real receipt-to-stock recovery, device and
   provider evidence, reminders and release checks still gate the beta and Stage 1 exit. Stages
   2–7 remain planned: learning data, buying intelligence, personalized recipes, storage assistance,
@@ -386,7 +640,7 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | SCKRL-213 | Done        | Frontend                  | Item detail / edit.                               | Implemented item-row tap to open a bottom-sheet detail editor with name, category, quantity, unit, zone move, expiry, added/source/status metadata, save, mark-as-used confirmation, and delete confirmation wired through SCKRL-202 mutations. Lowered the Stock detail Add FAB after user visual QA found it too high. Focused mobile typecheck, lint, tests, Prettier check, Expo export, and user Expo Go visual/runtime QA passed on 2026-06-05 after a save edit renamed `Cucumb R` to `Cucumber`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | SCKRL-401 | Done        | Frontend                  | Expiring-soon list.                               | Replaced the Expiring tab placeholder with a 14-day expiring list grouped by Today, Tomorrow, This week, and Next week. Added summary chips, loading/error/empty states, zone labels, urgency chips, progress bars, and visible accessible row actions for Used, Snooze 2d, and Compost. SCKRL-415 later made Used and Compost durable removal outcomes for monthly stats. Focused mobile typecheck, lint, tests, Prettier check, Expo export, and user Expo Go visual/runtime QA passed on 2026-06-05 after Snooze 2d moved `Test Cucumber` outside the 14-day list and the empty state rendered.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | SCKRL-405 | Done        | Backend                   | Expiry estimation.                                | Implemented shared category-and-zone expiry estimation in `@sackerl/api-client` with deterministic pure helpers, a covered lookup table for Fridge/Freezer/Pantry/Basement/Cabinet, custom-zone fallback, and unit tests. Mobile Add Item now uses the shared estimator by selected category and zone, and Stock item edit estimates when expiry is left blank. API-client typecheck/lint/test/build, mobile typecheck/lint/test/Expo export, and user Expo Go runtime QA passed on 2026-06-05 after Produce in Fridge estimated 6 days and Produce in Freezer estimated 180 days.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| SCKRL-406 | Review      | Backend                   | Expiry provenance and confirmation.               | Backend, Add/Edit and household-calendar integration are implemented, including member-safe household reads. Independent source QA and integration review accepted the final corrections on 2026-09-27. 194 workspace tests, typecheck/lint, iOS export and refreshed code-map checks pass. Corrected SQL replay and authenticated PostgREST/simulator acceptance remain pending. Codex applied neither migration; the owner reported a hosted SQL fixture failure, and their migration state remains unverified. See contract, shared ledger and QA report.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| SCKRL-406 | Review      | Backend                   | Expiry provenance and confirmation.               | Backend, Add/Edit and household-calendar integration are implemented, including member-safe household reads. Independent source QA and integration review accepted the final corrections on 2026-09-27. 194 workspace tests, typecheck/lint, iOS export and refreshed code-map checks pass. Corrected SQL suites before/after 312 and real two-session concurrency races passed with independent QA on 2026-10-04. Real Auth/PostgREST/shared-client provenance, confirmation, clear, conflicts, history and calendar permissions passed independently reviewed isolated QA; fixtures were cleaned. Native Add/Edit/Settings and final Council acceptance remain open. Root installed only the authorized 312 development migration; no 406 migration was applied by this closeout. See contract, shared ledger and QA report.                                                                                                                                                                                                                                                                  |
 | SCKRL-415 | Done        | Backend                   | Waste-avoided counter.                            | Added durable used-vs-compost tracking, shared monthly aggregate support, web `/items/removal-stats` route, and mobile Used/Compost persistence. Focused API-client typecheck/lint/test/build, mobile typecheck/lint/test/Expo export, web typecheck/lint/build, and root format check passed on 2026-06-07. The dev Supabase migration was applied and a public PostgREST schema smoke check confirmed `items.removal_reason`; user Expo Go QA confirmed Used/Compost removal flows. Authenticated runtime QA passed through a temporary user: `/items/removal-stats?month=2026-06` returned one used, one composted, total two; the QA user was deleted after validation.                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | SCKRL-301 | Done        | Frontend                  | Camera capture screen.                            | Replaced the Scan placeholder with a fullscreen dark receipt-capture shell from the Phase 2 handoff: hidden tab bar on Scan, top Cancel/Scan receipt/Help controls, faux camera viewport, receipt preview, amber alignment corners, status microcopy, Gallery/Capture/PDF controls, 200ms shutter flash, and `Skip - type it instead` route to manual Add item. Capture/import initially showed SCKRL-302 handoff messages because no camera/upload dependency was installed yet. Focused mobile typecheck/lint/test, root format check, Expo web export, and exported-bundle HTTP smoke passed on 2026-06-21. User Expo Go visual QA accepted the Scan screen and controls on 2026-06-21. Stage 0 truth audit keeps this Done as a visual/capture-shell foundation only; real camera/gallery/PDF acquisition is tracked by SCKRL-307.                                                                                                                                                                                                                                                          |
 | SCKRL-302 | Done        | Backend                   | Receipt upload and storage.                       | Added the `receipt_status` enum and `receipts` table migration with household RLS, timestamp maintenance, indexes, and status/currency/total constraints. Added shared `@sackerl/api-client` receipt types, mapping, validation, create/list client methods, and tests. Added authenticated web `/receipts` GET/POST route plus payload parsing, mobile receipt client wrapper, and Scan wiring that creates real uploaded receipt rows with temporary `sackerl://receipt/...` URLs until camera/file upload dependencies are installed. Focused API-client tests/typecheck/lint/build, web typecheck/lint/test/build, mobile typecheck/lint/test, root format check, Expo web export, and exported-bundle HTTP smoke passed on 2026-06-21. User applied the dev Supabase migration, authenticated runtime QA passed with an isolated temp user, and user Expo Go QA confirmed Scan persistence showed `Receipt uploaded. ID ... is ready for parsing.` Stage 0 truth audit keeps this Done as a receipt-row persistence foundation only; private binary media storage is tracked by SCKRL-308. |
@@ -395,6 +649,7 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | SCKRL-308 | Ready       | Infrastructure            | Private receipt media storage.                    | Ready after ADR-0001 acceptance on 2026-09-06. Replaces synthetic `sackerl://` references with private Supabase Storage, upload validation, signed access, retention, and cleanup. Publish the upload contract before SCKRL-307 integrates it. Candidate in the future Codex handover: docs/agents/codex-next-work-package.md; own Infra/Backend/QA Council plan required, local implementation only and no migration/provider execution. Not started.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | SCKRL-309 | Todo        | Backend                   | Async OCR and completion signaling.               | Follow-up ticket added by the Stage 0 truth audit on 2026-09-06. Closes the SCKRL-303 production gap by adding durable parse attempts or jobs, provider failure handling, retry semantics, parser/provider versioning, and client-visible completion state. Depends on SCKRL-308.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | SCKRL-304 | Review      | Frontend (root completed) | Receipt review screen.                            | Council v3 source acceptance, independent QA and integration review on 2026-09-28. Scan entry, corrections, explicit review, manual rows, full guarded saves, retained conflict drafts, no-generation fallback and disabled placement implemented. 44 mobile tests, lint/typecheck and iOS export pass; independent QA reran 24 focused tests. Connected/native/visual/accessibility gates remain; no migration applied. See docs/qa/sckrl-304-review.md.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| SCKRL-305 | Blocked     | Frontend                  | Receipt placement screen.                         | Await SCKRL-311 atomic placement and SCKRL-312 expiry/continuation integration under the ratified v2 contract. Drag and complete tap placement remain required; a saved review needs an enabled safe exit/return while placement is unavailable. See features.md and COUNCIL-20260929-02.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | SCKRL-025 | Done        | Agent Orchestrator        | Linked code overview.                             | Accepted by independent QA on 2026-09-13. 88 notes; 577 callables, 1053 relationships, 77 generated modules. Source/wiki links valid and refresh/check passes. Start docs/code-map/Sackerl Code Map.md.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | SCKRL-026 | Done        | Agent Orchestrator        | Shared Codex/Claude handoff workflow.             | Accepted locally 2026-09-13 after independent GPT-5.5 documentation QA and root review. 70 relative links valid; diff check clean. Shared checkpoint, provider profiles, interruption recovery and resume prompts. No app changes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | SCKRL-407 | Todo        | Frontend                  | Expiry warnings and overdue interaction.          | Phone-feedback triage 2026-09-13; criteria in features.md. Not started.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -407,6 +662,7 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | SCKRL-506 | Done        | Backend                   | Recipe expiry eligibility.                        | Accepted by independent QA and Sol integration on 2026-09-13. 29 recipe tests and 122 workspace tests pass; expiry gate shared by list/detail and both apps. See docs/qa/sckrl-506-recipe-expiry-qa.md. Device validation not performed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | SCKRL-310 | Done        | Backend                   | Receipt review data upgrade.                      | Accepted locally 2026-09-13 after independent SQL QA, Infrastructure and integration review. Atomic generation/review snapshots, corrections/manual lines, conflict guards and hardened grants. 102 tests, checks/build, migration replay and SQL fixtures pass. Live dev migration still pending. See docs/features/sckrl-310-receipt-review-data.md.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | SCKRL-311 | Todo        | Backend                   | Atomic receipt placement command.                 | Added on 2026-09-06 after Backend/Infrastructure audit identified the missing transaction boundary. Implements idempotent receipt finalization, reviewed-line validation, stock lineage, expiry facts, acquisition events, and all-or-nothing placement. Depends on SCKRL-202, SCKRL-310, and SCKRL-406.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| SCKRL-312 | Review      | Frontend                  | Receipt-line expiry and continuation.             | COUNCIL-20261001-01 v1 unanimously accepts source readiness after independent QA. Optional expiry persistence/UI and guarded saved Home exit/paginated same-ID resume implemented locally; 314 workspace tests and source gates pass. Disposable SQL replay and development installation passed with independent evidence review; connected Auth/PostgREST/shared-client QA passed. Native/restart and Next-route gates remain open. SCKRL-311 placement is excluded.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | SCKRL-501 | Done        | Backend                   | Recipe matching engine.                           | Added an idempotent `recipes` table migration with 50 seeded recipes, shared recipe suggestion scoring from active household stock, and authenticated web `GET /suggestions?limit=5&min_score=0.7`. Focused API-client tests/typecheck/lint/build, web typecheck/lint/test/build, root format check, and recipe seed count validation passed on 2026-06-11. User applied the migration in Supabase SQL Editor; public PostgREST confirmed 50 recipes, and authenticated local route runtime QA passed with an isolated QA user: `tomato-pasta` returned as top suggestion with score `1`, 5/5 covered ingredients, and QA-user cleanup succeeded.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | SCKRL-206 | Done        | Frontend                  | Dashboard Suggestion card.                        | Implemented the Phase 2 sage "From your stock" dashboard card on mobile Home using the shared SCKRL-501 recipe suggestion client. The card reads one match, shows up to four covered ingredient chips, hides when no match is available, and routes "Show recipe" to a minimal `/recipe/[id]` SCKRL-505 placeholder. Focused mobile typecheck/lint/test, api-client typecheck, root format check, Expo web export, local Expo HTTP smoke check, temporary Supabase QA-user cleanup, and user Expo Go visual/runtime QA passed on 2026-06-11. Screenshots confirmed `Tomato Pasta`, ingredient chips, tab clearance, and placeholder navigation.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | SCKRL-505 | Done        | Frontend                  | Recipe detail screen.                             | Replaced the `/recipe/[id]` placeholder with a recipe detail view that loads a scored recipe by id, shows checked in-stock ingredients, amber "buy" chips for missing ingredients, exposes the SCKRL-511 shopping-list placeholder CTA, and marks matched stock items as used through "Cooked it". Added shared `getSuggestion` support for recipe detail scoring. API-client tests/typecheck/lint, mobile typecheck/lint/test, root format check, and Expo web export passed on 2026-06-11. User Expo Go screenshots on 2026-06-12 confirmed 5/5 checked ingredients, 4/5 with amber `buy` for missing Garlic, shopping-list placeholder feedback, and Cooked-it changing matched items to used with the disabled 0/5 state.                                                                                                                                                                                                                                                                                                                                                                   |

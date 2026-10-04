@@ -109,6 +109,33 @@ describe('receipt review routes', () => {
     await expect(response.json()).resolves.toEqual({ error: 'Reload before saving.' });
   });
 
+  it('forwards expiry with the rendered generation and review revision', async () => {
+    const input = {
+      ...body,
+      lines: [{ ...body.lines[0], expiry: { date: '2026-10-01', state: 'dated' } }],
+    };
+    const response = await PUT(request(input), routeContext);
+    expect(response.status).toBe(200);
+    expect(mocks.saveReview).toHaveBeenCalledWith(auth, {
+      ...input,
+      householdId: 'session-household',
+      receiptId: 'receipt-1',
+    });
+  });
+
+  it.each([
+    { expiry: { date: '2026-02-29', state: 'dated' } },
+    { expiry: { date: null, state: 'no_date', confirmedBy: 'forged' } },
+    { expiryChangedBy: 'forged' },
+  ])('rejects expiry problems before submitting any review changes', async (invalid) => {
+    const response = await PUT(
+      request({ ...body, lines: [{ ...body.lines[0], ...invalid }] }),
+      routeContext,
+    );
+    expect(response.status).toBe(400);
+    expect(mocks.saveReview).not.toHaveBeenCalled();
+  });
+
   it('rejects malformed JSON without submitting a review', async () => {
     const response = await PUT(
       new Request('http://localhost/receipts/receipt-1/items', { method: 'PUT', body: '{' }),

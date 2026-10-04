@@ -18,7 +18,28 @@ const mocks = vi.hoisted(() => ({
       (context: AuthenticatedUserContext, input: SaveReceiptReviewInput) => Promise<ReceiptReview>
     >(),
   push: vi.fn(),
+  replace: vi.fn(),
   back: vi.fn(),
+  dispatch: vi.fn(),
+  setOptions: vi.fn(),
+  beforeRemove: null as
+    | null
+    | ((event: {
+        readonly preventDefault: () => void;
+        readonly data: { readonly action: unknown };
+      }) => void),
+  addListener: vi.fn(
+    (
+      _event: string,
+      listener: (event: {
+        readonly preventDefault: () => void;
+        readonly data: { readonly action: unknown };
+      }) => void,
+    ) => {
+      mocks.beforeRemove = listener;
+      return vi.fn();
+    },
+  ),
   alert: vi.fn(),
   id: 'receipt-1',
   session: null as Session,
@@ -31,7 +52,20 @@ vi.mock('./profile', () => ({ getMobileProfileClient: () => mocks }));
 vi.mock('./receipts', () => ({ getMobileReceiptsClient: () => mocks }));
 vi.mock('expo-router', () => ({
   useRouter: () => mocks,
+  useNavigation: () => mocks,
   useLocalSearchParams: () => ({ id: mocks.id }),
+}));
+vi.mock('expo-router/react-navigation', () => ({
+  usePreventRemove: (
+    prevent: boolean,
+    callback: (event: { data: { action: unknown } }) => void,
+  ) => {
+    mocks.beforeRemove = (event) => {
+      if (!prevent) return;
+      event.preventDefault();
+      callback({ data: event.data });
+    };
+  },
 }));
 vi.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
@@ -122,7 +156,10 @@ beforeEach(() => {
   mocks.getReceiptReview.mockReset().mockResolvedValue(receiptReview());
   mocks.saveReceiptReview.mockReset().mockResolvedValue(receiptReview());
   mocks.push.mockReset();
+  mocks.replace.mockReset();
   mocks.back.mockReset();
+  mocks.dispatch.mockReset();
+  mocks.beforeRemove = null;
   mocks.alert.mockReset();
 });
 afterEach(async () => {
@@ -145,6 +182,172 @@ describe('Receipt review route', () => {
     expect(text()).toContain('MILCH 1L');
     expect(action('Continue to placement').props.disabled).toBe(true);
     expect(mocks.getReceiptReview).toHaveBeenCalledTimes(1);
+  });
+
+  it('edits a date, requires review again, saves it, then exits to Home only from the saved snapshot', async () => {
+    const saved = receiptReview([reviewItem({ expiry: { date: '2026-10-01', state: 'dated' } })]);
+    mocks.saveReceiptReview.mockResolvedValue(saved);
+    await render();
+    await press('Edit Milk');
+    expect(action('Unknown').props.accessibilityState).toMatchObject({ checked: true });
+    await press('Has a date');
+    await edit('Optional expiry date, year month day', '2026-10-01');
+    await press('Mark reviewed');
+    await press('Save review');
+    expect(mocks.saveReceiptReview.mock.calls[0]?.[1].lines[0]?.expiry).toEqual({
+      date: '2026-10-01',
+      state: 'dated',
+    });
+    expect(action('Done for now')).toBeTruthy();
+    await press('Done for now');
+    expect(mocks.replace).toHaveBeenCalledWith('/(tabs)');
+  });
+
+  it('keeps expiry draft and blocks Done for now after an uncertain save', async () => {
+    mocks.saveReceiptReview.mockRejectedValue(new Error('Offline'));
+    await render();
+    await press('Edit Milk');
+    await press('No expiry date');
+    await press('Mark reviewed');
+    await press('Save review');
+    expect(text()).toContain('Your edits are still here');
+    expect(text()).toContain('No expiry date');
+    expect(text()).not.toContain('Done for now');
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
+
+  it('redispatches the original supported navigation action after explicit discard', async () => {
+    await render();
+    await press('Edit Milk');
+    await edit('Receipt item name', 'Unsaved name');
+    const preventDefault = vi.fn();
+    const actionToken = { type: 'GO_BACK' };
+    mocks.beforeRemove?.({ preventDefault, data: { action: actionToken } });
+    expect(preventDefault).toHaveBeenCalledOnce();
+    const alertActions = mocks.alert.mock.calls[0]?.[2] as {
+      readonly text: string;
+      readonly onPress?: () => void;
+    }[];
+    await act(() => alertActions.find((item) => item.text === 'Discard changes')?.onPress?.());
+    expect(mocks.dispatch).toHaveBeenCalledWith(actionToken);
+  });
+
+  it('blocks clean saved exit while saving and after a revision conflict', async () => {
+    const saved = receiptReview();
+    const persisted = { ...saved, receipt: { ...saved.receipt, reviewRevision: 3 } };
+    mocks.getReceiptReview.mockResolvedValue(persisted);
+    const pending = deferred<ReceiptReview>();
+    mocks.saveReceiptReview.mockReturnValue(pending.promise);
+    await render();
+    expect(action('Done for now')).toBeTruthy();
+    await press('Save review draft');
+    expect(text()).not.toContain('Done for now');
+    const preventDefault = vi.fn();
+    mocks.beforeRemove?.({ preventDefault, data: { action: { type: 'GO_BACK' } } });
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(mocks.alert).toHaveBeenLastCalledWith(
+      'Saving review',
+      'Please wait for the save result before leaving.',
+    );
+    await act(async () => {
+      pending.resolve(persisted);
+      await pending.promise;
+    });
+    expect(action('Done for now')).toBeTruthy();
+    mocks.saveReceiptReview.mockRejectedValue(new ApiRequestError('Conflict', 409));
+    await press('Save review draft');
+    expect(text()).not.toContain('Done for now');
+    expect(text()).toContain('Reload');
+  });
+
+  it('preserves unsaved expiry after a same-account token refresh', async () => {
+    await render();
+    await press('Edit Milk');
+    await press('Has a date');
+    await edit('Optional expiry date, year month day', '2026-12-31');
+    mocks.session = {
+      access_token: 'refreshed',
+      user: { id: 'owner', email: 'owner@test.invalid' },
+    };
+    await act(() => screen?.update(<ReceiptReviewRoute />));
+    expect(
+      screen?.root.findByProps({ accessibilityLabel: 'Optional expiry date, year month day' }).props
+        .value,
+    ).toBe('2026-12-31');
+    expect(mocks.getReceiptReview).toHaveBeenCalledTimes(1);
+    await press('Mark reviewed');
+    await press('Save review');
+    expect(mocks.saveReceiptReview.mock.calls[0]?.[0].accessToken).toBe('refreshed');
+    expect(mocks.saveReceiptReview.mock.calls[0]?.[1].lines[0]?.expiry).toEqual({
+      state: 'dated',
+      date: '2026-12-31',
+    });
+  });
+
+  it('keeps an uncertain save draft when the session refreshes in flight', async () => {
+    const pending = deferred<ReceiptReview>();
+    mocks.saveReceiptReview.mockReturnValue(pending.promise);
+    await render();
+    await press('Edit Milk');
+    await press('No expiry date');
+    await press('Mark reviewed');
+    await press('Save review');
+    mocks.session = {
+      access_token: 'refreshed',
+      user: { id: 'owner', email: 'owner@test.invalid' },
+    };
+    await act(() => screen?.update(<ReceiptReviewRoute />));
+    expect(text()).toContain('session refreshed during the save');
+    expect(text()).not.toContain('Done for now');
+    await act(async () => {
+      pending.resolve(receiptReview());
+      await pending.promise;
+    });
+    expect(text()).toContain('No expiry date');
+    expect(text()).not.toContain('Review saved. Items are not in stock yet.');
+  });
+
+  it('ignores a stale discard prompt after switching receipts', async () => {
+    await render();
+    await press('Edit Milk');
+    await edit('Receipt item name', 'Unsaved name');
+    mocks.beforeRemove?.({ preventDefault: vi.fn(), data: { action: { type: 'GO_BACK' } } });
+    const actions = mocks.alert.mock.calls[0]?.[2] as { text: string; onPress?: () => void }[];
+    mocks.id = 'receipt-2';
+    await act(() => screen?.update(<ReceiptReviewRoute />));
+    await act(() => actions.find((item) => item.text === 'Discard changes')?.onPress?.());
+    expect(mocks.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('restores the preserved draft when token refresh interrupts an explicit reload', async () => {
+    await render();
+    await press('Edit Milk');
+    await press('Has a date');
+    await edit('Optional expiry date, year month day', '2026-12-31');
+    const pending = deferred<ReceiptReview>();
+    mocks.getReceiptReview.mockReturnValue(pending.promise);
+    await press('Reload receipt review');
+    const actions = mocks.alert.mock.calls[0]?.[2] as { text: string; onPress?: () => void }[];
+    await act(() => actions.find((item) => item.text === 'Reload')?.onPress?.());
+    expect(text()).toContain('Loading receipt review');
+    mocks.session = {
+      access_token: 'refreshed',
+      user: { id: 'owner', email: 'owner@test.invalid' },
+    };
+    await act(() => screen?.update(<ReceiptReviewRoute />));
+    expect(text()).not.toContain('Loading receipt review');
+    expect(
+      screen?.root.findByProps({ accessibilityLabel: 'Optional expiry date, year month day' }).props
+        .value,
+    ).toBe('2026-12-31');
+    await act(async () => {
+      pending.resolve(receiptReview());
+      await pending.promise;
+    });
+    expect(
+      screen?.root.findByProps({ accessibilityLabel: 'Optional expiry date, year month day' }).props
+        .value,
+    ).toBe('2026-12-31');
   });
 
   it('does not fetch while signed out and retries a load failure', async () => {

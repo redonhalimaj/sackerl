@@ -1,6 +1,6 @@
 # Database tests
 
-These SQL fixtures exercise SCKRL-310 and SCKRL-406 against a disposable local PostgreSQL database. They
+These SQL fixtures exercise SCKRL-310, SCKRL-406 and SCKRL-312 against a disposable local PostgreSQL database. They
 use synthetic records, an `auth.uid()` stub and Supabase-like default grants. Run them as
 the owner of an **empty test database**, never against a hosted or application database.
 Hosted Auth, PostgREST and device journeys require separate integration evidence.
@@ -105,3 +105,44 @@ while session B issues the same update with the same now-stale `expected_fact_id
 the row lock and then fail with `PT409` once A commits, leaving A's fact active and the history a
 single ordered chain. Repeating the pair without `expected_fact_id` must let both writes land, with
 the later one active.
+
+## SCKRL-312 receipt-line expiry
+
+The SCKRL-312 migration and fixtures are prepared source only. **The current work checkpoint
+prohibits applying or replaying migrations anywhere.** The procedure below is for a later
+authorized test pass; it is not permission to run it now. Use an empty disposable database,
+synthetic records and `local_bootstrap.sql`, never a hosted or application database.
+
+For a populated pre-312 schema, apply earlier migrations, seed accepted parser/manual review rows
+before the upgrade, then run the new migration and assertions in the same database:
+
+```sh
+psql -X -v ON_ERROR_STOP=1 -f supabase/tests/local_bootstrap.sql
+for migration in supabase/migrations/*.sql; do
+  case "$migration" in
+    *sckrl_312*) break ;;
+  esac
+  psql -X -v ON_ERROR_STOP=1 --single-transaction -f "$migration" || exit 1
+done
+psql -X -v ON_ERROR_STOP=1 -f supabase/tests/sckrl_312_legacy_seed.sql
+psql -X -v ON_ERROR_STOP=1 --single-transaction \
+  -f supabase/migrations/20260930100000_sckrl_312_receipt_expiry.sql
+psql -X -v ON_ERROR_STOP=1 -f supabase/tests/sckrl_312_legacy_assert.sql
+psql -X -v ON_ERROR_STOP=1 -f supabase/tests/sckrl_312_receipt_expiry.sql
+```
+
+The legacy assertion checks unknown/null/unattributed defaults while retaining parser evidence,
+accepted corrections, review state, manual provenance and receipt headers. The command fixture
+uses the seeded owner, a second household member and an outsider. It covers typed dates,
+explicit reset versus no-date, omission by older clients, separate expiry/editor attribution,
+unchanged-save metadata, manual/parser defaults, invalid shapes/dates/provenance, atomic rollback,
+stale tokens, duplicate manual identity, RLS and direct-write denial. It also checks that receipt
+review creates no stock or stock expiry facts. The command file manages its own transaction and
+rolls back all mutations; do not add `--single-transaction` around it.
+
+For a clean-schema check, use another empty disposable database and omit the seed/assertion/command
+files. Full SCKRL-310 regression fixtures should also be rerun against the post-312 schema in their
+own populated disposable replay. SCKRL-311 placement, race/retry/lost-response handling, placed
+immutability and two-member stock fact conversion are **not** implemented or validated by this
+suite; they remain separate gates. SQL source review and TypeScript tests cannot substitute for
+an authorized replay or hosted Auth/PostgREST/native acceptance.

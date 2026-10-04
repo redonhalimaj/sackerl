@@ -1,6 +1,111 @@
 # Next session handover — GPT / Codex
 
-Updated: 2026-09-29. State: ready for a future Codex session; no active implementation writer.
+Updated: 2026-10-04. State: SCKRL-312 source accepted to Review; implementation writers stopped.
+
+**Active scope:** owner froze `feature/SCKRL-ASTRA` on 2026-10-03 to implemented work plus
+its pending validation. Finish SCKRL-304/406/312 and this branch's SCKRL-908 smoke coverage, retain SCKRL-506 recipe expiry eligibility and its regressions,
+verify existing review-data prerequisites, then complete independent closeout and update the
+already-open draft [PR #4](https://github.com/redonhalimaj/sackerl/pull/4) into `dev`.
+GitHub head remains `d550bd1`; the SCKRL-312 increment is local/uncommitted. Do not create a
+duplicate PR. SCKRL-311/305/308/307/309/history/notifications and other new product implementation
+are deferred to later branches and are not branch-closeout prerequisites. Global Stage 1 remains
+incomplete after this branch closes. See the active branch table in [status.md](../../status.md).
+
+**Latest continuation:** [Council source acceptance v1](council-decisions/COUNCIL-20261001-01.md)
+received unanimous fresh final votes after independent QA and reciprocal Chair review.
+SCKRL-312 is **Review**, not Done. Receipt review supports persisted unknown/dated/no-date expiry,
+explicit re-review after included expiry edits, preserved drafts through failed/conflicted/uncertain
+saves and token refresh, supported native removal prevention and clean saved **Done for now**.
+Home discovers persisted saved reviews, pages beyond three, revalidates household and the same
+receipt ID, guards stale async work and retains entries with Retry. Placement remains unavailable.
+
+Independent [source QA](../qa/sckrl-312-review.md) passed 49 focused and 85 mobile tests.
+Root integration: 314 workspace tests, all five lint/typecheck gates, formatting/diff/map checks
+pass; map 671 callables/1,231 relationships/83 modules with zero stale files. iOS export passed
+(1,289 modules, `/tmp/sackerl-312-ios-verified`). Actual fallbacks and file ownership are recorded
+in the Council decision; root runtime model/effort was not exposed. Source remains local and
+uncommitted on `feature/SCKRL-ASTRA` at `d550bd1`; preserve all edits.
+
+**Migration follow-up authorized:** the owner asks Codex to do point 1, applying the prepared
+SCKRL-312 migration to development after disposable tests. This supersedes the earlier replay/dev
+application restriction only for this bounded operation. Root has executed 49 successful SQL steps
+in three disposable PostgreSQL 14.20 databases: populated 312 upgrade/legacy/commands, clean replay
+and post-312 SCKRL-310 regressions. Independent QA2 accepted the runner/logs and SQL evidence in [database QA](../qa/sckrl-312-database-review.md); the temporary server is stopped.
+The source acceptance snapshot remains unchanged; these are local auth-stub results.
+
+**Development installation complete — 2026-10-04:** the owner supplied `DATABASE_URL` in
+ignored root `.env`. Read-only preflight verified the development target, client TLSv1.3, accepted
+SCKRL-310 schema/security and byte-exact receipt RPC bodies. An initial checksum mismatch was
+newline trimming in the local comparison, not hosted drift. The operational
+[Council v1](council-decisions/COUNCIL-20261003-01.md) was unanimously ratified with fresh final votes.
+Root asserted all four reviewed hashes and applied only SCKRL-312 in the guarded transaction:
+baseline/preservation checks passed, COMMIT and exit zero were explicit, and the fresh read-only
+postcommit verifier passed. All 15 receipts and 3 lines are preserved; schema, constraints, exact
+save function and RLS/grants verify. PostgREST reload was notified on commit. No hosted fixtures,
+other migration or migration-history changes occurred. Independent QA accepted the inspected execution log and postcommit metadata.
+See [execution evidence](../qa/sckrl-312-development-migration-plan.md).
+
+**Latest QA continuation — 2026-10-04:** 406 corrected local suites before/after312 and both
+concurrency races passed, with independent [database QA](../qa/sckrl-406-database-review.md).
+The final connected run `sckrl-qa-20261004081439810-1f570395` passed all 22 real Auth/PostgREST/shared
+client stages and exact cleanup (two synthetic households, three users); process exit zero.
+Temporary reviewed harness and all four run manifests/results are under
+`/tmp/sckrl-connected-qa.hQUcwx`. Its final SHA is
+`c9b38ec1aacc98e36bd96ea4cbec0ebeb35e5b33609e325b2a2ee94a33106524`.
+Earlier failures were harness assertions (JSON key order, all-excluded review completion,
+403 foreign-fact vs409 stale-fact), preserved as failed runs with complete cleanup; no product
+source fix was needed. Independent QA accepted the [connected evidence](../qa/sckrl-304-406-312-connected-review.md).
+
+**Native setup checkpoint — 2026-10-04:** Deputy and independent QA supported the exact
+prepared lifecycle. Root created a fresh QA simulator, installed only the existing Expo Go binary,
+verified the actual compiled Auth configuration points to development, and reached the fresh
+signed-out login screen. Fixture run `sckrl-native-20261004085221557-f9d77650` provisioned two
+synthetic users, one household, one saved sample and one unconfirmed stock estimate. Specific
+GUI transmission authorization was requested but not received; no credentials were entered.
+Root then finished the held fixture (exit 0, exact household/both-user absence, private login file
+removed) and removed only the new QA device (exit 0); original simulator/session still shows the
+same Home stock/sample. No native acceptance follows from successful setup/cleanup.
+
+Temporary fixture helper/plan: `/tmp/sckrl-native-fixture.LBV655`, reviewed registry SHA
+`3e5e92b9f508a2c2a44b9ca69fea36334d4fa0c8ef496aefd04321679106ac75`.
+Device/cleanup scripts and completed manifest:
+`/var/folders/sz/htc75wrs1gqc7qxrylld40sc0000gn/T/sackerl-native-device.sy4mlpbz`.
+Device script SHA `d4cee12707e9611d62cc02c7c4892cd373c2bd6d3d670f97033363aed39bdb6a`;
+cleanup SHA `15bb20c4b236fa247f26080775f4bcdde96b655f95c22ebd54c516b89e5cb2a4`.
+Do not rerun in its old directory with an existing device manifest; preserve this evidence and
+use a new private directory for a deliberately authorized new run. Recheck hashes/source and
+live Metro destination; require fresh fixture lease/liveness and exact finally cleanup.
+Approval must explicitly permit generated QA email/passwords in Sackerl to development
+`https://raqqhpeailkxqvubgzir.supabase.co`; no owner password or service key is entered in the UI.
+
+**Latest authenticated native continuation — 2026-10-04:** the owner explicitly approved
+using generated QA logins against development. Do not request that authorization again.
+Independent [native QA](../qa/sckrl-304-406-312-native-review.md) supports bounded receipt
+correction/save, expiry states/date validation, dirty Back/Keep editing, clean Done for now,
+saved Home resume after cold Expo Go restart, metadata-only stock Edit, same-date confirmation,
+member clear/history and estimated Add, and owner/member calendar Settings. The supplementary
+ordinary-owner readback passed before its live lease ended. Both authenticated holding processes
+and exact guarded device cleanup exited zero; synthetic households/users/private login files
+are removed, and the original simulator remains booted. Preserve the earlier expired final
+readback failure as historical evidence; the new run supports its own freshly exercised actions.
+See the report for exact run IDs, helper hashes, artifacts and acceptance limits.
+
+**Next concrete action:** prepare bounded remaining validation for native edge-swipe, dirty
+account switching, in-flight/conflicted/uncertain saves and keyboard/VoiceOver/accessibility;
+Next.js middleware is a separate gate. Computer Use coordinate interaction failed, so gesture
+and full screen-reader acceptance require an operable validation path. Do not infer these passes
+from AX labels or API assertions. Preserve the original iPhone17/iOS26.5
+`534D9647-8E3B-4EFE-A3F6-CF45A0905324` session/data. Any new synthetic run must recheck the
+reviewed helper/source hashes, target and lease, then complete exact cleanup before checkpointing.
+No new migration, batch push/history repair or deferred feature is permitted. SCKRL304/406/312
+stay Review pending actual acceptance; source is uncommitted and draft PR4 remains the target.
+Owner requests for a profile page/account entry and `Hello, <account name>` are recorded in
+[feedback.md](../../feedback.md) as later-branch ticket proposals; no implementation started.
+
+For later branches, SCKRL-311 placement remains contract-only and precedes SCKRL-305; it must implement canonical
+placed-state filtering along with locked conversion, lineage/events, idempotency/recovery and
+placed-review immutability. SCKRL-308 remains Ready as a separate private-media lane;
+SCKRL-304/406 remain Review and SCKRL-908 remains In Progress. Only the bounded development 312 upgrade has been performed. No deployment, merge or new publication occurred; production and unrelated hosted changes remain excluded.
 
 The owner requests continuation in GPT/Codex, not Claude. This supersedes the outgoing
 `claude-next-work-package.md` and the mandatory alternating-assistant instructions from September 28.
@@ -11,15 +116,16 @@ a feature or waive a QA gate. The later sample addition below supersedes that ea
 **Latest increment — development sample (2026-09-29):** Council
 [COUNCIL-20260929-01](council-decisions/COUNCIL-20260929-01.md) accepted a development-only
 **Scan → Load sample receipt** path after the owner had no parsed fixture to open.
-`apps/mobile/lib/sample-receipt.ts`, Scan and its tests are local uncommitted changes on top of
-published commit `5f3c395` / [draft PR #4](https://github.com/redonhalimaj/sackerl/pull/4).
+`apps/mobile/lib/sample-receipt.ts`, Scan and its tests are in commit `d550bd1` on the feature
+branch, after published commit `5f3c395` / [draft PR #4](https://github.com/redonhalimaj/sackerl/pull/4).
 Milk, Bananas and Bread are clearly synthetic unresolved parser rows saved via existing authenticated
 commands; no stock write. Same-session retry recovers uncertain creation by URI and reuses a known
 receipt/generation, preserving edits. Recovery state is in memory and is lost on restart/unmount.
-Independent [source QA](../qa/sckrl-304-sample-review.md) supports Review; connected creation/read/save
-and native visual/accessibility validation remain open. Root implemented; Deputy and QA explicitly
+Independent [source QA](../qa/sckrl-304-sample-review.md) supports Review; owner screenshots now
+show partial connected/native behavior, while reload persistence, correction, conflict and full
+accessibility validation remain open. Root implemented; Deputy and QA explicitly
 used configured `gpt-6-sol` / `high` fallbacks (preferred routes unavailable). No migration/deployment
-or additional publication occurred. Continue with owner QA before choosing the next implementation.
+or additional publication occurred. This historical sample checkpoint is superseded for next work by the SCKRL-312 checkpoint above.
 
 **Later owner authorization, 2026-09-29:** commit the accumulated branch work and open a PR into
 `dev`. Staging, commit and branch push are authorized for that publication; merge, deployment and
@@ -82,9 +188,9 @@ Obsidian preferences rather than reformatting them. No database/runtime acceptan
 - Scan is simulated. It creates a receipt record, uploads no photo and starts no parsing job.
   The owner reached “Review not ready”; Refresh only reads the same receipt. This is limited
   native rendering evidence, not validation of parsed-line editing, saves or placement.
-- The owner needs a practical route into review-editor QA. An explicit development-only sample
-  preview was suggested but is neither ratified nor implemented. An isolated parsed fixture is an
-  alternative when the required environment and operations are authorized.
+- The development-only sample route now gives the owner a practical review-editor QA path. The
+  owner reached the editor and saw a save-success message; persistence after reopening, field
+  correction, conflict/failure behavior and native accessibility still need independent QA.
 - Password reset mail did not arrive. A later `/recover` attempt returned 429 with 11 seconds
   remaining. The original delivery failure is undiagnosed. The app also lacks recovery-link/new-
   password handling and its “email sent” message overstates delivery. Later signed-in screenshots
@@ -151,10 +257,11 @@ Claude package or require alternating providers unless the owner explicitly chan
 
 ## Future Codex resume prompt
 
-> Continue Sackerl from status.md and docs/agents/codex-next-work-package.md. The previous writer
-> has stopped. Read the repository instructions, inspect the actual staged/unstaged/untracked tree,
-> and use the Council with explicitly recorded available Codex models. First review the September 29
-> simulator findings and original notification/product feedback, then select one bounded next task.
-> Preserve SCKRL-304/406 Review gates and all migration/hosted-write/commit/merge restrictions.
-> Keep status and the Obsidian map current, obtain independent QA, and checkpoint for another
-> GPT/Codex session when finished. Claude is not part of this handover.
+> Continue only the closeout of feature/SCKRL-ASTRA from status.md and this package, using the
+> Council and separate independent QA. Preserve all current local edits. Validate the implemented
+> 304/406/312 receipt and expiry work, existing 310/506/harness foundations and this branch's smoke
+> coverage. Local 312 SQL/development installation, corrected406 SQL/concurrency and final
+> connected L2 passed and independently accepted; native and Next-route gates remain open. Dev DATABASE_URL is supplied. Do not rerun
+> the installed 312 upgrade or repair migration history. Do not start 311/305, media/OCR, history, notifications or other
+> new features; those belong to later branches. Update existing draft PR #4 into dev rather than
+> creating a duplicate; source acceptance does not mean Done or authorize merge/deployment.

@@ -279,3 +279,68 @@ reuses a member household rather than creating an unintended second one. This is
 existing members; invitations, household switching and member calendar writes are not added.
 Profile request tests and member/nonmember SQL fixtures must cover this path. SQL remains
 unexecuted under the owner's migration restriction.
+
+## Addendum 2026-09-30: SCKRL-312 Receipt Expiry And Placement Boundary
+
+Status: accepted design under [COUNCIL-20260930-01 v2](../agents/council-decisions/COUNCIL-20260930-01.md).
+This refines SCKRL-310 review persistence and the initial SCKRL-311 placement contract; it does
+not accept an implementation or close the pending runtime gates.
+
+### Review persistence and attribution
+
+- Receipt lines store exactly `unknown`, `dated`, or `no_date`, with a nullable calendar `date`.
+  Only `dated` has a non-null valid Gregorian `YYYY-MM-DD` value. `unknown` means no date entered;
+  `no_date` records the explicit “No expiry date” choice, without asserting package-label evidence.
+  Removing an entered date returns to `unknown`. Legacy, parser and new manual lines default to
+  `unknown`, with null date and attribution. Dates retain their calendar components across locale,
+  time zone and DST changes.
+- The optional strict expiry state/date object belongs to the full generation/revision-guarded
+  SCKRL-310 save. Omission preserves existing expiry and defaults a new line to `unknown`, so older
+  callers cannot erase it. Invalid combinations, dates or supplied actors/times reject the entire
+  save. Parser evidence remains immutable; direct receipt-line mutations remain revoked.
+- `expiry_changed_by` and `expiry_changed_at` are database-owned and change only when the stored
+  expiry choice/date changes, including reset. Unchanged saves and unrelated edits preserve them.
+  They identify the expiry editor independently of `reviewed_by`; neither is stock confirmation.
+  Expiry participates in correction/review equality, and an included line's expiry edit requires
+  explicit review again. An optional unknown or no-date choice does not block review completion.
+
+### Initial stock conversion
+
+- SCKRL-311 reads persisted expiry under the receipt lock; placement payloads do not resubmit dates,
+  provenance or reviewer attribution. `unknown` creates null `items.expires_on` with no expiry fact.
+  `dated` creates a declared `user` fact with the entered date. `no_date` creates a declared `user`
+  fact with a null date. Both facts use unknown printed marking, null confidence/version and
+  `confirm: false`. Excluded lines create no stock, expiry facts or acquisition events.
+- SCKRL-406 records the placing session as the fact writer. The expiry editor remains attributable
+  through the source receipt line. No review confirmation is inherited, and initial placement has
+  no expiry-confirmation control or flag; later dated-item confirmation uses the existing stock
+  flow and its authenticated actor. Public payloads cannot override either actor or timestamp.
+- Receipt placement supplies no automatic estimate in this increment, an explicit receipt-flow
+  exception to SCKRL-405. Existing stock Add/Edit estimation keeps its accepted contract. A later
+  receipt-estimation decision must define the calendar base day, category/zone/version policy,
+  preview consistency and confirmation before using purchase or placement dates as estimator input.
+
+### Placement, recovery and authorization
+
+- Authenticate and check current household membership before returning any cached placement result.
+  Lock the receipt and necessary referenced state, then validate the exact active generation,
+  expected review revision, reviewed included-line set and household-zone assignments. Stock,
+  unique receipt-line lineage, applicable expiry facts, acquisition events and an immutable
+  placement record/result commit together; failure leaves the prior state unchanged.
+- Bind the idempotency key to normalized command input. Identical-key/input replay returns the
+  original result before stale-token checks; changed input conflicts. A second key cannot place
+  an already placed receipt. An authenticated canonical status/result read supports recovery.
+  After timeout, retain the key and immutable input and retry the same operation if needed;
+  an unplaced read does not prove the original command is no longer in flight.
+- Review saves and parse-promotion/failure commands reject committed placement under the same
+  receipt lock. The initial placed review is read-only. SCKRL-306 post-placement re-edit remains
+  deferred until a separate correction contract defines source snapshots and stock lineage.
+- Keep lineage and reads household scoped, placement metadata server-owned and expiry facts
+  select-only for clients. Logs and analytics exclude dates, receipt/product text and user-entered
+  content. Existing parent deletion and retention rules apply; this adds no independent audit
+  archive, provider, media bucket or job boundary.
+
+Separate QA must validate omission compatibility, attribution across two members, household
+isolation, stale/racing commands, atomic rollback, retries/lost responses and placed immutability.
+Required migration replay and connected/native acceptance remain pending. The current prohibition
+on applying or replaying migrations is unchanged; this addendum authorizes neither operation.
