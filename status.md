@@ -11,10 +11,11 @@ Owner direction, 2026-10-03: finish the implemented work and its outstanding val
 backlog below is retained for planning; deferred tickets are not requirements for closing this
 branch. This scope freeze does not waive the acceptance gates of implemented tickets.
 
-**Publication target:** `feature/SCKRL-ASTRA` → `dev`. Read-only GitHub verification on
-2026-10-04 confirms [PR #4](https://github.com/redonhalimaj/sackerl/pull/4) is **open and draft**,
-with head `d550bd12ad18b4f9fe7e3acedb57370bc51b1dea`. Update this PR with the local SCKRL-312
-increment and current evidence instead of creating a duplicate. Local changes remain uncommitted.
+**Publication target:** `feature/SCKRL-ASTRA` → `dev`, existing
+[draft PR #4](https://github.com/redonhalimaj/sackerl/pull/4). The owner explicitly authorized
+commit/push and PR publication on 2026-10-04. Source and QA evidence were committed as
+`6a04f82` and pushed successfully; the follow-up documentation checkpoint records that publication.
+Keep this PR draft until its remaining acceptance gates pass; do not create a duplicate.
 PR creation/publication and ticket Done/merge readiness are separate checkpoints; a draft can
 record open gates, while a completed branch cannot claim those gates have passed.
 
@@ -55,6 +56,14 @@ acceptance. Production, deployment, merge and unrelated hosted changes remain ou
 
 ### Current work checkpoint
 
+- **Draft PR publication — 2026-10-04:** owner requested commit/push and a PR into `dev`.
+  Independent QA supported bounded publication: all 22 accepted source hashes remain unchanged,
+  the 406 fixture correction is exactly the accepted one-line change, and the 49-file publication
+  contains no detected credentials or private fixture assets. Root committed and pushed `6a04f82`.
+  Formatting/map checks pass; lint/typecheck/test succeeded with all 18 matching Turbo cache hits
+  (314 recorded tests). Existing PR #4 is the target, with current evidence/open gates in its
+  description; remote CI still requires verification. Publication is not Done, merge, deployment
+  or final Council acceptance. SCKRL-304/406/312 remain Review and bounded SCKRL-908 In Progress.
 - **Owner future-enhancement feedback — 2026-10-04:** documentation-only Council triage
   records EN/DE receipt brand/product categorization, a shopping session with purchase tracking,
   alternative product-photo recognition, personalized intake options, private friend recipe

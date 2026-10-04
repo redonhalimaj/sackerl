@@ -6,10 +6,19 @@ Updated: 2026-10-04. State: SCKRL-312 source accepted to Review; implementation 
 its pending validation. Finish SCKRL-304/406/312 and this branch's SCKRL-908 smoke coverage, retain SCKRL-506 recipe expiry eligibility and its regressions,
 verify existing review-data prerequisites, then complete independent closeout and update the
 already-open draft [PR #4](https://github.com/redonhalimaj/sackerl/pull/4) into `dev`.
-GitHub head remains `d550bd1`; the SCKRL-312 increment is local/uncommitted. Do not create a
-duplicate PR. SCKRL-311/305/308/307/309/history/notifications and other new product implementation
+The owner explicitly authorized publication on 2026-10-04. Source/QA increment `6a04f82` was
+committed and pushed, followed by a documentation publication checkpoint. Use the current GitHub
+head when checking CI; preserve draft status and open acceptance gates. Do not create a duplicate PR. SCKRL-311/305/308/307/309/history/notifications and other new product implementation
 are deferred to later branches and are not branch-closeout prerequisites. Global Stage 1 remains
 incomplete after this branch closes. See the active branch table in [status.md](../../status.md).
+
+**Publication checkpoint — 2026-10-04:** independent QA supported the bounded draft update;
+all 22 frozen source hashes remain unchanged. Formatting/code map pass; integration lint,
+typecheck and tests reused all 18 matching Turbo tasks (314 recorded tests). Source and QA
+records are published in `6a04f82`; current PR description documents later runtime evidence and
+remaining native/middleware gates. Publication does not close tickets, waive QA, merge or deploy.
+Check CI on the latest branch head, then continue the remaining validation below. Historical
+local/uncommitted references below describe earlier checkpoints and are superseded here.
 
 **Latest continuation:** [Council source acceptance v1](council-decisions/COUNCIL-20261001-01.md)
 received unanimous fresh final votes after independent QA and reciprocal Chair review.
