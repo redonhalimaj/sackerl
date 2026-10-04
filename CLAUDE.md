@@ -1,5 +1,21 @@
 # Sackerl Coding Agent Guide
 
+## Shared Codex / Claude Continuation
+
+Start with the **Current work checkpoint** in [status.md](status.md) and follow
+[the handoff workflow](docs/agents/codex-claude-handoff.md). The owner authorizes continuation in
+either assistant. Use `TEAM.md`'s Claude profile in Claude and Codex profile in Codex; GPT-specific
+role assignments are not a barrier to Claude takeover. Record actual model identity when known,
+preserve existing staged/unstaged work, and keep one writer per file set. Save checkpoints after
+milestones and before limits; independent QA is still required before Done.
+
+Use the [Council workflow](docs/agents/council-workflow.md) for substantive decisions and final
+acceptance. **The Team** does detailed work with a **Deputy**; the **Chair** provides expert review.
+Deputy and participating specialists first reach unanimity, then hear the Chair's refinements and
+reconfirm the same final revision together. No silent assent or Chair override counts as consensus.
+TEAM.md defines the GPT-5.5 Deputy and preferred GPT-6 Astra Chair routes for Codex; the authorized
+Claude profile preserves these responsibilities using explicitly recorded available Claude models.
+
 ## Repo Context
 
 Sackerl is a mobile-first grocery stock management app for private households. The core user journey is:
@@ -14,7 +30,7 @@ The product should feel friendly, simple, accessible, and practical. It must not
 
 ## Current Stage
 
-The repo has the SCKRL-001 foundation scaffold in place. The selected baseline is pnpm workspaces + Turborepo, Next.js App Router for web, Expo SDK 54 with Expo Router for mobile, and shared packages for tokens, UI, and API-client boundaries.
+The repo has the SCKRL-001 foundation scaffold in place. The selected baseline is pnpm workspaces + Turborepo, Next.js App Router for web, Expo SDK 57 with Expo Router for mobile, and shared packages for tokens, UI, and API-client boundaries.
 
 The Phase 1 design-system foundation is implemented locally from the initial design handoff: shared tokens, typography, core primitives, icon registry, animated paper bag, brand mark/logo utilities, and the mobile tab shell. SCKRL-006 and SCKRL-007 are Done after screenshot-based visual QA.
 
@@ -26,7 +42,7 @@ The active product-screen handoff is now `Design/Phase 2/sackerl phase 2`. Use i
 
 - Read [AGENTS.md](AGENTS.md), [PROGRAM.md](PROGRAM.md), [TEAM.md](TEAM.md), [status.md](status.md), [epic.md](epic.md), and [features.md](features.md) before starting substantial work.
 - Use `PROGRAM.md` for long-term sequencing, stage gates, safety constraints, and agent ownership. Use `status.md` and `features.md` for active ticket state and accepted implementation scope.
-- Follow the canonical model, delegation, escalation, and handoff policy in `TEAM.md`. Luna agents receive bounded work with stable contracts; unresolved architecture, privacy, transactional, health-safety, or recommendation-policy decisions must be escalated through the assigned GPT-5.5 specialist and the Sol Orchestrator.
+- Follow the active provider profile, delegation, escalation, and handoff policy in `TEAM.md`. Bounded implementation starts from stable contracts; unresolved architecture, privacy, transactional, health-safety, or recommendation-policy decisions go to the responsible specialist role and Orchestrator under that profile.
 - Work from explicit `SCKRL-XXX` tickets or direct user instructions.
 - Keep changes scoped to the active ticket.
 - Do not introduce unrelated refactors while the codebase is still forming.
@@ -54,7 +70,7 @@ pnpm --filter @sackerl/web build
 ## Current Structure
 
 - `apps/web`: Next.js App Router scaffold with profile, household, stock, receipt, parsing, recipe-suggestion, and shopping-list routes.
-- `apps/mobile`: Expo SDK 54 + Expo Router app with auth-gated onboarding, storage zones, stock and expiry management, recipe suggestions, shopping lists, and simulated receipt capture.
+- `apps/mobile`: Expo SDK 57 + Expo Router app with auth-gated onboarding, storage zones, stock and expiry management, recipe suggestions, shopping lists, and simulated receipt capture.
 - `packages/tokens`: shared design token package.
 - `packages/ui`: shared primitives, icons, logo utilities, and animated paper bag.
 - `packages/api-client`: shared Supabase-backed auth, profile/household, stock, receipt, parsing, recipe, and shopping-list clients.

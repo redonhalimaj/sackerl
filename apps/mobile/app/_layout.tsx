@@ -11,6 +11,7 @@ export default function RootLayout() {
         <Stack.Screen name="auth" />
         <Stack.Screen name="storage-zones" />
         <Stack.Screen name="add-item" />
+        <Stack.Screen name="receipt-review/[id]" />
         <Stack.Screen name="recipe/[id]" />
         <Stack.Screen name="suggestions" />
         <Stack.Screen name="shopping-list" />

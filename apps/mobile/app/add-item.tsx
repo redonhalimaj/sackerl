@@ -1,11 +1,12 @@
 import { colors, nativeFont, space } from '@sackerl/tokens';
 import {
-  estimateExpiryDate,
+  defaultHouseholdCalendarTimeZone,
   itemCategories,
   itemQuantityUnits,
   type AuthenticatedUserContext,
   type ItemCategoryId,
   type ItemQuantityUnit,
+  type Household,
   type StorageZone,
 } from '@sackerl/api-client';
 import { categoryMeta, zoneMeta, type TileCategory, type ZoneKind } from '@sackerl/ui';
@@ -26,6 +27,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { useAuthSession } from '../lib/auth-session';
+import {
+  buildAddExpiryDeclaration,
+  estimateExpiryForHousehold,
+  isValidGregorianDate,
+  normalizeZoneParam,
+  parseQuantity,
+} from '../lib/add-item-form';
 import { getMobileItemsClient } from '../lib/items';
 import { getMobileProfileClient } from '../lib/profile';
 
@@ -51,7 +59,6 @@ const fontFamily =
       ? nativeFont.android
       : nativeFont.fallback;
 
-const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const defaultZoneKeys = ['fridge', 'pantry', 'basement', 'freezer'] as const;
 const quantityStep = 1;
 
@@ -113,27 +120,6 @@ function zoneOptionFromStorageZone(zone: StorageZone): ZoneOption {
   };
 }
 
-function firstParamValue(value: string | readonly string[] | undefined): string | undefined {
-  if (typeof value === 'string') {
-    return value;
-  }
-
-  return value?.[0];
-}
-
-function normalizeZoneParam(value: string | readonly string[] | undefined): string | undefined {
-  const zone = firstParamValue(value)?.trim().toLowerCase();
-
-  return zone && /^[a-z][a-z0-9-]{1,31}$/.test(zone) ? zone : undefined;
-}
-
-function parseQuantity(value: string): number | null {
-  const normalized = value.trim().replace(',', '.');
-  const parsed = Number(normalized);
-
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-}
-
 function formatQuantity(value: number): string {
   return Number.isInteger(value)
     ? String(value)
@@ -171,7 +157,7 @@ function dedupeZoneKeys(zones: readonly string[]): readonly string[] {
 
 async function loadWritableZones(
   context: AuthenticatedUserContext,
-): Promise<readonly ZoneOption[]> {
+): Promise<{ readonly household: Household; readonly zones: readonly ZoneOption[] }> {
   const profileClient = getMobileProfileClient();
   const itemsClient = getMobileItemsClient();
   const household = await profileClient.ensureHousehold(context);
@@ -186,11 +172,14 @@ async function loadWritableZones(
     zones = await itemsClient.listZones(context, updatedHousehold.id);
 
     if (zones.length < 1) {
-      return resolveZoneOptions(zones, updatedHousehold.zones);
+      return {
+        household: updatedHousehold,
+        zones: resolveZoneOptions(zones, updatedHousehold.zones),
+      };
     }
   }
 
-  return resolveZoneOptions(zones, household.zones);
+  return { household, zones: resolveZoneOptions(zones, household.zones) };
 }
 
 function FieldError({ message }: { readonly message: string | undefined }): JSX.Element | null {
@@ -205,9 +194,14 @@ export default function AddItemRoute(): JSX.Element {
   const router = useRouter();
   const { session } = useAuthSession();
   const [categoryId, setCategoryId] = useState<ItemCategoryId>('produce');
+  const [calendarTimeZone, setCalendarTimeZone] = useState(defaultHouseholdCalendarTimeZone);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [expiryInput, setExpiryInput] = useState(() =>
-    estimateExpiryDate({ categoryId: 'produce', zoneKey: initialZoneKey }),
+    estimateExpiryForHousehold({
+      categoryId: 'produce',
+      timeZone: defaultHouseholdCalendarTimeZone,
+      zoneKey: initialZoneKey,
+    }),
   );
   const [expiryTouched, setExpiryTouched] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -221,9 +215,15 @@ export default function AddItemRoute(): JSX.Element {
 
   useEffect(() => {
     if (!expiryTouched) {
-      setExpiryInput(estimateExpiryDate({ categoryId, zoneKey: selectedZoneKey }));
+      setExpiryInput(
+        estimateExpiryForHousehold({
+          categoryId,
+          timeZone: calendarTimeZone,
+          zoneKey: selectedZoneKey,
+        }),
+      );
     }
-  }, [categoryId, expiryTouched, selectedZoneKey]);
+  }, [calendarTimeZone, categoryId, expiryTouched, selectedZoneKey]);
 
   const loadZones = useCallback(async () => {
     if (!session?.user) {
@@ -241,13 +241,15 @@ export default function AddItemRoute(): JSX.Element {
           id: session.user.id,
         },
       };
-      const zones = await loadWritableZones(context);
+      const loaded = await loadWritableZones(context);
+      const zones = loaded.zones;
       const nextSelectedZone =
         zones.find((zone) => zone.key === requestedZoneKey) ??
         zones[0] ??
         zoneOptionFromKey('fridge');
 
       setZoneOptions(zones);
+      setCalendarTimeZone(loaded.household.calendarTimeZone);
       setSelectedZoneKey(nextSelectedZone.key);
       setLoadState('ready');
     } catch (error) {
@@ -272,7 +274,10 @@ export default function AddItemRoute(): JSX.Element {
     setQuantityInput(formatQuantity(Math.max(quantityStep, nextValue)));
   }
 
-  function validateForm(): { readonly expiresOn: string | null; readonly qtyValue: number } | null {
+  function validateForm(): {
+    readonly estimatedExpiry: string;
+    readonly qtyValue: number;
+  } | null {
     const nextErrors: FieldErrors = {};
     const trimmedName = name.trim();
     const qtyValue = parseQuantity(quantityInput);
@@ -292,8 +297,8 @@ export default function AddItemRoute(): JSX.Element {
       nextErrors.zone = 'This storage zone is not ready yet. Reopen storage setup and save zones.';
     }
 
-    if (trimmedExpiry && !datePattern.test(trimmedExpiry)) {
-      nextErrors.expiry = 'Use YYYY-MM-DD or leave it blank.';
+    if (trimmedExpiry && !isValidGregorianDate(trimmedExpiry)) {
+      nextErrors.expiry = 'Enter a real date in YYYY-MM-DD format, or leave it blank.';
     }
 
     setErrors(nextErrors);
@@ -303,7 +308,11 @@ export default function AddItemRoute(): JSX.Element {
     }
 
     return {
-      expiresOn: trimmedExpiry || estimateExpiryDate({ categoryId, zoneKey: selectedZone.key }),
+      estimatedExpiry: estimateExpiryForHousehold({
+        categoryId,
+        timeZone: calendarTimeZone,
+        zoneKey: selectedZone.key,
+      }),
       qtyValue,
     };
   }
@@ -332,9 +341,16 @@ export default function AddItemRoute(): JSX.Element {
       };
       const household = await getMobileProfileClient().ensureHousehold(context);
 
+      const expiry = buildAddExpiryDeclaration({
+        expiryInput,
+        expiryTouched,
+        fallbackExpiry: validFields.estimatedExpiry,
+      });
+
       await getMobileItemsClient().createItem(context, {
         categoryId,
-        expiresOn: validFields.expiresOn,
+        expiresOn: expiry.expiresOn,
+        ...(expiry.expiry ? { expiry: expiry.expiry } : {}),
         householdId: household.id,
         name: name.trim(),
         qtyUnit: quantityUnit,
@@ -551,7 +567,9 @@ export default function AddItemRoute(): JSX.Element {
           <View style={styles.fieldGroup}>
             <View style={styles.expiryHeader}>
               <Text style={styles.fieldLabel}>Expires on</Text>
-              <Text style={styles.estimatedBadge}>estimated</Text>
+              <Text style={styles.estimatedBadge}>
+                {expiryTouched && expiryInput.trim() ? 'user entered' : 'estimated'}
+              </Text>
             </View>
             <TextInput
               editable={!isLocked}
@@ -569,8 +587,9 @@ export default function AddItemRoute(): JSX.Element {
               value={expiryInput}
             />
             <Text style={styles.metaText}>
-              Based on {selectedCategory.label.toLowerCase()} in{' '}
-              {(selectedZone?.label ?? 'storage').toLowerCase()}; edit if you know better.
+              {expiryTouched && expiryInput.trim()
+                ? 'Adding this item confirms the date you entered.'
+                : `Estimated from ${selectedCategory.label.toLowerCase()} in ${(selectedZone?.label ?? 'storage').toLowerCase()}. Type a date to confirm it; leaving this blank uses the estimate.`}
             </Text>
             <FieldError message={errors.expiry} />
           </View>

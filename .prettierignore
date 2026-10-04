@@ -8,3 +8,8 @@ coverage
 pnpm-lock.yaml
 docs/design/initial-design-overview
 Design
+
+# Local tool/editor state and Expo-generated declarations
+.claude
+**/.obsidian/**
+apps/mobile/expo-env.d.ts

@@ -13,6 +13,32 @@ export const itemRemovalReasons = ['used', 'composted'] as const;
 
 export type ItemRemovalReason = (typeof itemRemovalReasons)[number];
 
+export const expiryFactSources = ['printed', 'user', 'estimated', 'model'] as const;
+
+export type ExpiryFactSource = (typeof expiryFactSources)[number];
+
+export const expiryFactOrigins = ['declared', 'inferred', 'backfill'] as const;
+
+export type ExpiryFactOrigin = (typeof expiryFactOrigins)[number];
+
+export const expiryPrintedMarkings = ['use_by', 'best_before', 'unknown'] as const;
+
+export type ExpiryPrintedMarking = (typeof expiryPrintedMarkings)[number];
+
+/**
+ * Identity of the category-zone lookup behind `estimateExpiryDate`. Declaring it keeps an accepted
+ * estimate distinguishable from a typed date for the life of the item.
+ */
+export const categoryZoneEstimatorVersion = 'category-zone-v1';
+
+/**
+ * Model-derived provenance is reserved in the schema but rejected by the database in Stage 1, so
+ * no fabricated model evidence can be recorded before a provider exists.
+ */
+export const declarableExpiryFactSources = ['printed', 'user', 'estimated'] as const;
+
+export type DeclarableExpiryFactSource = (typeof declarableExpiryFactSources)[number];
+
 export const itemCategories = [
   { id: 'dairy', label: 'Dairy', short: 'MK', sortOrder: 10 },
   { id: 'produce', label: 'Produce', short: 'PR', sortOrder: 20 },
@@ -137,10 +163,56 @@ export type StorageZone = {
   readonly sortOrder: number;
 };
 
+/**
+ * Provenance of the currently displayed expiry date. Every field is `null` when the item has no
+ * recorded expiry fact. No combination of these values means the food is safe.
+ */
+export type ItemExpiryProvenance = {
+  readonly confirmedAt: string | null;
+  readonly factId: string | null;
+  readonly origin: ExpiryFactOrigin | null;
+  readonly printedMarking: ExpiryPrintedMarking | null;
+  readonly source: ExpiryFactSource | null;
+};
+
+/** One immutable row of expiry history. */
+export type ItemExpiryFact = {
+  readonly confidence: number | null;
+  readonly confirmedAt: string | null;
+  readonly confirmedBy: string | null;
+  readonly estimatorVersion: string | null;
+  readonly expiresOn: string | null;
+  readonly householdId: string;
+  readonly id: string;
+  readonly isActive: boolean;
+  readonly itemId: string;
+  readonly origin: ExpiryFactOrigin;
+  readonly printedMarking: ExpiryPrintedMarking;
+  readonly recordedAt: string;
+  readonly recordedBy: string | null;
+  readonly source: ExpiryFactSource;
+  readonly supersededAt: string | null;
+  readonly supersedesFactId: string | null;
+};
+
+/**
+ * Provenance a caller states for the date it is writing. Omitting it records the weakest honest
+ * provenance instead of claiming a source the write path does not actually know.
+ */
+export type ExpiryDeclarationInput = {
+  readonly confidence?: number | null | undefined;
+  readonly confirm?: boolean | undefined;
+  readonly estimatorVersion?: string | null | undefined;
+  readonly expectedFactId?: string | null | undefined;
+  readonly printedMarking?: ExpiryPrintedMarking | undefined;
+  readonly source: DeclarableExpiryFactSource;
+};
+
 export type StockItem = {
   readonly addedOn: string;
   readonly categoryId: ItemCategoryId;
   readonly expiresOn: string | null;
+  readonly expiryProvenance: ItemExpiryProvenance;
   readonly householdId: string;
   readonly id: string;
   readonly name: string;
@@ -165,6 +237,11 @@ export type DatabaseStockItemRow = {
   readonly added_on: string;
   readonly category_id: ItemCategoryId;
   readonly expires_on: string | null;
+  readonly expiry_confirmed_at?: string | null | undefined;
+  readonly expiry_fact_id?: string | null | undefined;
+  readonly expiry_origin?: ExpiryFactOrigin | null | undefined;
+  readonly expiry_printed_marking?: ExpiryPrintedMarking | null | undefined;
+  readonly expiry_source?: ExpiryFactSource | null | undefined;
   readonly household_id: string;
   readonly id: string;
   readonly name: string;
@@ -174,6 +251,25 @@ export type DatabaseStockItemRow = {
   readonly removed_on: string | null;
   readonly source: ItemSource;
   readonly zone_id: string;
+};
+
+export type DatabaseItemExpiryFactRow = {
+  readonly confidence: number | string | null;
+  readonly confirmed_at: string | null;
+  readonly confirmed_by: string | null;
+  readonly estimator_version: string | null;
+  readonly expires_on: string | null;
+  readonly household_id: string;
+  readonly id: string;
+  readonly is_active: boolean;
+  readonly item_id: string;
+  readonly origin: ExpiryFactOrigin;
+  readonly printed_marking: ExpiryPrintedMarking;
+  readonly recorded_at: string;
+  readonly recorded_by: string | null;
+  readonly source: ExpiryFactSource;
+  readonly superseded_at: string | null;
+  readonly supersedes_fact_id: string | null;
 };
 
 export type ItemsClientOptions = {
@@ -206,6 +302,7 @@ export type CreateStockItemInput = {
   readonly addedOn?: string | undefined;
   readonly categoryId: ItemCategoryId;
   readonly expiresOn?: string | null | undefined;
+  readonly expiry?: ExpiryDeclarationInput | undefined;
   readonly householdId: string;
   readonly name: string;
   readonly qtyUnit: ItemQuantityUnit;
@@ -224,6 +321,7 @@ export type UpdateStockItemInput = {
   readonly addedOn?: string | undefined;
   readonly categoryId?: ItemCategoryId | undefined;
   readonly expiresOn?: string | null | undefined;
+  readonly expiry?: ExpiryDeclarationInput | undefined;
   readonly householdId: string;
   readonly id: string;
   readonly name?: string | undefined;
@@ -241,6 +339,28 @@ export type DeleteStockItemInput = {
   readonly id: string;
   readonly removalReason?: ItemRemovalReason | undefined;
   readonly removedOn?: string | undefined;
+};
+
+export type ConfirmItemExpiryInput = {
+  readonly expectedFactId?: string | null | undefined;
+  readonly householdId: string;
+  readonly id: string;
+};
+
+export type ClearItemExpiryInput = {
+  readonly changes?:
+    | Omit<UpdateStockItemInput, 'expiresOn' | 'expiry' | 'householdId' | 'id'>
+    | undefined;
+  readonly confirm?: boolean | undefined;
+  readonly expectedFactId?: string | null | undefined;
+  readonly householdId: string;
+  readonly id: string;
+};
+
+export type ListItemExpiryHistoryInput = {
+  readonly householdId: string;
+  readonly itemId: string;
+  readonly limit?: number | undefined;
 };
 
 export type GetItemRemovalStatsInput = {
@@ -280,10 +400,20 @@ type RequestResult<T> = {
   readonly total: number | null;
 };
 
+type ExpiryDeclarationRow = {
+  confidence?: number;
+  confirm?: boolean;
+  estimator_version?: string;
+  expected_fact_id?: string | null;
+  printed_marking?: ExpiryPrintedMarking;
+  source: DeclarableExpiryFactSource;
+};
+
 type ItemMutationRow = {
   added_on?: string;
   category_id?: ItemCategoryId;
   expires_on?: string | null;
+  expiry_declaration?: ExpiryDeclarationRow;
   household_id?: string;
   name?: string;
   qty_unit?: ItemQuantityUnit;
@@ -295,9 +425,12 @@ type ItemMutationRow = {
 };
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const monthPattern = /^\d{4}-\d{2}$/;
 const itemSelect =
-  'id,household_id,name,qty_value,qty_unit,category_id,zone_id,expires_on,added_on,removed_on,removal_reason,source';
+  'id,household_id,name,qty_value,qty_unit,category_id,zone_id,expires_on,added_on,removed_on,removal_reason,source,expiry_fact_id,expiry_source,expiry_origin,expiry_printed_marking,expiry_confirmed_at';
+const expiryFactSelect =
+  'id,household_id,item_id,expires_on,source,origin,printed_marking,confidence,estimator_version,confirmed_at,confirmed_by,supersedes_fact_id,superseded_at,is_active,recorded_by,recorded_at';
 const removalStatsSelect = 'removed_on,removal_reason';
 const zoneSelect = 'id,household_id,key,label,sort_order,created_at';
 
@@ -317,6 +450,37 @@ export function isItemCategoryId(value: unknown): value is ItemCategoryId {
   return typeof value === 'string' && itemCategoryIds.includes(value as ItemCategoryId);
 }
 
+export function isExpiryFactSource(value: unknown): value is ExpiryFactSource {
+  return typeof value === 'string' && expiryFactSources.includes(value as ExpiryFactSource);
+}
+
+export function isExpiryFactOrigin(value: unknown): value is ExpiryFactOrigin {
+  return typeof value === 'string' && expiryFactOrigins.includes(value as ExpiryFactOrigin);
+}
+
+export function isExpiryPrintedMarking(value: unknown): value is ExpiryPrintedMarking {
+  return typeof value === 'string' && expiryPrintedMarkings.includes(value as ExpiryPrintedMarking);
+}
+
+export function isDeclarableExpiryFactSource(value: unknown): value is DeclarableExpiryFactSource {
+  return (
+    typeof value === 'string' &&
+    declarableExpiryFactSources.includes(value as DeclarableExpiryFactSource)
+  );
+}
+
+/**
+ * True when the displayed date came from a category-zone estimate that nobody has confirmed. This
+ * is the state SCKRL-407 marks as uncertain and invites the user to correct.
+ */
+export function isUnconfirmedExpiryEstimate(provenance: ItemExpiryProvenance): boolean {
+  return (
+    provenance.origin === 'declared' &&
+    provenance.source === 'estimated' &&
+    provenance.confirmedAt === null
+  );
+}
+
 export function mapStorageZoneRow(row: DatabaseStorageZoneRow): StorageZone {
   return {
     createdAt: row.created_at,
@@ -328,11 +492,45 @@ export function mapStorageZoneRow(row: DatabaseStorageZoneRow): StorageZone {
   };
 }
 
+export function mapItemExpiryProvenance(row: DatabaseStockItemRow): ItemExpiryProvenance {
+  const factId = row.expiry_fact_id ?? null;
+
+  return {
+    confirmedAt: factId ? (row.expiry_confirmed_at ?? null) : null,
+    factId,
+    origin: factId ? (row.expiry_origin ?? null) : null,
+    printedMarking: factId ? (row.expiry_printed_marking ?? null) : null,
+    source: factId ? (row.expiry_source ?? null) : null,
+  };
+}
+
+export function mapItemExpiryFactRow(row: DatabaseItemExpiryFactRow): ItemExpiryFact {
+  return {
+    confidence: row.confidence == null ? null : Number(row.confidence),
+    confirmedAt: row.confirmed_at,
+    confirmedBy: row.confirmed_by,
+    estimatorVersion: row.estimator_version,
+    expiresOn: row.expires_on,
+    householdId: row.household_id,
+    id: row.id,
+    isActive: row.is_active,
+    itemId: row.item_id,
+    origin: row.origin,
+    printedMarking: row.printed_marking,
+    recordedAt: row.recorded_at,
+    recordedBy: row.recorded_by,
+    source: row.source,
+    supersededAt: row.superseded_at,
+    supersedesFactId: row.supersedes_fact_id,
+  };
+}
+
 export function mapStockItemRow(row: DatabaseStockItemRow): StockItem {
   return {
     addedOn: row.added_on,
     categoryId: row.category_id,
     expiresOn: row.expires_on,
+    expiryProvenance: mapItemExpiryProvenance(row),
     householdId: row.household_id,
     id: row.id,
     name: row.name,
@@ -539,6 +737,107 @@ function validateQuantityUnit(value: ItemQuantityUnit): ItemQuantityUnit {
   }
 
   return value;
+}
+
+function validateExpiryFactId(value: string, fieldName: string): string {
+  const id = value.trim();
+
+  if (!uuidPattern.test(id)) {
+    throw new ApiRequestError(`${fieldName} must be a uuid.`, 400);
+  }
+
+  return id;
+}
+
+/**
+ * Turns a declaration into the write-only command value the database trigger consumes. Everything
+ * the database owns - actor, timestamps, origin, supersede chain - is deliberately absent here.
+ */
+function buildExpiryDeclarationRow(
+  declaration: ExpiryDeclarationInput,
+  /** `undefined` means the write leaves the existing date in place; the server checks the rest. */
+  expiresOn: string | null | undefined,
+): ExpiryDeclarationRow {
+  if (!isDeclarableExpiryFactSource(declaration.source)) {
+    throw new ApiRequestError(
+      isExpiryFactSource(declaration.source)
+        ? 'Model-derived expiry provenance is not enabled.'
+        : 'Expiry source is invalid.',
+      400,
+    );
+  }
+
+  const row: ExpiryDeclarationRow = { source: declaration.source };
+
+  if (expiresOn === null && declaration.source !== 'user') {
+    throw new ApiRequestError(
+      declaration.source === 'printed'
+        ? 'A printed expiry source requires a date.'
+        : 'Clearing an expiry date requires the user source.',
+      400,
+    );
+  }
+
+  if (declaration.printedMarking !== undefined) {
+    if (!isExpiryPrintedMarking(declaration.printedMarking)) {
+      throw new ApiRequestError('Printed marking is invalid.', 400);
+    }
+
+    if (declaration.printedMarking !== 'unknown' && declaration.source === 'estimated') {
+      throw new ApiRequestError('A printed marking requires a printed or user-entered date.', 400);
+    }
+
+    row.printed_marking = declaration.printedMarking;
+  }
+
+  if (declaration.confidence != null) {
+    if (
+      !Number.isFinite(declaration.confidence) ||
+      declaration.confidence < 0 ||
+      declaration.confidence > 1
+    ) {
+      throw new ApiRequestError('Expiry confidence must be between 0 and 1.', 400);
+    }
+
+    if (declaration.source !== 'estimated') {
+      throw new ApiRequestError('Confidence is only valid for an estimated expiry date.', 400);
+    }
+
+    row.confidence = declaration.confidence;
+  }
+
+  if (declaration.estimatorVersion != null) {
+    const estimatorVersion = declaration.estimatorVersion.trim();
+
+    if (!estimatorVersion || estimatorVersion.length > 80) {
+      throw new ApiRequestError('Estimator version must be 1 to 80 characters.', 400);
+    }
+
+    if (declaration.source !== 'estimated') {
+      throw new ApiRequestError(
+        'An estimator version is only valid for an estimated expiry date.',
+        400,
+      );
+    }
+
+    row.estimator_version = estimatorVersion;
+  }
+
+  if (declaration.confirm !== undefined) {
+    if (typeof declaration.confirm !== 'boolean') {
+      throw new ApiRequestError('Expiry confirmation must be a boolean.', 400);
+    }
+
+    row.confirm = declaration.confirm;
+  }
+
+  if (declaration.expectedFactId != null) {
+    row.expected_fact_id = validateExpiryFactId(declaration.expectedFactId, 'expectedFactId');
+  } else if (declaration.expectedFactId === null) {
+    row.expected_fact_id = null;
+  }
+
+  return row;
 }
 
 function validateSource(value: ItemSource | undefined): ItemSource {
@@ -802,6 +1101,15 @@ export class SackerlItemsClient {
       patch.source = validateSource(input.source);
     }
 
+    if (input.expiry !== undefined) {
+      // A declaration with no date change re-records the provenance of the date already shown,
+      // which is how a confirmation or a printed marking is saved without moving the date.
+      patch.expiry_declaration = buildExpiryDeclarationRow(
+        input.expiry,
+        'expiresOn' in input ? (patch.expires_on ?? null) : undefined,
+      );
+    }
+
     if (Object.keys(patch).length < 1) {
       throw new ApiRequestError('No item changes were provided.', 400);
     }
@@ -840,6 +1148,117 @@ export class SackerlItemsClient {
       removalReason: input.removalReason,
       removedOn: input.removedOn ?? todayIsoDate(),
     });
+  }
+
+  /**
+   * Records that the user confirmed the date currently shown, without moving it. Declared facts keep
+   * their source, while inferred and backfilled dates become a user assertion of the shown date.
+   */
+  async confirmItemExpiry(
+    context: AuthenticatedUserContext,
+    input: ConfirmItemExpiryInput,
+  ): Promise<StockItem> {
+    const suppliedExpectedFactId =
+      input.expectedFactId === undefined
+        ? undefined
+        : input.expectedFactId === null
+          ? null
+          : validateExpiryFactId(input.expectedFactId, 'expectedFactId');
+    const active = await this.getActiveItemExpiryFact(context, input.householdId, input.id);
+
+    if (suppliedExpectedFactId !== undefined && suppliedExpectedFactId !== (active?.id ?? null)) {
+      throw new ApiRequestError('The expiry date changed. Reload the item before saving.', 409);
+    }
+
+    if (!active) {
+      throw new ApiRequestError('This item has no recorded expiry date to confirm.', 400);
+    }
+
+    if (active.expiresOn === null) {
+      throw new ApiRequestError('This item has no expiry date to confirm.', 400);
+    }
+
+    if (!isDeclarableExpiryFactSource(active.source)) {
+      throw new ApiRequestError('This expiry source cannot be confirmed.', 400);
+    }
+
+    const expectedFactId = suppliedExpectedFactId ?? active.id;
+
+    const declaredExpiry =
+      active.origin === 'declared'
+        ? {
+            printedMarking: active.printedMarking,
+            source: active.source,
+            ...(active.confidence != null ? { confidence: active.confidence } : {}),
+            ...(active.estimatorVersion ? { estimatorVersion: active.estimatorVersion } : {}),
+          }
+        : {
+            printedMarking: 'unknown' as const,
+            source: 'user' as const,
+          };
+
+    return this.updateItem(context, {
+      householdId: input.householdId,
+      id: input.id,
+      expiry: {
+        ...declaredExpiry,
+        confirm: true,
+        expectedFactId,
+      },
+    });
+  }
+
+  /** Records that the user says this item has no expiry date. */
+  async clearItemExpiry(
+    context: AuthenticatedUserContext,
+    input: ClearItemExpiryInput,
+  ): Promise<StockItem> {
+    const expiry: ExpiryDeclarationInput = {
+      confirm: input.confirm ?? true,
+      source: 'user',
+      ...(input.expectedFactId !== undefined ? { expectedFactId: input.expectedFactId } : {}),
+    };
+
+    return this.updateItem(context, {
+      ...input.changes,
+      householdId: input.householdId,
+      id: input.id,
+      expiresOn: null,
+      expiry,
+    });
+  }
+
+  /** Newest-first expiry history for one item. Read-only; the database owns every value here. */
+  async listItemExpiryHistory(
+    context: AuthenticatedUserContext,
+    input: ListItemExpiryHistoryInput,
+  ): Promise<readonly ItemExpiryFact[]> {
+    const rows = await this.requestRows<DatabaseItemExpiryFactRow>('item_expiry_facts', context, {
+      household_id: `eq.${validateHouseholdId(input.householdId)}`,
+      item_id: `eq.${validateItemId(input.itemId)}`,
+      limit: clampPageSize(input.limit),
+      order: 'fact_sequence.desc',
+      select: expiryFactSelect,
+    });
+
+    return rows.map(mapItemExpiryFactRow);
+  }
+
+  async getActiveItemExpiryFact(
+    context: AuthenticatedUserContext,
+    householdId: string,
+    itemId: string,
+  ): Promise<ItemExpiryFact | null> {
+    const rows = await this.requestRows<DatabaseItemExpiryFactRow>('item_expiry_facts', context, {
+      household_id: `eq.${validateHouseholdId(householdId)}`,
+      is_active: 'is.true',
+      item_id: `eq.${validateItemId(itemId)}`,
+      limit: 1,
+      select: expiryFactSelect,
+    });
+    const row = firstRow(rows);
+
+    return row ? mapItemExpiryFactRow(row) : null;
   }
 
   async getRemovalStats(
@@ -888,6 +1307,10 @@ export class SackerlItemsClient {
 
       if ('expiresOn' in input) {
         row.expires_on = normaliseDate(input.expiresOn, 'expiresOn') ?? null;
+      }
+
+      if (input.expiry !== undefined) {
+        row.expiry_declaration = buildExpiryDeclarationRow(input.expiry, row.expires_on ?? null);
       }
 
       rows.push(row);

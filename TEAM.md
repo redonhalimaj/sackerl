@@ -1,6 +1,6 @@
 # Sackerl Agent Team
 
-Last reviewed: 2026-09-06
+Last reviewed: 2026-09-29
 
 Status: Canonical team, model-routing, delegation, and handoff policy.
 
@@ -9,6 +9,12 @@ Status: Canonical team, model-routing, delegation, and handoff policy.
 This document defines which agent roles Sackerl uses, which model and reasoning effort each role
 receives, how work moves between roles, and when a task must be escalated.
 
+The specialist group is named **The Team**. The user-authorized **Council workflow** adds a
+GPT-5.5 **Deputy** for detailed coordination and a **Chair** for expert review and final integration.
+The Deputy and participating Team members reach a unanimous recommendation; after reciprocal
+Chair review, all participants must endorse the same final revision. See
+[Council workflow](docs/agents/council-workflow.md) for voting, disagreements and resource limits.
+
 - `PROGRAM.md` defines long-term product stages, gates, safety constraints, and program outcomes.
 - `features.md` defines accepted SCKRL ticket scope.
 - `status.md` defines live ticket state.
@@ -16,29 +22,72 @@ receives, how work moves between roles, and when a task must be escalated.
 - `docs/agents/*.md` contains the detailed brief for each role.
 - This file is authoritative for team composition and model assignment.
 
-## Team Matrix
+## Provider Profiles
 
-| Role                     | Model          | Reasoning | Primary responsibility                                                                                                         |
-| ------------------------ | -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Agent Orchestrator       | `gpt-5.6-sol`  | `xhigh`   | Program reasoning, sequencing, model routing, conflict resolution, integration review, and stage-gate enforcement              |
-| Business Process Analyst | `gpt-5.6-luna` | `high`    | User journeys, business rules, success metrics, open decisions, acceptance criteria, and SCKRL ticket refinement               |
-| Frontend                 | `gpt-5.6-luna` | `high`    | Bounded mobile/web UI, accessibility, correction flows, interaction states, and visible uncertainty                            |
-| Backend                  | `gpt-5.5`      | `xhigh`   | Domain models, migrations, transactional commands, OCR/jobs, inventory events, notifications, and recommendation logic         |
-| Infrastructure           | `gpt-5.5`      | `xhigh`   | Architecture, security, privacy, storage, job topology, data lifecycle, environments, provider boundaries, backup, and restore |
-| DevOps                   | `gpt-5.6-luna` | `high`    | Bounded CI/CD, environment automation, deployment, migration execution, observability wiring, and release checks               |
-| QA                       | `gpt-5.5`      | `high`    | Acceptance challenge, stage-gate evidence, regression analysis, accessibility, data quality, and recommendation safety         |
+The owner explicitly authorized Codex ↔ Claude continuation on 2026-09-13. Follow
+[the shared handoff workflow](docs/agents/codex-claude-handoff.md) and keep the live checkpoint in
+`status.md`. One assistant owns writing to a given set of files at a time.
+
+Clarification on 2026-09-16: keep Codex active for ongoing work. Claude handover is conditional on
+unfinished work that cannot be completed in the current session or an owner-requested switch.
+Owner-requested parallel Claude work uses separate ticket/file ownership and one integration
+owner; ordinary checkpoints do not imply a transfer.
+
+Historical clarification on 2026-09-28 (superseded below): the owner requested an alternating handover after the active Council
+work: Codex prepares the next bounded issue for Claude, and Claude prepares the return package for
+Codex. Follow the [handoff workflow](docs/agents/codex-claude-handoff.md); retain honest ticket states,
+independent QA and one writer per file set. A prepared handover does not launch the other assistant.
+
+Current owner preference (2026-09-29): prepare continuation for a future GPT/Codex session;
+Claude is not the next recipient. Use [the Codex handover](docs/agents/codex-next-work-package.md).
+This supersedes mandatory alternation. Preserve the Council, independent QA and shared checkpoint;
+only involve Claude again on an explicit owner request. No roster/model changes are implied.
+
+- **Codex profile:** use the exact roster below for delegated work when available. Existing
+  running sessions retain their actual model; record it honestly.
+- **Claude profile:** use the Claude model selected in the user's runtime. Record its actual
+  identity/settings when exposed, or `unknown` otherwise. The same Orchestrator, Business Process
+  Analyst, Frontend, Backend, Infrastructure, DevOps and QA roles apply. Explicit GPT assignments
+  in the roster and role briefs are Codex defaults, not a requirement to obtain GPT access from
+  Claude. Delegates use available, explicitly recorded Claude models; no cross-provider effort
+  equivalence is assumed.
+- In either profile, escalate unresolved architecture, security, transactional, privacy, health
+  and recommendation-policy decisions to the responsible specialist role and Orchestrator.
+  Preserve independent QA and integration gates. If a required reviewer is unavailable, leave
+  review pending rather than asserting acceptance.
+
+This is a standing provider-routing exception authorized by the user, not a silent model
+substitution. Switching providers needs no repeated permission within the existing task scope.
+It does not authorize new feature scope, simultaneous overlapping writers, or external writes.
+The profile rules take precedence over provider-specific wording elsewhere in the repo.
+
+## Team Matrix (Codex Defaults)
+
+| Role                       | Model          | Reasoning | Primary responsibility                                                                                                         |
+| -------------------------- | -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Chair / Agent Orchestrator | `gpt-6-astra`  | `xhigh`   | Expert refinement, program reasoning, reciprocal Council review, final integration and stage-gate enforcement                  |
+| Deputy                     | `gpt-5.5`      | `xhigh`   | Detailed work coordination, evidence synthesis, specialist assignments and unanimous Council recommendations                   |
+| Business Process Analyst   | `gpt-5.6-luna` | `high`    | User journeys, business rules, success metrics, open decisions, acceptance criteria, and SCKRL ticket refinement               |
+| Frontend                   | `gpt-5.6-luna` | `high`    | Bounded mobile/web UI, accessibility, correction flows, interaction states, and visible uncertainty                            |
+| Backend                    | `gpt-5.5`      | `xhigh`   | Domain models, migrations, transactional commands, OCR/jobs, inventory events, notifications, and recommendation logic         |
+| Infrastructure             | `gpt-5.5`      | `xhigh`   | Architecture, security, privacy, storage, job topology, data lifecycle, environments, provider boundaries, backup, and restore |
+| DevOps                     | `gpt-5.6-luna` | `high`    | Bounded CI/CD, environment automation, deployment, migration execution, observability wiring, and release checks               |
+| QA                         | `gpt-5.5`      | `high`    | Acceptance challenge, stage-gate evidence, regression analysis, accessibility, data quality, and recommendation safety         |
 
 ## Assignment Rationale
 
-- `gpt-5.6-sol` is reserved for the role that must reason across the whole program, reconcile
-  conflicting specialist output, and decide whether stage gates are satisfied.
+- `gpt-6-astra` is the preferred Chair route for the user's requested highest-tier expert review.
+  The root session remains Chair; documentation does not switch its model. Record the actual
+  runtime identity when exposed, or unknown. Earlier Sol review records remain historical evidence.
+- `gpt-5.5` Deputy handles detailed coordination so the Chair can focus on consequential claims,
+  counterarguments and refinements. This is a work allocation policy, not a pricing guarantee.
 - `gpt-5.5` is assigned to specialist roles with the highest correctness cost: schema and
   transactional behavior, architecture and privacy, asynchronous processing, model-policy
   evaluation, and adversarial QA.
 - `gpt-5.6-luna` is assigned to well-bounded, higher-volume delivery work after product rules,
   architecture, and contracts are stable.
 
-Official model references:
+Existing specialist model references:
 
 - [GPT-5.6 Sol](https://developers.openai.com/api/docs/models/gpt-5.6-sol)
 - [GPT-5.5](https://developers.openai.com/api/docs/models/gpt-5.5)
@@ -46,8 +95,8 @@ Official model references:
 
 ## Operating Topology
 
-The team is orchestrator-led and ticket-driven. It is not a permanently running group of seven
-agents.
+The Council is Chair-led and ticket-driven. The Team's specialists are assigned as needed rather
+than kept permanently active. The Deputy coordinates detailed work under the Chair's scope.
 
 1. The Orchestrator is the single integration owner.
 2. Specialist agents are created for explicit SCKRL tickets or explicit user requests.
@@ -57,6 +106,11 @@ agents.
 6. Agents do not create unrelated product scope from `PROGRAM.md`; the Business Process Analyst and
    Orchestrator must first turn program work into accepted tickets.
 
+Apply the Council to substantive decisions and acceptance; routine execution follows a ratified
+approach. The existing delivery workflow below supplies role-specific work and QA gates within
+that decision cycle. Unresolved disputes may reach the Chair explicitly as disputes, never as a
+fabricated unanimous recommendation. The Chair cannot override the final unanimity requirement.
+
 Repository documentation selects the model for future delegated work when the runtime supports
 explicit routing. It does not change the model of an agent session that is already running.
 
@@ -65,8 +119,8 @@ explicit routing. It does not change the model of an agent session that is alrea
 - Use the exact model and reasoning effort in the Team Matrix when supported by the runtime.
 - Do not silently substitute a different model or effort. Report the unavailable route and make the
   fallback decision explicit.
-- Use the Sol Orchestrator for cross-program dependencies, conflicting evidence, scope decisions,
-  final integration, and stage-gate judgment.
+- Use the Chair for cross-program dependencies, conflicting evidence, scope decisions, expert
+  refinement, final integration and stage-gate judgment; use the Deputy for detailed coordination.
 - Use GPT-5.5 Backend for schema evolution, transactions, inventory or purchase events, OCR and job
   behavior, notification logic, deterministic recommendations, and model boundaries.
 - Use GPT-5.5 Infrastructure for security, RLS and trust boundaries, privacy, health-data handling,
@@ -144,6 +198,8 @@ Every returning agent must report:
 
 ## Role Briefs
 
+- [Council workflow](docs/agents/council-workflow.md)
+- [Deputy](docs/agents/deputy.md)
 - [Agent Orchestrator](docs/agents/orchestrator.md)
 - [Business Process Analyst](docs/agents/business-process-analyst.md)
 - [Frontend](docs/agents/frontend.md)

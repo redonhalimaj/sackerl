@@ -2,10 +2,15 @@ import { createSackerlRecipesClient, type SackerlRecipesClient } from '@sackerl/
 
 import { mobileSupabaseAuthConfig } from './auth';
 
-let mobileRecipesClient: SackerlRecipesClient | undefined;
+const mobileRecipesClients = new Map<string, SackerlRecipesClient>();
 
-export function getMobileRecipesClient(): SackerlRecipesClient {
-  mobileRecipesClient ??= createSackerlRecipesClient(mobileSupabaseAuthConfig);
+export function getMobileRecipesClient(calendarTimeZone: string): SackerlRecipesClient {
+  let client = mobileRecipesClients.get(calendarTimeZone);
 
-  return mobileRecipesClient;
+  if (!client) {
+    client = createSackerlRecipesClient(mobileSupabaseAuthConfig, { calendarTimeZone });
+    mobileRecipesClients.set(calendarTimeZone, client);
+  }
+
+  return client;
 }

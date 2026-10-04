@@ -151,3 +151,196 @@ parse data, and false expiry precision.
 - Failed parse promotion preserving the previous active generation.
 - Duplicate placement and injected mid-transaction failure tests.
 - Existing-item expiry backfill without visible date changes.
+
+## Addendum 2026-09-16: SCKRL-406 Expiry Provenance Persistence
+
+Ticket: SCKRL-406. Status: accepted for the backend slice; Codex owns review and the mobile and
+calendar consumers. This addendum records the persistence and authorization choices made while
+implementing the **Expiry Provenance** decision above. It refines that decision and does not
+replace it: `items.expires_on` remains the compatible projection and the fact record stays
+append-only.
+
+### Persistence
+
+- The append-only record is `public.item_expiry_facts`, one immutable row per recorded date, with
+  `source`, `printed_marking`, `confidence`, `estimator_version`, `confirmed_at`, `confirmed_by`,
+  `supersedes_fact_id`, `superseded_at`, `is_active`, `recorded_by` and `recorded_at`.
+- A partial unique index enforces at most one active fact per item. The active fact's `expires_on`
+  always equals `items.expires_on`.
+- Five read-only projection columns on `items` (`expiry_fact_id`, `expiry_source`,
+  `expiry_origin`, `expiry_printed_marking`, `expiry_confirmed_at`) mirror the active fact so list
+  screens keep one query. They are a cache maintained solely by the trigger, not the record of
+  truth, and are not client-writable.
+
+### Trigger over RPC
+
+Writes go through one `before insert or update on public.items` `security definer` trigger rather
+than a new command RPC. This was chosen because the existing app writes items through plain
+PostgREST inserts, batch inserts and patches. A trigger keeps every one of those paths atomic and
+consistent inside a single statement without rewriting callers, whereas an RPC would leave the
+existing direct paths free to move a date without recording a fact. Callers state provenance with
+a write-only `items.expiry_declaration jsonb` command column, which the trigger consumes, applies,
+and always stores as `null`. Optimistic concurrency uses an optional `expected_fact_id` inside that
+declaration; the item row lock serialises concurrent writers, and a stale expectation raises
+`PT409` without mutating anything.
+
+SCKRL-311 will still be a single transactional command as decided above. It writes items the same
+way and therefore inherits this behaviour rather than duplicating it.
+
+### Honesty over completeness
+
+- A third axis, `origin` (`declared`, `inferred`, `backfill`), records how the provenance itself was
+  obtained. `origin <> 'declared'` is constrained to the weakest honest shape: `estimated` for a
+  date or `user` for a cleared date, with no confidence, no estimator version, no printed marking
+  and no confirmation. An undeclared legacy write therefore cannot claim provenance it does not
+  have, and a migration backfill (`origin = 'backfill'`, `recorded_by is null`) stays permanently
+  distinguishable from a real category-zone estimate.
+- `source = 'model'` is reserved in the enum, as decided above, and actively rejected at write time
+  in Stage 1 so no fabricated model evidence can enter the record before a provider exists.
+- Changing a date never carries the previous date's confirmation forward. Confirmation is always a
+  separate explicit user action recorded as its own fact.
+- `printed_marking` stays independent of `source` and `confirmed_at`. No combination of values in
+  this model asserts that food is safe.
+
+### Authorization
+
+- `item_expiry_facts` is household scoped through the existing `is_household_member` check, has a
+  select-only RLS policy, and has its `authenticated` grants reduced to `select`.
+- A guard trigger rejects every delete and every update except the `is_active true -> false`
+  supersede transition, so history survives an accidentally broad grant.
+- Both the item foreign key and the supersede self-foreign key are composite on `household_id`, so
+  a cross-household reference is not expressible.
+- `recorded_by`, `recorded_at`, `confirmed_by`, `confirmed_at`, `origin`, `is_active`,
+  `superseded_at` and `supersedes_fact_id` are database-owned and are discarded if a client sends
+  them.
+
+### Household calendar zone
+
+`households.calendar_time_zone` is `text not null default 'Europe/Vienna'`, validated against
+`pg_timezone_names` by a trigger plus a syntactic check constraint. The default reproduces
+SCKRL-506's current pilot configuration exactly, so existing recipe eligibility results do not
+change. It replaces the hard-coded constant in the web recipe factory; the factory keeps its old
+signature and default so existing callers are unaffected.
+
+### Codex return review — 2026-09-16
+
+Infrastructure (`gpt-5.5`, xhigh) and Orchestrator (`gpt-5.6-sol`, xhigh) independently reviewed
+the uncommitted design. The trigger is accepted as a bounded persistence refinement for the
+existing direct item writes; it does not replace SCKRL-311's transactional placement command.
+The command column stores no request payload after execution. History is append-only in its
+evidence fields; activation/supersession metadata can change, and deleting the parent item
+cascades its history. This is not an immutable audit archive independent of item retention.
+
+The `origin` axis is accepted with explicit precedence: for `inferred` and `backfill`, the stored
+`estimated` source is a compatibility placeholder, not evidence an estimator ran. Those facts
+are unknown/unverified. A declared estimate may identify an estimator; migration/compatibility
+writes never invent one. Consumers must not flatten these states into a known category estimate.
+Confirming an inferred/backfill date creates a new `declared` **user** assertion with unknown
+marking and no estimator/confidence. Its predecessor retains the original unknown/backfill
+evidence. Confirming a declared estimate preserves that estimated source. This makes confirmation
+orthogonal to known source without retrospectively inventing the source of an unknown date.
+
+Alternatives considered: using null confidence/version as an implicit "unknown" flag would also
+match legitimate unscored declarations; using a null actor would mix migration history with
+privileged compatibility writes. Adding an `unknown` source would change the original four-source
+contract and still would not distinguish migration from ongoing compatibility writes. A
+database-owned origin field records those three cases directly without widening who can assert
+provenance. It is not a trust score: `declared` means supplied by the caller, not independently
+verified package evidence. Removing the axis from consumer decisions would defeat its purpose.
+
+Review found and required an optimistic-guard correction: omitted `expected_fact_id` remains
+unconditional, explicit JSON null expects no active fact, and a UUID expects that exact fact.
+Mobile expiry edits always supply an expectation; unrelated item edits omit the expiry command.
+An explicit new date can be confirmed in the same save, but no confirmation is inherited.
+
+Further review corrections use an immutable, database-owned `fact_sequence` identity for
+history order because transaction timestamps can tie or precede lock acquisition. Confidence
+is normalized to its persisted three-decimal precision before retry comparison. These do not
+alter expiry evidence or eligibility; they make the stated ordering and retry contracts hold.
+
+Settings is the owner-editable calendar surface. All three mobile recipe scoring entry points
+and the web suggestions endpoint use the household zone; Add uses it for the estimator base
+day. Stock/Expiring urgency grouping and the known expiry-changing snooze implementation remain
+separately tracked in SCKRL-407/408 and are not accepted as corrected by this ticket.
+
+These decisions accept the architecture refinement, not the implementation's final QA gate.
+Pending migrations remain unapplied under the owner's current instruction; corrected SQL still
+requires runtime validation after that restriction is lifted.
+
+### Integration correction — 2026-09-27: member calendar reads
+
+Final Orchestrator review found that the accepted member-readable Settings contract was
+unreachable: the profile lookup and original household SELECT policy only served owners.
+SCKRL-406 adds a member SELECT policy using the existing security-definer membership predicate;
+household/calendar UPDATE remains owner-only. Profile resolution preserves the owned household
+first, then resolves the caller's membership in a deterministic household-ID order. It derives
+the returned role from the actual household owner ID, not a membership role string. `ensureHousehold`
+reuses a member household rather than creating an unintended second one. This is read access for
+existing members; invitations, household switching and member calendar writes are not added.
+Profile request tests and member/nonmember SQL fixtures must cover this path. SQL remains
+unexecuted under the owner's migration restriction.
+
+## Addendum 2026-09-30: SCKRL-312 Receipt Expiry And Placement Boundary
+
+Status: accepted design under [COUNCIL-20260930-01 v2](../agents/council-decisions/COUNCIL-20260930-01.md).
+This refines SCKRL-310 review persistence and the initial SCKRL-311 placement contract; it does
+not accept an implementation or close the pending runtime gates.
+
+### Review persistence and attribution
+
+- Receipt lines store exactly `unknown`, `dated`, or `no_date`, with a nullable calendar `date`.
+  Only `dated` has a non-null valid Gregorian `YYYY-MM-DD` value. `unknown` means no date entered;
+  `no_date` records the explicit “No expiry date” choice, without asserting package-label evidence.
+  Removing an entered date returns to `unknown`. Legacy, parser and new manual lines default to
+  `unknown`, with null date and attribution. Dates retain their calendar components across locale,
+  time zone and DST changes.
+- The optional strict expiry state/date object belongs to the full generation/revision-guarded
+  SCKRL-310 save. Omission preserves existing expiry and defaults a new line to `unknown`, so older
+  callers cannot erase it. Invalid combinations, dates or supplied actors/times reject the entire
+  save. Parser evidence remains immutable; direct receipt-line mutations remain revoked.
+- `expiry_changed_by` and `expiry_changed_at` are database-owned and change only when the stored
+  expiry choice/date changes, including reset. Unchanged saves and unrelated edits preserve them.
+  They identify the expiry editor independently of `reviewed_by`; neither is stock confirmation.
+  Expiry participates in correction/review equality, and an included line's expiry edit requires
+  explicit review again. An optional unknown or no-date choice does not block review completion.
+
+### Initial stock conversion
+
+- SCKRL-311 reads persisted expiry under the receipt lock; placement payloads do not resubmit dates,
+  provenance or reviewer attribution. `unknown` creates null `items.expires_on` with no expiry fact.
+  `dated` creates a declared `user` fact with the entered date. `no_date` creates a declared `user`
+  fact with a null date. Both facts use unknown printed marking, null confidence/version and
+  `confirm: false`. Excluded lines create no stock, expiry facts or acquisition events.
+- SCKRL-406 records the placing session as the fact writer. The expiry editor remains attributable
+  through the source receipt line. No review confirmation is inherited, and initial placement has
+  no expiry-confirmation control or flag; later dated-item confirmation uses the existing stock
+  flow and its authenticated actor. Public payloads cannot override either actor or timestamp.
+- Receipt placement supplies no automatic estimate in this increment, an explicit receipt-flow
+  exception to SCKRL-405. Existing stock Add/Edit estimation keeps its accepted contract. A later
+  receipt-estimation decision must define the calendar base day, category/zone/version policy,
+  preview consistency and confirmation before using purchase or placement dates as estimator input.
+
+### Placement, recovery and authorization
+
+- Authenticate and check current household membership before returning any cached placement result.
+  Lock the receipt and necessary referenced state, then validate the exact active generation,
+  expected review revision, reviewed included-line set and household-zone assignments. Stock,
+  unique receipt-line lineage, applicable expiry facts, acquisition events and an immutable
+  placement record/result commit together; failure leaves the prior state unchanged.
+- Bind the idempotency key to normalized command input. Identical-key/input replay returns the
+  original result before stale-token checks; changed input conflicts. A second key cannot place
+  an already placed receipt. An authenticated canonical status/result read supports recovery.
+  After timeout, retain the key and immutable input and retry the same operation if needed;
+  an unplaced read does not prove the original command is no longer in flight.
+- Review saves and parse-promotion/failure commands reject committed placement under the same
+  receipt lock. The initial placed review is read-only. SCKRL-306 post-placement re-edit remains
+  deferred until a separate correction contract defines source snapshots and stock lineage.
+- Keep lineage and reads household scoped, placement metadata server-owned and expiry facts
+  select-only for clients. Logs and analytics exclude dates, receipt/product text and user-entered
+  content. Existing parent deletion and retention rules apply; this adds no independent audit
+  archive, provider, media bucket or job boundary.
+
+Separate QA must validate omission compatibility, attribution across two members, household
+isolation, stale/racing commands, atomic rollback, retries/lost responses and placed immutability.
+Required migration replay and connected/native acceptance remain pending. The current prohibition
+on applying or replaying migrations is unchanged; this addendum authorizes neither operation.
