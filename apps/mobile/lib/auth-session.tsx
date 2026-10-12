@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react';
@@ -31,9 +32,14 @@ export function AuthSessionProvider({ children }: PropsWithChildren): React.Reac
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const [session, setSession] = useState<AuthSession>(null);
   const [status, setStatus] = useState<AuthSessionStatus>('loading');
+  const sessionGenerationRef = useRef(0);
+  const mountedRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
+    mountedRef.current = true;
+    const generation = ++sessionGenerationRef.current;
+    const current = () => isMounted && generation === sessionGenerationRef.current;
     let unsubscribe: (() => void) | undefined;
 
     try {
@@ -43,7 +49,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren): React.Reac
       authClient
         .getSession()
         .then(({ data, error }) => {
-          if (!isMounted) {
+          if (!current()) {
             return;
           }
 
@@ -57,7 +63,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren): React.Reac
           setStatus('ready');
         })
         .catch((error: unknown) => {
-          if (!isMounted) {
+          if (!current()) {
             return;
           }
 
@@ -68,6 +74,9 @@ export function AuthSessionProvider({ children }: PropsWithChildren): React.Reac
       const {
         data: { subscription },
       } = authClient.onAuthStateChange((_event, nextSession) => {
+        if (!isMounted) return;
+        // A newer SDK event supersedes any session read or operation still pending.
+        ++sessionGenerationRef.current;
         setSession(nextSession);
         setStatus('ready');
       });
@@ -76,12 +85,16 @@ export function AuthSessionProvider({ children }: PropsWithChildren): React.Reac
         subscription.unsubscribe();
       };
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Unable to initialize auth.');
-      setStatus('error');
+      if (current()) {
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to initialize auth.');
+        setStatus('error');
+      }
     }
 
     return () => {
       isMounted = false;
+      mountedRef.current = false;
+      ++sessionGenerationRef.current;
       unsubscribe?.();
     };
   }, []);
@@ -91,11 +104,13 @@ export function AuthSessionProvider({ children }: PropsWithChildren): React.Reac
       client,
       errorMessage,
       refreshSession: async () => {
-        if (!client) {
+        if (!client || !mountedRef.current) {
           return;
         }
 
+        const generation = ++sessionGenerationRef.current;
         const { data, error } = await client.getSession();
+        if (!mountedRef.current || generation !== sessionGenerationRef.current) return;
 
         if (error) {
           setErrorMessage(error.message);
@@ -108,11 +123,13 @@ export function AuthSessionProvider({ children }: PropsWithChildren): React.Reac
       },
       session,
       signOut: async () => {
-        if (!client) {
+        if (!client || !mountedRef.current) {
           return;
         }
 
+        const generation = ++sessionGenerationRef.current;
         const { error } = await client.signOut();
+        if (!mountedRef.current || generation !== sessionGenerationRef.current) return;
 
         if (error) {
           setErrorMessage(error.message);

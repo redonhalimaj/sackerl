@@ -47,16 +47,17 @@ Default Slice 1 provider recommendation: Supabase Auth plus Supabase/Postgres un
 
 `TEAM.md` is authoritative for model assignments and routing. This table is the repository-startup summary.
 
-| Agent                      | Model          | Reasoning | Primary Ownership                                                                                                               |
-| -------------------------- | -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Chair / Agent Orchestrator | `gpt-6-astra`  | `xhigh`   | Expert refinement, reciprocal Council review, final integration and program stage gates.                                        |
-| Deputy                     | `gpt-5.5`      | `xhigh`   | Coordinates The Team's detailed work, synthesizes evidence and obtains explicit unanimous recommendations.                      |
-| Business Process Analyst   | `gpt-5.6-luna` | `high`    | Turns product goals into journeys, business rules, metrics, acceptance criteria, open decisions, and SCKRL tickets.             |
-| Frontend                   | `gpt-5.6-luna` | `high`    | Implements scoped mobile/web UI, accessibility, correction flows, drag/tap alternatives, and visible prediction uncertainty.    |
-| Backend                    | `gpt-5.5`      | `xhigh`   | Owns domain models, transactional APIs, receipt/OCR workflows, event history, notifications, and recommendation logic.          |
-| Infrastructure             | `gpt-5.5`      | `xhigh`   | Owns architecture, privacy, persistence, media, jobs, environments, external services, reliability, and provider boundaries.    |
-| DevOps                     | `gpt-5.6-luna` | `high`    | Owns scoped CI/CD, build tooling, environment automation, observability wiring, release checks, and deployment mechanics.       |
-| QA                         | `gpt-5.5`      | `high`    | Owns stage-gate validation, integration and journey coverage, accessibility, data quality, recommendation evaluation, and risk. |
+| Agent                      | Model          | Reasoning | Primary Ownership                                                                                                                      |
+| -------------------------- | -------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Chair / Agent Orchestrator | `gpt-6-astra`  | `xhigh`   | Expert refinement, reciprocal Council review, final integration and program stage gates.                                               |
+| Deputy                     | `gpt-5.5`      | `xhigh`   | Coordinates The Team's detailed work, synthesizes evidence and obtains explicit unanimous recommendations.                             |
+| Business Process Analyst   | `gpt-5.6-luna` | `high`    | Turns product goals into journeys, business rules, metrics, acceptance criteria, open decisions, and SCKRL tickets.                    |
+| Frontend                   | `gpt-5.6-luna` | `high`    | Implements scoped mobile/web UI, accessibility, correction flows, drag/tap alternatives, and visible prediction uncertainty.           |
+| Backend                    | `gpt-5.5`      | `xhigh`   | Owns domain models, transactional APIs, receipt/OCR workflows, event history, notifications, and recommendation logic.                 |
+| Infrastructure             | `gpt-5.5`      | `xhigh`   | Owns architecture, privacy, persistence, media, jobs, environments, external services, reliability, and provider boundaries.           |
+| DevOps                     | `gpt-5.6-luna` | `high`    | Owns scoped CI/CD, build tooling, environment automation, observability wiring, release checks, and deployment mechanics.              |
+| QA                         | `gpt-5.5`      | `high`    | Owns stage-gate validation, integration and journey coverage, accessibility, data quality, recommendation evaluation, and risk.        |
+| Junior support             | `gpt-6-luna`   | `low`     | Small, self-contained mechanical coding and documentation tasks for the Chair, Deputy and all specialists; supervisor review required. |
 
 ## Model Routing Rules
 
@@ -71,6 +72,11 @@ ownership, escalation and independent QA gates; record actual provider/model and
 - Use `gpt-5.6-luna` for well-scoped, high-volume work with stable contracts: ticket refinement, UI implementation, CI wiring, documentation, and focused validation.
 - A Luna-owned task must be escalated to the Orchestrator before it expands into unresolved cross-layer architecture, destructive migration design, authentication or RLS policy, health safety, or recommendation-policy decisions.
 - Model routing does not change ownership. Every ticket still has one primary role owner and passes through QA before Done.
+- Any senior role may delegate easy mechanical tasks to Junior support with short task-local
+  context (`fork_turns: "none"`), exact files, examples and checks. The supervisor reviews the
+  result and retains ownership; Junior has no Council vote or QA signoff. Ambiguity or changes to
+  auth/RLS/secrets, schemas/transactions, architecture, privacy/providers or policy return to the
+  supervisor. See [TEAM.md](TEAM.md#junior-support) and [the junior brief](docs/agents/junior.md).
 
 ## Scrum Ticket Model
 

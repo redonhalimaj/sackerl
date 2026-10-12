@@ -1,6 +1,6 @@
 # Council workflow
 
-Adopted: 2026-09-28. Policy version: 1.
+Adopted: 2026-09-28. Policy version: 2 (junior support added 2026-10-11).
 
 The Council combines detailed work by **The Team**, coordination by a **Deputy**, and expert
 review by the **Chair**. The Deputy and The Team reach a unanimous recommendation before normal
@@ -24,6 +24,13 @@ assigned actual work. The Deputy is a distinct participant, not a substitute for
 opinions. The Chair remains accountable for integration; one specialist remains primary owner of
 each ticket. Record actual model/effort when exposed, or unknown; a preferred route is not proof of
 the root session's identity. Never silently substitute an unavailable model.
+
+The Chair, Deputy and every Team member may use **Junior support** (`gpt-6-luna`, `low`) for
+small mechanical tasks under [TEAM.md](../../TEAM.md#junior-support). The junior receives only
+task-local instructions and the supervisor reviews its work. It is a supporting worker, has no
+Council vote, and cannot replace a specialist decision or independent QA. Its assignment does
+not add a voting seat or change unanimity requirements. Count it against the concurrency limit;
+schedule it in a free slot instead of adding an unbounded nested team.
 
 ## When to use it
 

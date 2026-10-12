@@ -43,7 +43,7 @@ const mocks = vi.hoisted(() => ({
   alert: vi.fn(),
   id: 'receipt-1',
   session: null as Session,
-  authStatus: 'authenticated',
+  authStatus: 'ready',
 }));
 vi.mock('./auth-session', () => ({
   useAuthSession: () => ({ session: mocks.session, status: mocks.authStatus }),
@@ -141,16 +141,33 @@ async function render() {
 }
 function deferred<T>() {
   let resolve!: (value: T) => void;
-  const promise = new Promise<T>((done) => {
+  let reject!: (error: Error) => void;
+  const promise = new Promise<T>((done, fail) => {
     resolve = done;
+    reject = fail;
   });
-  return { promise, resolve };
+  return { promise, resolve, reject };
+}
+
+async function switchToMember() {
+  mocks.session = {
+    access_token: 'member-token',
+    user: { id: 'member', email: 'member@test.invalid' },
+  };
+  await act(() => screen?.update(<ReceiptReviewRoute />));
+}
+
+function alertActions(index: number) {
+  return mocks.alert.mock.calls[index]?.[2] as {
+    readonly text: string;
+    readonly onPress?: () => void;
+  }[];
 }
 
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   mocks.session = { access_token: 'token', user: { id: 'owner', email: 'owner@test.invalid' } };
-  mocks.authStatus = 'authenticated';
+  mocks.authStatus = 'ready';
   mocks.id = 'receipt-1';
   mocks.getHousehold.mockReset().mockResolvedValue({ id: 'home' });
   mocks.getReceiptReview.mockReset().mockResolvedValue(receiptReview());
@@ -493,6 +510,265 @@ describe('Receipt review route', () => {
     });
     expect(mocks.saveReceiptReview).not.toHaveBeenCalled();
     expect(text()).not.toContain('Milk');
+  });
+
+  it('loads the member context and ignores an old owner read after an account change', async () => {
+    const pending = deferred<ReceiptReview>();
+    mocks.getReceiptReview.mockReturnValueOnce(pending.promise);
+    await render();
+    const memberReview = receiptReview([reviewItem({ effectiveName: 'Member canonical' })]);
+    mocks.getReceiptReview.mockResolvedValue(memberReview);
+    await switchToMember();
+    expect(mocks.getHousehold).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        accessToken: 'member-token',
+        user: { id: 'member', email: 'member@test.invalid' },
+      }),
+    );
+    expect(mocks.getReceiptReview).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        accessToken: 'member-token',
+        user: { id: 'member', email: 'member@test.invalid' },
+      }),
+      { householdId: 'home', receiptId: 'receipt-1' },
+    );
+    await act(async () => {
+      pending.resolve(receiptReview([reviewItem({ effectiveName: 'Old owner response' })]));
+      await pending.promise;
+    });
+    expect(text()).toContain('Member canonical');
+    expect(text()).not.toContain('Old owner response');
+  });
+
+  it.each(['resolve', 'reject'] as const)(
+    'ignores an old owner save %s after a member loads and edits the shared receipt',
+    async (completion) => {
+      const pending = deferred<ReceiptReview>();
+      mocks.saveReceiptReview.mockReturnValueOnce(pending.promise);
+      await render();
+      await press('Edit Milk');
+      await edit('Receipt item name', 'Owner local draft');
+      await press('Close');
+      await press('Save review draft');
+      mocks.getReceiptReview.mockResolvedValue(
+        receiptReview([reviewItem({ effectiveName: 'Member canonical' })]),
+      );
+      await switchToMember();
+      expect(text()).not.toContain('Owner local draft');
+      await press('Edit Member canonical');
+      await edit('Receipt item name', 'Member local draft');
+      await press('Close');
+      await act(async () => {
+        if (completion === 'resolve') {
+          pending.resolve(receiptReview([reviewItem({ effectiveName: 'Owner local draft' })]));
+        } else {
+          pending.reject(new Error('Old owner save failure'));
+        }
+        await pending.promise.catch(() => undefined);
+      });
+      expect(text()).toContain('Member local draft');
+      expect(text()).not.toContain('Owner local draft');
+      expect(text()).not.toContain('Old owner save failure');
+      expect(text()).not.toContain('Review saved. Items are not in stock yet.');
+      expect(text()).not.toContain('Done for now');
+      await press('Save review draft');
+      expect(mocks.saveReceiptReview).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          accessToken: 'member-token',
+          user: { id: 'member', email: 'member@test.invalid' },
+        }),
+        expect.objectContaining({
+          lines: [expect.objectContaining({ name: 'Member local draft' })],
+        }),
+      );
+    },
+  );
+
+  it('does not dispatch an owner save after a member switch during household lookup', async () => {
+    await render();
+    const household = deferred<{ id: string }>();
+    mocks.getHousehold.mockReturnValueOnce(household.promise);
+    await press('Save review draft');
+    await switchToMember();
+    await act(async () => {
+      household.resolve({ id: 'home' });
+      await household.promise;
+    });
+    expect(mocks.saveReceiptReview).not.toHaveBeenCalled();
+    await press('Save review draft');
+    expect(mocks.saveReceiptReview).toHaveBeenCalledOnce();
+    expect(mocks.saveReceiptReview.mock.calls[0]?.[0]).toMatchObject({
+      accessToken: 'member-token',
+      user: { id: 'member' },
+    });
+  });
+
+  it('keeps the member draft when an old owner explicit reload completes', async () => {
+    await render();
+    await press('Edit Milk');
+    await edit('Receipt item name', 'Owner unsaved correction');
+    await press('Close');
+    const pending = deferred<ReceiptReview>();
+    mocks.getReceiptReview.mockReturnValueOnce(pending.promise);
+    await press('Reload receipt review');
+    await act(() =>
+      alertActions(0)
+        .find((item) => item.text === 'Reload')
+        ?.onPress?.(),
+    );
+    mocks.getReceiptReview.mockResolvedValue(
+      receiptReview([reviewItem({ effectiveName: 'Member canonical' })]),
+    );
+    await switchToMember();
+    await press('Edit Member canonical');
+    await edit('Receipt item name', 'Member reload draft');
+    await press('Close');
+    await act(async () => {
+      pending.resolve(receiptReview([reviewItem({ effectiveName: 'Old owner reload' })]));
+      await pending.promise;
+    });
+    expect(text()).toContain('Member reload draft');
+    expect(text()).not.toContain('Old owner reload');
+    expect(text()).not.toContain('Owner unsaved correction');
+    expect(mocks.getReceiptReview.mock.calls[2]?.[0]).toMatchObject({
+      accessToken: 'member-token',
+      user: { id: 'member' },
+    });
+  });
+
+  it('ignores stale reload and discard warnings from the previous account', async () => {
+    await render();
+    await press('Edit Milk');
+    await edit('Receipt item name', 'Owner warning draft');
+    await press('Close');
+    mocks.beforeRemove?.({ preventDefault: vi.fn(), data: { action: { type: 'GO_BACK' } } });
+    const exitWarning = alertActions(0);
+    await press('Reload receipt review');
+    const reloadWarning = alertActions(1);
+    await switchToMember();
+    await press('Edit Milk');
+    await edit('Receipt item name', 'Member warning draft');
+    await press('Close');
+    const reads = mocks.getReceiptReview.mock.calls.length;
+    await act(() => {
+      exitWarning.find((item) => item.text === 'Reload latest')?.onPress?.();
+      exitWarning.find((item) => item.text === 'Discard changes')?.onPress?.();
+      reloadWarning.find((item) => item.text === 'Reload')?.onPress?.();
+    });
+    expect(mocks.dispatch).not.toHaveBeenCalled();
+    expect(mocks.getReceiptReview).toHaveBeenCalledTimes(reads);
+    expect(text()).toContain('Member warning draft');
+    expect(text()).not.toContain('Owner warning draft');
+  });
+
+  it('retains a rejected draft for deliberate successful retry before any modeled mutation', async () => {
+    let modeledMutations = 0;
+    const persisted = receiptReview([
+      reviewItem({ effectiveName: 'Retry correction', reviewState: 'reviewed' }),
+    ]);
+    mocks.saveReceiptReview
+      .mockRejectedValueOnce(new Error('Simulated rejection before mutation'))
+      .mockImplementationOnce(() => {
+        ++modeledMutations;
+        return Promise.resolve({
+          ...persisted,
+          receipt: { ...persisted.receipt, reviewRevision: 8 },
+        });
+      });
+    await render();
+    await press('Edit Milk');
+    await edit('Receipt item name', 'Retry correction');
+    await press('Mark reviewed');
+    await press('Save review');
+    expect(modeledMutations).toBe(0);
+    expect(text()).toContain('Retry correction');
+    expect(text()).not.toContain('Done for now');
+    expect(mocks.saveReceiptReview).toHaveBeenCalledOnce();
+    await press('Save review');
+    expect(mocks.saveReceiptReview.mock.calls[1]?.[1]).toEqual(
+      mocks.saveReceiptReview.mock.calls[0]?.[1],
+    );
+    expect(modeledMutations).toBe(1);
+    expect(text()).toContain('Review saved. Items are not in stock yet.');
+    expect(action('Done for now')).toBeTruthy();
+  });
+
+  it('reconciles modeled committed response loss through a guarded retry and explicit reload', async () => {
+    // This models revision guards; it exercises no real transport or database commit.
+    let canonical = receiptReview([]);
+    let modeledMutations = 0;
+    mocks.getReceiptReview.mockImplementation(() => Promise.resolve(canonical));
+    mocks.saveReceiptReview.mockImplementation((_context, input) => {
+      if (input.expectedReviewRevision !== canonical.receipt.reviewRevision) {
+        return Promise.reject(new ApiRequestError('Simulated stale revision', 409));
+      }
+      const line = input.lines[0];
+      if (!line?.clientLineId) return Promise.reject(new Error('Expected a manual line'));
+      ++modeledMutations;
+      const persisted = receiptReview([
+        reviewItem({
+          id: 'persisted-manual',
+          clientLineId: line.clientLineId,
+          source: 'manual',
+          effectiveName: line.name,
+          effectiveCategoryId: line.categoryId,
+          effectiveQtyUnit: line.qtyUnit,
+          effectiveQtyValue: line.qtyValue,
+          reviewState: line.reviewState,
+          expiry: line.expiry ?? { state: 'unknown', date: null },
+        }),
+      ]);
+      canonical = {
+        ...persisted,
+        receipt: { ...persisted.receipt, reviewRevision: 8, reviewStatus: 'reviewed' },
+        summary: {
+          ...persisted.summary,
+          canComplete: true,
+          reviewedCount: 1,
+          reviewRevision: 8,
+          reviewStatus: 'reviewed',
+          unresolvedCount: 0,
+        },
+      };
+      return Promise.reject(new Error('Simulated response loss after commit'));
+    });
+    await render();
+    await press('Add missing item');
+    await edit('Receipt item name', 'Beans');
+    await edit('Receipt item quantity', '2');
+    await press('Unit pcs');
+    await press('Category Pantry');
+    await press('Mark reviewed');
+    await press('Save review');
+    const firstInput = mocks.saveReceiptReview.mock.calls[0]?.[1];
+    expect(modeledMutations).toBe(1);
+    expect(canonical.receipt.reviewRevision).toBe(8);
+    expect(canonical.items[0]?.clientLineId).toBe(firstInput?.lines[0]?.clientLineId);
+    expect(text()).toContain('Beans');
+    expect(text()).not.toContain('Done for now');
+    expect(mocks.saveReceiptReview).toHaveBeenCalledOnce();
+    expect(mocks.getReceiptReview).toHaveBeenCalledOnce();
+    await press('Save review');
+    expect(mocks.saveReceiptReview.mock.calls[1]?.[1]).toEqual(firstInput);
+    expect(modeledMutations).toBe(1);
+    expect(text()).toContain('changed elsewhere');
+    expect(text()).toContain('Beans');
+    expect(text()).not.toContain('Done for now');
+    await press('Reload latest review');
+    expect(mocks.getReceiptReview).toHaveBeenCalledOnce();
+    expect(text()).toContain('Beans');
+    await act(async () => {
+      alertActions(0)
+        .find((item) => item.text === 'Reload')
+        ?.onPress?.();
+      await Promise.resolve();
+    });
+    expect(mocks.getReceiptReview).toHaveBeenCalledTimes(2);
+    expect(canonical.items).toHaveLength(1);
+    expect(modeledMutations).toBe(1);
+    expect(mocks.saveReceiptReview).toHaveBeenCalledTimes(2);
+    expect(text()).toContain('Beans');
+    expect(action('Done for now')).toBeTruthy();
   });
 
   it('ignores a late save response after navigating to another receipt', async () => {
