@@ -8,7 +8,9 @@ Last updated: 2026-10-12
 
 Active checkout: **`feature/SCKRL-908-council-junior`**, created from dev **`a0f5359`** on
 2026-10-11 for junior support and a bounded SCKRL-908 source recovery increment. The dev
-publication below is the integrated baseline; this follow-up is local and has not been published.
+publication below is the integrated baseline. This follow-up is pushed and open in
+[PR #6](https://github.com/redonhalimaj/sackerl/pull/6), targeting `dev` and awaiting the owner's
+GitHub review and merge.
 
 The owner requested checkout/pull and a next-session handoff on 2026-10-04. The clean checkout
 was switched to **`dev`** and `git pull --ff-only origin dev` succeeded at
@@ -145,6 +147,17 @@ summary supersedes their outdated draft/publication, uncommitted-source and next
 
 ### Current work checkpoint
 
+- **PR publication — 2026-10-12:** the owner authorizes committing, pushing and creating a PR,
+  and retains the merge on GitHub. Source/evidence commit `9900c46` is pushed on
+  `feature/SCKRL-908-council-junior`; [PR #6](https://github.com/redonhalimaj/sackerl/pull/6)
+  targets `dev` and is open for review. No merge or deployment was performed. Publication checks
+  passed formatting, lint, typecheck, tests and code-map validation: all 18 Turbo tasks passed,
+  15 reused matching cache and the mobile suite freshly passed 116 tests. The unchanged accepted
+  source snapshot and separate ordinary simulator acceptance below remain the QA evidence;
+  private executors, captures and credentials remain ignored. [GitHub CI](https://github.com/redonhalimaj/sackerl/actions/runs/38264673047)
+  passed install/format/lint/typecheck/test on source head `9900c46`; this is separate from the
+  later publication-documentation commit and from a merge into `dev`.
+  SCKRL-304/406/312 remain Review, SCKRL-908 remains In Progress and Stage 1 remains incomplete.
 - **Simulator smoke accepted — 2026-10-12:** the owner requests an actual simulator test before
   moving on and resumes after usage interruptions. The unanimously ratified
   [Council method v4](docs/agents/council-decisions/COUNCIL-20261011-02-simulator.md) ran on the
@@ -206,8 +219,9 @@ summary supersedes their outdated draft/publication, uncommitted-source and next
   14 reviewed files. The increment adds 23 mounted-provider and eight receipt-screen regression
   cases; modeled commit/lost-response schedules are source evidence only. Junior completed the
   role brief, literal renderer-version correction and generated map under senior review.
-  Changes remain local and unpublished. No hosted fixture, migration, native build or new product
-  feature is started. VoiceOver/large text remain release deferrals;
+  At this source checkpoint, changes were local and unpublished; the later simulator and PR
+  checkpoints above supersede that publication state. No migration, native build or new product
+  feature was started. VoiceOver/large text remain release deferrals;
   native/provider gates and 304/406/312 Review plus 908 In Progress are preserved. Next product
   candidates remain 311 atomic placement, then 305 placement UI after prerequisites.
 - **Owner manual-QA closeout — 2026-10-11:** owner reports clean swipe returning Home,

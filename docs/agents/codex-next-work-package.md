@@ -6,6 +6,16 @@ and QA reports; this handover supersedes the old draft-publication instructions.
 
 ## Latest checkpoint — 2026-10-12
 
+The owner authorized committing, pushing and opening a PR, retaining the GitHub merge.
+[PR #6](https://github.com/redonhalimaj/sackerl/pull/6) is open against `dev` from
+`feature/SCKRL-908-council-junior`, with source/evidence commit `9900c46` pushed.
+Publication checks passed format/lint/typecheck/test/code-map validation: all 18 Turbo tasks
+passed, 15 reused matching cache, and the mobile suite freshly passed 116 tests.
+[GitHub CI](https://github.com/redonhalimaj/sackerl/actions/runs/38264673047) passed
+install/format/lint/typecheck/test on source head `9900c46`, separate from the later documentation
+commit and any merge. No merge or deployment was performed; do not merge or enable auto-merge
+for the owner.
+
 The requested ordinary simulator run is complete with verified readbacks and cleanup under
 [Council method v4](council-decisions/COUNCIL-20261011-02-simulator.md). Actual owner login,
 dirty Back/Keep/Discard/canonical reload, clean Back, invalid-date retention and correction,
@@ -48,7 +58,8 @@ Separate source acceptance v1 is ratified with five fresh Support votes on
 `4ca3ae6a88e729b5c98b2756b7ecf1ffa9c7be6c00a796532f3c3b4dac88020b` (6,745 bytes, 14-file
 snapshot). This increment adds 23 provider and eight screen regression cases; fake SDK and modeled
 commit schedules establish source behavior only. Junior delivered its brief, renderer-version
-correction and regenerated map under senior review. Changes remain local and unpublished.
+correction and regenerated map under senior review. At that source checkpoint, changes were
+local and unpublished; the PR publication above supersedes that state.
 Native/hosted/build gates remain open, so
 304/406/312 retain Review and 908 In Progress.
 The former `/tmp` packet/controller/fixture are absent; old hashes cannot bind a new run.
