@@ -2,9 +2,13 @@
 
 ## Session Handoff
 
-Last updated: 2026-10-11
+Last updated: 2026-10-12
 
-### Current checkout and merged baseline — dev
+### Current checkout and merged baseline
+
+Active checkout: **`feature/SCKRL-908-council-junior`**, created from dev **`a0f5359`** on
+2026-10-11 for junior support and a bounded SCKRL-908 source recovery increment. The dev
+publication below is the integrated baseline; this follow-up is local and has not been published.
 
 The owner requested checkout/pull and a next-session handoff on 2026-10-04. The clean checkout
 was switched to **`dev`** and `git pull --ff-only origin dev` succeeded at
@@ -51,7 +55,8 @@ Validation evidence is in [source QA](docs/qa/sckrl-312-review.md),
 [live HTTP QA](docs/qa/sckrl-304-312-next-http-review.md) and
 [native recovery follow-up](docs/qa/sckrl-304-312-native-followup-review.md). Local integration reused all 18 matching
 Turbo tasks (314 recorded tests); formatting and code-map checks passed with 671 callables,
-1,231 relationships, 83 modules and zero stale files. All 22 accepted source hashes remain unchanged.
+1,231 relationships, 83 modules and zero stale files. All 22 accepted source hashes were unchanged
+at that baseline closeout. The current source follow-up has the separate evidence snapshot below.
 
 ### Remaining QA checks — what “gates” means
 
@@ -113,9 +118,10 @@ as fixed; only the evidence above establishes completed work.
 1. Read this checkpoint, `AGENTS.md`, `CLAUDE.md`, `TEAM.md`, the Council workflow and
    [Codex handover](docs/agents/codex-next-work-package.md). Inspect current dev/remote/working tree;
    preserve this local handoff. Continue in Codex with the Council; no Claude takeover requested.
-2. For a development continuation, create a separate scoped follow-up branch from current dev.
-   First prepare bounded remaining receipt/expiry QA above and resolve findings, with independent
-   QA and Council review. Do not reopen the merged PR or start all deferred features.
+2. Continue the active `feature/SCKRL-908-council-junior` follow-up branch. First prepare bounded
+   remaining receipt/expiry QA above and resolve findings, with independent QA and Council review.
+   The former native fault tooling is absent and needs freshly reviewed replacements before use.
+   Do not reopen the merged PR or start all deferred features.
 3. After the applicable prerequisites and Council contract/ADR review, the next receipt-to-stock
    candidate is **SCKRL-311 Backend atomic placement**, then **SCKRL-305 Frontend placement**.
    Transactionality, lineage, expiry attribution, idempotency/recovery and placed-review immutability
@@ -139,6 +145,71 @@ summary supersedes their outdated draft/publication, uncommitted-source and next
 
 ### Current work checkpoint
 
+- **Simulator smoke accepted — 2026-10-12:** the owner requests an actual simulator test before
+  moving on and resumes after usage interruptions. The unanimously ratified
+  [Council method v4](docs/agents/council-decisions/COUNCIL-20261011-02-simulator.md) ran on the
+  accepted current source using a new Expo Go 57.0.9 / iPhone 17 / iOS 26.5 QA simulator.
+  Fresh served-source/SDK/singleton/development-origin proof passed before fixture creation or
+  login. Actual native owner login, dirty header Back/Keep editing/Discard/canonical reload,
+  clean Back, invalid-date inline validation with retained draft, final reviewed edits, saved
+  feedback/disabled placement/Done for now and authenticated cold restart/resume passed.
+  Saved choices are Milk QA corrected / 2040-02-29, Bread / no expiry date, Apples / Unknown.
+  Ordinary authoritative owner/member readbacks match: revision 1→2, same generation/line IDs,
+  unchanged parser/raw/money fields, correct expiry actors and zero stock/expiry facts.
+  Exact fixture cleanup passed; generated accounts/profile/household/receipt data and private
+  login were removed. Only owned QA device `4FE6CDC0-F0DB-49B5-B374-AA7CB1A798F0` and Metro
+  PID `11318` were removed; all initial device states/free ports and the original simulator's
+  actual Booted state were preserved. Fixture worker PID was `55939`; `83849` was the terminal
+  tool session ID. Source and actual evidence remain in ignored `.env.qa-simulator-20261012-v4`;
+  the sealed 100-file evidence registry SHA-256 is
+  `c9a9376d974af693c163164bbf61d7d90b5313ee6d64a690840cf8489b5c8a75`.
+  Frontend, Infrastructure and independent QA inspected the actual evidence/readbacks/cleanup
+  and reported no blocker. Some AX snapshots caught transitions; settled paired PNGs supply
+  the visual kept-draft and empty-Fridge evidence. **Council result acceptance v1 is unanimously
+  ratified** after separate preliminary consensus, reciprocal Chair review and five fresh final
+  Support votes on `6258d9d990de63d27de3178be63310c2e35d1a02f1bac0121937e490cbf0d5f3`
+  (3,678 canonical bytes). This accepts the exercised ordinary owner flow and exact cleanup;
+  SCKRL-304/406/312 remain Review, SCKRL-908 remains In Progress and Stage 1 remains incomplete.
+  The completed
+  [independent simulator QA report](docs/qa/sckrl-908-simulator-20261012-review.md) recommends
+  accepting the bounded ordinary result with no blocking finding.
+  Earlier verifier attempts stopped before fixture/login/device and were cleaned; their history
+  remains in the Council record. Member UI sign-in, Settings, controlled pending/lost responses,
+  dirty account changes, native SDK races, physical gestures, locale/DST and development-build/
+  device coverage remain unexecuted in this run. VoiceOver/large text remain release-deferred.
+  Whole SCKRL-908 completion is not an added prerequisite for starting bounded SCKRL-311 contract
+  work; its existing 202/310/312/406 dependencies, ADR and independent Council gates still apply.
+- **Council continuation and junior support — 2026-10-11:** the owner requests the cheapest
+  suitable GPT junior for the Chair and all subagents, plus Council development continuation.
+  Work is isolated on `feature/SCKRL-908-council-junior` from dev `a0f5359`. Junior support uses
+  `gpt-6-luna` / `low`, short task-local context and supervisor review; it has no ticket ownership,
+  Council vote or independent QA signoff. The junior produced its own role brief; canonical
+  matrices and operating rules are synchronized. Senior defaults remain unchanged.
+  This Council reuses recorded available-model fallbacks:
+  Deputy/Infrastructure `gpt-6.1-sol` / `xhigh`, independent QA `gpt-6.1-sol` / `high`;
+  root model/effort is not exposed. The historical native fault packet/controller/fixture under
+  `/tmp` are absent, so the old unratified recommendation cannot be executed from its hashes.
+  [COUNCIL-20261011-01](docs/agents/council-decisions/COUNCIL-20261011-01.md) design v1 is ratified
+  with explicit Chair/Deputy/Infrastructure/QA/Frontend final Support on the exact recommendation.
+  Frontend was added before votes; actual route is the recorded `gpt-6-luna` / `high` fallback.
+  Infrastructure reproduced provider ordering defects against unchanged source: 15 failing and
+  8 passing mounted-provider tests, including stale initial/refresh/sign-out results and a
+  cleaned-up effect callback. The bounded same-contract guard now passes all 23 provider tests.
+  Independent QA reproduced the same 15/8 baseline through isolated copies, cleaned them exactly
+  and verified unchanged final source hashes. Root's full mobile suite passes 116 tests;
+  receipt-client regression passes 51. Mobile lint/typecheck and root formatting pass. Junior
+  regenerated the code map: 672 callables, 1,232 relationships, 83 modules, zero stale files.
+  Frontend and [independent QA](docs/qa/sckrl-908-source-recovery-review.md) reviewed the final
+  source and junior guidance without blocking findings. Separate source acceptance v1 is ratified
+  by fresh Chair/Deputy/Infrastructure/QA/Frontend Support on
+  `4ca3ae6a88e729b5c98b2756b7ecf1ffa9c7be6c00a796532f3c3b4dac88020b` (6,745 bytes), binding
+  14 reviewed files. The increment adds 23 mounted-provider and eight receipt-screen regression
+  cases; modeled commit/lost-response schedules are source evidence only. Junior completed the
+  role brief, literal renderer-version correction and generated map under senior review.
+  Changes remain local and unpublished. No hosted fixture, migration, native build or new product
+  feature is started. VoiceOver/large text remain release deferrals;
+  native/provider gates and 304/406/312 Review plus 908 In Progress are preserved. Next product
+  candidates remain 311 atomic placement, then 305 placement UI after prerequisites.
 - **Owner manual-QA closeout — 2026-10-11:** owner reports clean swipe returning Home,
   a light-yellow check label on the edit step and Keep/edit/discard working; they like the iPhone
   options. The manual follow-up is closed at the owner's request. Dirty-swipe warning is not
@@ -813,7 +884,7 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | SCKRL-521 | Done        | Frontend                  | Suggestions screen.                               | Implemented the mobile full "From your stock" recipe suggestions screen using the shared SCKRL-501 recipe scorer, best-match ordering, filter chips for All/Vegetarian/Quick/Dinner, empty state, and navigation into SCKRL-505 recipe detail. The Home dashboard suggestion card now exposes `See all` navigation to `/suggestions`. Vegetarian and dinner filters use deterministic client heuristics because the current SCKRL-501 recipe schema does not yet store dietary/course tags. User QA confirmed suggestions and filters work, then found return navigation polish issues. Home now preserves scroll position on return and Expiring `See all` routes through stack screen `/use-soon` so edge-swipe/back can pop cleanly. User retest accepted on 2026-06-21.                                                                                                                                                                                                                                                                                                                     |
 | SCKRL-906 | Done        | QA                        | Application test harness.                         | Completed locally 2026-09-11 after independent GPT-5.5 high QA and integration review. Strict app Vitest scripts; real household route test; mounted React mobile render/rerender behavior; form tests; exact renderer dependencies; harness/fixture docs. Mobile 5 tests, web 1 test, root 75 tests, app lint/typecheck, root typecheck and empty-suite failure probes passed. No device/provider/E2E claim.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | SCKRL-907 | Todo        | QA                        | Authenticated API journey tests.                  | Adds isolated authenticated integration coverage for household zones, stock, deterministic receipt parsing, recipes, shopping lists, authorization, invalid data, retries, and cleanup. Depends on SCKRL-906.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| SCKRL-908 | In Progress | QA                        | Current mobile journey smoke tests.               | Bounded Expo Go journeys and isolated fixture cleanup are verified in the native QA report; source is integrated into dev. Remaining development-build/device, gesture, failure/recovery and full accessibility coverage are open. Broader Stage 1 journey coverage is separate; no completed automation claim.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| SCKRL-908 | In Progress | QA                        | Current mobile journey smoke tests.               | The local source increment is independently reviewed and accepted in [Council01](docs/agents/council-decisions/COUNCIL-20261011-01.md): auth ordering guard, 23 provider/eight screen regressions; mobile 116 and receipt-client 51 pass, lint/typecheck/format/map pass. The 2026-10-12 ordinary Expo Go owner review/save/cold-resume run, canonical owner/member readbacks and exact cleanup are independently reviewed in [simulator QA](docs/qa/sckrl-908-simulator-20261012-review.md) and unanimously accepted by [Council02 result v1](docs/agents/council-decisions/COUNCIL-20261011-02-simulator.md). Development-build/device, gesture, failure/recovery and remaining accessibility gates stay open; broader Stage 1 coverage is separate.                                                                                                                                                                                                                                                                                                                                          |
 | SCKRL-909 | Todo        | QA                        | Receipt-to-stock journey automation.              | Extends automation across real acquisition, private upload, OCR, review, drag/tap placement, idempotent retry, and receipt-created stock after SCKRL-304/305 and SCKRL-307 through SCKRL-311 are Done.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ## Setup Notes

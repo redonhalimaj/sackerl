@@ -1,6 +1,6 @@
 # Sackerl Agent Team
 
-Last reviewed: 2026-09-29
+Last reviewed: 2026-10-11
 
 Status: Canonical team, model-routing, delegation, and handoff policy.
 
@@ -63,16 +63,17 @@ The profile rules take precedence over provider-specific wording elsewhere in th
 
 ## Team Matrix (Codex Defaults)
 
-| Role                       | Model          | Reasoning | Primary responsibility                                                                                                         |
-| -------------------------- | -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Chair / Agent Orchestrator | `gpt-6-astra`  | `xhigh`   | Expert refinement, program reasoning, reciprocal Council review, final integration and stage-gate enforcement                  |
-| Deputy                     | `gpt-5.5`      | `xhigh`   | Detailed work coordination, evidence synthesis, specialist assignments and unanimous Council recommendations                   |
-| Business Process Analyst   | `gpt-5.6-luna` | `high`    | User journeys, business rules, success metrics, open decisions, acceptance criteria, and SCKRL ticket refinement               |
-| Frontend                   | `gpt-5.6-luna` | `high`    | Bounded mobile/web UI, accessibility, correction flows, interaction states, and visible uncertainty                            |
-| Backend                    | `gpt-5.5`      | `xhigh`   | Domain models, migrations, transactional commands, OCR/jobs, inventory events, notifications, and recommendation logic         |
-| Infrastructure             | `gpt-5.5`      | `xhigh`   | Architecture, security, privacy, storage, job topology, data lifecycle, environments, provider boundaries, backup, and restore |
-| DevOps                     | `gpt-5.6-luna` | `high`    | Bounded CI/CD, environment automation, deployment, migration execution, observability wiring, and release checks               |
-| QA                         | `gpt-5.5`      | `high`    | Acceptance challenge, stage-gate evidence, regression analysis, accessibility, data quality, and recommendation safety         |
+| Role                       | Model          | Reasoning | Primary responsibility                                                                                                                 |
+| -------------------------- | -------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Chair / Agent Orchestrator | `gpt-6-astra`  | `xhigh`   | Expert refinement, program reasoning, reciprocal Council review, final integration and stage-gate enforcement                          |
+| Deputy                     | `gpt-5.5`      | `xhigh`   | Detailed work coordination, evidence synthesis, specialist assignments and unanimous Council recommendations                           |
+| Business Process Analyst   | `gpt-5.6-luna` | `high`    | User journeys, business rules, success metrics, open decisions, acceptance criteria, and SCKRL ticket refinement                       |
+| Frontend                   | `gpt-5.6-luna` | `high`    | Bounded mobile/web UI, accessibility, correction flows, interaction states, and visible uncertainty                                    |
+| Backend                    | `gpt-5.5`      | `xhigh`   | Domain models, migrations, transactional commands, OCR/jobs, inventory events, notifications, and recommendation logic                 |
+| Infrastructure             | `gpt-5.5`      | `xhigh`   | Architecture, security, privacy, storage, job topology, data lifecycle, environments, provider boundaries, backup, and restore         |
+| DevOps                     | `gpt-5.6-luna` | `high`    | Bounded CI/CD, environment automation, deployment, migration execution, observability wiring, and release checks                       |
+| QA                         | `gpt-5.5`      | `high`    | Acceptance challenge, stage-gate evidence, regression analysis, accessibility, data quality, and recommendation safety                 |
+| Junior support             | `gpt-6-luna`   | `low`     | Small, self-contained mechanical coding and documentation tasks for the Chair, Deputy and every specialist; supervisor review required |
 
 ## Assignment Rationale
 
@@ -86,12 +87,20 @@ The profile rules take precedence over provider-specific wording elsewhere in th
   evaluation, and adversarial QA.
 - `gpt-5.6-luna` is assigned to well-bounded, higher-volume delivery work after product rules,
   architecture, and contracts are stable.
+- `gpt-6-luna` at `low` is the junior route added at the owner's request on 2026-10-11.
+  It is the cheapest model exposed by this runtime's agent launcher. Published standard API
+  rates for short context are $0.10 input, $0.01 cached input and $0.50 output per million tokens;
+  these rates do not establish this session's billing. The cheaper GPT-5 nano is deprecated and
+  unavailable in this launcher, so it is not the junior route. See the official
+  [GPT-6 Luna model page](https://developers.openai.com/api/docs/models/gpt-6-luna) and
+  [GPT-5 nano model page](https://developers.openai.com/api/docs/models/gpt-5-nano).
 
 Existing specialist model references:
 
 - [GPT-5.6 Sol](https://developers.openai.com/api/docs/models/gpt-5.6-sol)
 - [GPT-5.5](https://developers.openai.com/api/docs/models/gpt-5.5)
 - [GPT-5.6 Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna)
+- [GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna)
 
 ## Operating Topology
 
@@ -113,6 +122,21 @@ fabricated unanimous recommendation. The Chair cannot override the final unanimi
 
 Repository documentation selects the model for future delegated work when the runtime supports
 explicit routing. It does not change the model of an agent session that is already running.
+
+### Junior support
+
+The Chair, Deputy and every specialist may assign a junior a small task within already accepted
+scope. Suitable work includes mechanical edits, formatting, scoped file inventories and fixtures
+from supplied examples. Give it only task-local instructions, exact allowed files, examples,
+exclusions, expected output and checks. Use `fork_turns: "none"` where available rather than
+copying the full conversation. Do not spawn a junior when explaining and checking the task would
+cost more than completing it directly.
+
+The assigning agent remains the supervisor and retains ticket ownership. It reviews the actual
+diff and checks before using the result. Junior support has no Council vote, acceptance authority
+or independent QA role, and does not delegate further. Ambiguity, authentication/RLS/secrets,
+schema/transaction changes, architecture, privacy/provider or policy decisions return immediately
+to the supervisor and responsible specialist. See [the junior brief](docs/agents/junior.md).
 
 ## Model Routing Rules
 
@@ -207,6 +231,7 @@ Every returning agent must report:
 - [Infrastructure](docs/agents/infrastructure.md)
 - [DevOps](docs/agents/devops.md)
 - [QA](docs/agents/qa.md)
+- [Junior support](docs/agents/junior.md)
 
 ## Maintenance
 

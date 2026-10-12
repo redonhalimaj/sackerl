@@ -16,6 +16,12 @@ reconfirm the same final revision together. No silent assent or Chair override c
 TEAM.md defines the GPT-5.5 Deputy and preferred GPT-6 Astra Chair routes for Codex; the authorized
 Claude profile preserves these responsibilities using explicitly recorded available Claude models.
 
+In the Codex profile, the Chair, Deputy and every specialist can use Junior support
+(`gpt-6-luna`, `low`) for self-contained mechanical tasks with short task-local context. The
+assigning agent reviews the output and retains ticket ownership. Junior support has no Council
+vote or independent QA authority; follow [TEAM.md](TEAM.md#junior-support) and
+[the junior brief](docs/agents/junior.md) for exclusions and escalation.
+
 ## Repo Context
 
 Sackerl is a mobile-first grocery stock management app for private households. The core user journey is:

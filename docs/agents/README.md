@@ -27,8 +27,13 @@ review requirements apply in both providers.
 | Infrastructure           | `gpt-5.5`      | `xhigh`   |
 | DevOps                   | `gpt-5.6-luna` | `high`    |
 | QA                       | `gpt-5.5`      | `high`    |
+| Junior support           | `gpt-6-luna`   | `low`     |
 
 The Orchestrator must use this matrix when the runtime supports explicit model routing. Model substitutions must be explicit. Luna agents receive bounded work with stable contracts; unresolved cross-layer, security, privacy, transactional, health-safety, or recommendation-policy questions return to the appropriate GPT-5.5 specialist and the Orchestrator.
+
+Junior support is available to the Chair, Deputy and every specialist for self-contained
+mechanical tasks. Use short task-local context; the assigning supervisor retains ownership and
+reviews the result. Junior support has no Council vote or independent QA authority.
 
 ## Roles
 
@@ -41,6 +46,7 @@ The Orchestrator must use this matrix when the runtime supports explicit model r
 - [infrastructure.md](infrastructure.md)
 - [devops.md](devops.md)
 - [qa.md](qa.md)
+- [junior.md](junior.md)
 
 The root operating model lives in [AGENTS.md](../../AGENTS.md), with program direction in [PROGRAM.md](../../PROGRAM.md).
 

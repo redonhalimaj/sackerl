@@ -6,7 +6,7 @@ tags: [code-map, generated]
 
 [[Sackerl Code Map]] · [[Maintenance]]
 
-Generated from 79 runtime TypeScript files and 12 SQL migrations: **671 named callables**, **1231 resolved relationships**, **83 module notes**.
+Generated from 79 runtime TypeScript files and 12 SQL migrations: **672 named callables**, **1232 resolved relationships**, **83 module notes**.
 
 Open a module to see each method, its source line, what it calls and what uses it. In Obsidian, open its Local graph to explore connected modules.
 
@@ -43,7 +43,7 @@ Open a module to see each method, its source line, what it calls and what uses i
 | [[Methods - apps-mobile-app-suggestions\|apps/mobile/app/suggestions.tsx]] | 11 |
 | [[Methods - apps-mobile-components-ScreenScaffold\|apps/mobile/components/ScreenScaffold.tsx]] | 1 |
 | [[Methods - apps-mobile-lib-add-item-form\|apps/mobile/lib/add-item-form.ts]] | 8 |
-| [[Methods - apps-mobile-lib-auth-session\|apps/mobile/lib/auth-session.tsx]] | 6 |
+| [[Methods - apps-mobile-lib-auth-session\|apps/mobile/lib/auth-session.tsx]] | 7 |
 | [[Methods - apps-mobile-lib-auth\|apps/mobile/lib/auth.ts]] | 3 |
 | [[Methods - apps-mobile-lib-items\|apps/mobile/lib/items.ts]] | 1 |
 | [[Methods - apps-mobile-lib-profile\|apps/mobile/lib/profile.ts]] | 1 |

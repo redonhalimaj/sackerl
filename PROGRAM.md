@@ -385,16 +385,17 @@ group is **The Team**; the Deputy coordinates detailed work, and the Chair contr
 review. Unanimous Team/Deputy recommendations receive reciprocal Chair review and require final
 unanimous agreement. This changes the operating model, not product stages or delivery gates.
 
-| Role                     | Model          | Reasoning | Why this tier                                                                                                            |
-| ------------------------ | -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Chair / Orchestrator     | `gpt-6-astra`  | `xhigh`   | Preferred expert review route; cross-program reasoning, reciprocal Council review and final integration                  |
-| Deputy                   | `gpt-5.5`      | `xhigh`   | Detailed work coordination, evidence synthesis, specialist assignments and unanimous recommendations                     |
-| Business Process Analyst | `gpt-5.6-luna` | `high`    | High-volume discovery synthesis and ticket refinement within Orchestrator-approved product boundaries                    |
-| Frontend                 | `gpt-5.6-luna` | `high`    | Bounded UI implementation and iteration after interaction rules and contracts are stable                                 |
-| Backend                  | `gpt-5.5`      | `xhigh`   | Complex schema evolution, transactional correctness, OCR/jobs, event data, and recommendation logic                      |
-| Infrastructure           | `gpt-5.5`      | `xhigh`   | High-impact architecture, security, privacy, provider, reliability, and data-retention decisions                         |
-| DevOps                   | `gpt-5.6-luna` | `high`    | Repeatable, bounded automation and deployment work derived from approved infrastructure decisions                        |
-| QA                       | `gpt-5.5`      | `high`    | Adversarial validation, cross-layer regression analysis, data-quality evaluation, and health/recommendation safety gates |
+| Role                     | Model          | Reasoning | Why this tier                                                                                                              |
+| ------------------------ | -------------- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Chair / Orchestrator     | `gpt-6-astra`  | `xhigh`   | Preferred expert review route; cross-program reasoning, reciprocal Council review and final integration                    |
+| Deputy                   | `gpt-5.5`      | `xhigh`   | Detailed work coordination, evidence synthesis, specialist assignments and unanimous recommendations                       |
+| Business Process Analyst | `gpt-5.6-luna` | `high`    | High-volume discovery synthesis and ticket refinement within Orchestrator-approved product boundaries                      |
+| Frontend                 | `gpt-5.6-luna` | `high`    | Bounded UI implementation and iteration after interaction rules and contracts are stable                                   |
+| Backend                  | `gpt-5.5`      | `xhigh`   | Complex schema evolution, transactional correctness, OCR/jobs, event data, and recommendation logic                        |
+| Infrastructure           | `gpt-5.5`      | `xhigh`   | High-impact architecture, security, privacy, provider, reliability, and data-retention decisions                           |
+| DevOps                   | `gpt-5.6-luna` | `high`    | Repeatable, bounded automation and deployment work derived from approved infrastructure decisions                          |
+| QA                       | `gpt-5.5`      | `high`    | Adversarial validation, cross-layer regression analysis, data-quality evaluation, and health/recommendation safety gates   |
+| Junior support           | `gpt-6-luna`   | `low`     | Cheapest launcher route for self-contained mechanical work; each assigning senior reviews its output and retains ownership |
 
 Routing policy:
 
@@ -403,6 +404,9 @@ Routing policy:
 - Luna work must start from stable acceptance criteria and contracts. Escalate unresolved architecture, security, privacy, transactional integrity, health safety, or recommendation policy to a GPT-5.5 specialist and the Orchestrator.
 - GPT-5.5 specialists own complex reasoning in their domain but do not broaden product scope. Cross-domain tradeoffs return to the Orchestrator.
 - The Chair performs expert refinement, integration and stage-gate judgment. The Deputy coordinates bounded specialist execution. Record the actual root model; a preferred route does not switch a running session.
+- The Chair, Deputy and all specialists may use Junior support for the easiest tasks with short
+  task-local context. The supervisor checks its diff and validation; the junior has no Council
+  vote or QA authority. Follow [TEAM.md](TEAM.md#junior-support) for boundaries and escalation.
 
 ### Orchestrator
 

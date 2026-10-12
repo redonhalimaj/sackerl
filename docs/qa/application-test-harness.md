@@ -1,7 +1,7 @@
 # Application test harness
 
 Ticket: SCKRL-906  
-Last reviewed: 2026-09-11
+Last reviewed: 2026-10-11 — version accuracy only; historical acceptance evidence dated 2026-09-11 is unchanged.
 
 Status: accepted locally after independent QA and integration review; SCKRL-906 Done.
 
@@ -11,7 +11,7 @@ Status: accepted locally after independent QA and integration review; SCKRL-906 
   `pnpm test --filter=@sackerl/web` from the workspace. The real `/household` route test exercises
   its unauthenticated response without contacting Supabase.
 - Mobile behavior/component tests: Vitest with the component's real function, a mounted
-  `react-test-renderer` 19.1.0 tree (matching mobile React 19.1.0), and provider-free React Native
+  `react-test-renderer` 19.2.3 tree (matching mobile React 19.2.3), and provider-free React Native
   host mocks. Run `pnpm --filter @sackerl/mobile test` locally or
   `pnpm test --filter=@sackerl/mobile` from the workspace. The focused checks cover add-item input
   normalization and the shared mobile screen shell, including a mounted rerender that asserts
