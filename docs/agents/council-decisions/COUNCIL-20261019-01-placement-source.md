@@ -534,3 +534,17 @@ bytes/hash are retained to preserve the accepted SQL input/evidence binding; no 
 for this cosmetic warning. Staged whitespace checking with `blank-at-eol,space-before-tab` passes;
 the default EOF warning is explicitly retained, not reported as a clean default staged check.
 Manifest-to-index hashes, ignored-file exclusion and credential-pattern checks also pass.
+
+### Publication outcome — 2026-11-02
+
+Source/evidence/testing handover commit `3e297f39b360a8ffaf9ad6ce098e43013d6a9ff5` was committed
+and pushed successfully via TTY to `origin/feature/SCKRL-311-astra-luna`. Git returned exit zero,
+created the remote feature branch and set tracking; local and upstream refs matched. All 72 staged
+paths were accounted for by the 69-entry publication snapshot plus excluded bookkeeping. Ignored
+archives/credentials were excluded. No PR, merge, deployment or hosted write was performed.
+
+The owner will perform the remaining testing using Claude. All delegated writers/reviewers have
+completed and implementation/test file ownership is released. Source-v4 acceptance and the
+user-directed v5-r2 documentation verification remain unchanged; SCKRL-311 stays Review and all
+remaining gates stay open. This status/Council-only checkpoint records the verified source push;
+its own commit is identified by Git history rather than a self-referential hash in this text.
