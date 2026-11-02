@@ -265,3 +265,24 @@ test.describe('/shopping-list/suggestions', () => {
     ).toBe('limit must be an integer.');
   });
 });
+
+test.describe('/shopping-list malformed JSON (SCKRL-912)', () => {
+  test('POST, batch and PATCH return 400 for a malformed body', async ({ owner, request }) => {
+    await setupHousehold(owner);
+    const existing = await createListItem(owner);
+    const headers = {
+      Authorization: `Bearer ${owner.user.accessToken}`,
+      'Content-Type': 'application/json',
+    };
+    // A string would be JSON-encoded by Playwright; send raw bytes so the body is malformed.
+    const data = Buffer.from('{not json');
+
+    for (const response of [
+      await request.post('/shopping-list', { data, headers }),
+      await request.post('/shopping-list/batch', { data, headers }),
+      await request.patch(`/shopping-list/${existing.id}`, { data, headers }),
+    ]) {
+      expect((await expectJson(response, 400)).error).toBe('Invalid JSON body.');
+    }
+  });
+});

@@ -2,6 +2,7 @@ import { getRequestAuthContext, jsonResponse } from '../../../lib/api-auth';
 import { getRequestHousehold } from '../../../lib/items';
 import { readCreateShoppingListBatchBody } from '../../../lib/shopping-list-payload';
 import { getWebShoppingListClient, shoppingListApiErrorResponse } from '../../../lib/shopping-list';
+import { readJsonBody } from '../../../lib/request-json';
 
 export async function POST(request: Request): Promise<Response> {
   const context = await getRequestAuthContext(request);
@@ -17,7 +18,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    const items = readCreateShoppingListBatchBody(await request.json());
+    const items = readCreateShoppingListBatchBody(await readJsonBody(request));
     const createdItems = await getWebShoppingListClient().createItemsBatch(context, {
       householdId: household.id,
       items,

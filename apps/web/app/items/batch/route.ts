@@ -1,6 +1,7 @@
 import { getRequestAuthContext, jsonResponse } from '../../../lib/api-auth';
 import { readCreateItemBatchBody } from '../../../lib/item-payload';
 import { getRequestHousehold, getWebItemsClient, itemApiErrorResponse } from '../../../lib/items';
+import { readJsonBody } from '../../../lib/request-json';
 
 export async function POST(request: Request): Promise<Response> {
   const context = await getRequestAuthContext(request);
@@ -18,7 +19,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const items = await getWebItemsClient().createItemsBatch(context, {
       householdId: household.id,
-      items: readCreateItemBatchBody(await request.json()),
+      items: readCreateItemBatchBody(await readJsonBody(request)),
     });
 
     return jsonResponse({ items }, 201);

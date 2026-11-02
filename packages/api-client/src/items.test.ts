@@ -29,7 +29,11 @@ import {
   mapItemExpiryProvenance,
   mapStockItemRow,
 } from './items';
-import type { ApiRequestError, AuthenticatedUserContext } from './profile';
+import {
+  ApiRequestError as ApiRequestErrorClass,
+  type ApiRequestError,
+  type AuthenticatedUserContext,
+} from './profile';
 
 const config = {
   anonKey: 'public-key',
@@ -1197,4 +1201,87 @@ describe('expiry provenance', () => {
       'order=fact_sequence.desc&select=',
     );
   });
+});
+
+// SCKRL-912 F4: unlike the receipt placement command, the items client has no idempotency key and
+// never sets `outcomeUnknown`. Uncertain mutation outcomes must still reach the caller as failures
+// (never as a silent success) so the UI can reload before any retry.
+describe('items client uncertain mutation outcomes', () => {
+  const batchInput = {
+    householdId: 'household-123',
+    items: [
+      {
+        categoryId: 'dairy',
+        name: 'Milk',
+        qtyUnit: 'l',
+        qtyValue: 1,
+        source: 'manual',
+        zoneId: 'zone-123',
+      },
+    ],
+  } as const;
+  const mutations = [
+    {
+      name: 'createItemsBatch',
+      run: (client: ReturnType<typeof createSackerlItemsClient>) =>
+        client.createItemsBatch(context, batchInput),
+    },
+    {
+      name: 'updateItem',
+      run: (client: ReturnType<typeof createSackerlItemsClient>) =>
+        client.updateItem(context, {
+          householdId: 'household-123',
+          id: 'item-123',
+          name: 'Oat milk',
+        }),
+    },
+    {
+      name: 'deleteItem',
+      run: (client: ReturnType<typeof createSackerlItemsClient>) =>
+        client.deleteItem(context, {
+          householdId: 'household-123',
+          id: 'item-123',
+          removalReason: 'used',
+          removedOn: '2026-06-01',
+        }),
+    },
+  ] as const;
+
+  it.each(mutations)(
+    '$name propagates a transport failure without outcomeUnknown',
+    async ({ run }) => {
+      const transportError = new TypeError('fetch failed');
+      const fetchMock = vi.fn<typeof fetch>().mockRejectedValue(transportError);
+      const client = createSackerlItemsClient(config, { fetch: fetchMock });
+
+      const failure = await run(client).then(
+        () => undefined,
+        (error: unknown) => error,
+      );
+
+      expect(failure).toBe(transportError);
+      expect(failure).not.toHaveProperty('outcomeUnknown');
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each(mutations)(
+    '$name surfaces a 5xx as ApiRequestError with its status and no outcomeUnknown',
+    async ({ run }) => {
+      const fetchMock = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(jsonResponse({ message: 'upstream unavailable' }, { status: 503 }));
+      const client = createSackerlItemsClient(config, { fetch: fetchMock });
+
+      const failure = await run(client).then(
+        () => undefined,
+        (error: unknown) => error,
+      );
+
+      expect(failure).toBeInstanceOf(ApiRequestErrorClass);
+      expect(failure).toMatchObject({ message: 'upstream unavailable', status: 503 });
+      expect(failure).not.toHaveProperty('outcomeUnknown');
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    },
+  );
 });

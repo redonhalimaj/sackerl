@@ -1,4 +1,8 @@
-import { createSackerlReceiptsClient, ReceiptPlacementApiError } from '@sackerl/api-client';
+import {
+  ApiRequestError,
+  createSackerlReceiptsClient,
+  ReceiptPlacementApiError,
+} from '@sackerl/api-client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -110,6 +114,45 @@ describe('receipt placement route', () => {
       code: 'RECEIPT_NOT_FOUND',
     });
   });
+
+  it('passes the PLACEMENT_CONFLICT code through as a 409 (SCKRL-912)', async () => {
+    mocks.finalize.mockRejectedValue(
+      new ReceiptPlacementApiError('Placement conflicted with a concurrent change.', 409, {
+        code: 'PLACEMENT_CONFLICT',
+      }),
+    );
+    const response = await POST(
+      new Request('https://local.test/receipts/id/placement', {
+        method: 'POST',
+        body: JSON.stringify(command),
+      }),
+      context,
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({
+      error: 'Placement conflicted with a concurrent change.',
+      code: 'PLACEMENT_CONFLICT',
+    });
+  });
+
+  it.each([409, 422])(
+    'does not invent a specific code for an uncoded %i ApiRequestError',
+    async (status) => {
+      mocks.finalize.mockRejectedValue(new ApiRequestError('Request conflicted.', status));
+      const response = await POST(
+        new Request('https://local.test/receipts/id/placement', {
+          method: 'POST',
+          body: JSON.stringify(command),
+        }),
+        context,
+      );
+
+      expect(response.status).toBe(status);
+      expect(response.headers.get('Cache-Control')).toBe('no-store');
+      await expect(response.json()).resolves.toEqual({ error: 'Request conflicted.' });
+    },
+  );
 
   it('returns only a stable 404 for a foreign-household receipt', async () => {
     mocks.finalize.mockRejectedValue(
