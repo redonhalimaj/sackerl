@@ -1,0 +1,69 @@
+{
+  "description": "Signed-out onboarding -> pick zones -> sign in with the synthetic user -> back to zones -> household created -> Home.",
+  "steps": [
+    {
+      "do": "launch"
+    },
+    {
+      "do": "tapIfPresent",
+      "id": "tabs.settings"
+    },
+    {
+      "do": "tapIfPresent",
+      "id": "settings.sign-out"
+    },
+    {
+      "do": "assertVisible",
+      "id": "onboarding.get-started",
+      "timeout": 60000
+    },
+    {
+      "do": "tap",
+      "id": "onboarding.get-started"
+    },
+    {
+      "do": "assertVisible",
+      "id": "storage-zones.row.fridge"
+    },
+    {
+      "do": "tap",
+      "id": "storage-zones.continue"
+    },
+    {
+      "do": "assertVisible",
+      "id": "auth.email"
+    },
+    {
+      "do": "type",
+      "id": "auth.email",
+      "text": "${E2E_EMAIL}"
+    },
+    {
+      "do": "type",
+      "id": "auth.password",
+      "text": "${E2E_PASSWORD}"
+    },
+    {
+      "do": "tap",
+      "id": "auth.submit"
+    },
+    {
+      "do": "assertVisible",
+      "id": "storage-zones.continue",
+      "timeout": 30000
+    },
+    {
+      "do": "assertEnabled",
+      "id": "storage-zones.continue"
+    },
+    {
+      "do": "tap",
+      "id": "storage-zones.continue"
+    },
+    {
+      "do": "assertVisible",
+      "id": "tabs.stock",
+      "timeout": 30000
+    }
+  ]
+}

@@ -79,10 +79,12 @@ function RoundIconButton({
   children,
   label,
   onPress,
+  testID,
 }: {
   readonly children: JSX.Element;
   readonly label: string;
   readonly onPress?: (() => void) | undefined;
+  readonly testID?: string | undefined;
 }): JSX.Element {
   return (
     <Pressable
@@ -90,6 +92,7 @@ function RoundIconButton({
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [styles.roundButton, pressed ? styles.pressed : null]}
+      testID={testID}
     >
       {children}
     </Pressable>
@@ -277,11 +280,11 @@ function ExpiringRow({
   const isUrgent = days <= 2;
 
   return (
-    <View style={styles.itemRow}>
+    <View style={styles.itemRow} testID={`expiring.row.${item.id}`}>
       <View style={styles.itemMainRow}>
         <CategoryTile category={item.categoryId} />
         <View style={styles.itemCopy}>
-          <Text numberOfLines={1} style={styles.itemName}>
+          <Text numberOfLines={1} style={styles.itemName} testID={`expiring.row.${item.id}.name`}>
             {item.name}
           </Text>
           <Text numberOfLines={1} style={styles.itemMeta}>
@@ -318,6 +321,7 @@ function ExpiringRow({
             styles.actionButtonUsed,
             pressed ? styles.pressed : null,
           ]}
+          testID={`expiring.row.${item.id}.used`}
         >
           <Text style={[styles.actionButtonText, styles.actionButtonTextUsed]}>Used</Text>
         </Pressable>
@@ -333,6 +337,7 @@ function ExpiringRow({
             styles.actionButtonSnooze,
             pressed ? styles.pressed : null,
           ]}
+          testID={`expiring.row.${item.id}.snooze`}
         >
           <Text style={styles.actionButtonText}>Snooze 2d</Text>
         </Pressable>
@@ -348,6 +353,7 @@ function ExpiringRow({
             styles.actionButtonCompost,
             pressed ? styles.pressed : null,
           ]}
+          testID={`expiring.row.${item.id}.compost`}
         >
           <Text style={[styles.actionButtonText, styles.actionButtonTextCompost]}>Compost</Text>
         </Pressable>
@@ -535,7 +541,7 @@ export default function ExpiringRoute(): JSX.Element {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={styles.screen} testID="expiring.screen">
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -551,10 +557,11 @@ export default function ExpiringRoute(): JSX.Element {
             onPress={() => {
               router.back();
             }}
+            testID="expiring.back"
           >
             <ChevronLeftIcon />
           </RoundIconButton>
-          <RoundIconButton label="Filter expiring items">
+          <RoundIconButton label="Filter expiring items" testID="expiring.filter">
             <FilterIcon />
           </RoundIconButton>
         </View>
@@ -572,8 +579,16 @@ export default function ExpiringRoute(): JSX.Element {
           <SummaryChip count={nextWeekCount} label="Next week" />
         </View>
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-        {statusMessage ? <Text style={styles.statusText}>{statusMessage}</Text> : null}
+        {errorMessage ? (
+          <Text style={styles.errorText} testID="expiring.error">
+            {errorMessage}
+          </Text>
+        ) : null}
+        {statusMessage ? (
+          <Text style={styles.statusText} testID="expiring.status">
+            {statusMessage}
+          </Text>
+        ) : null}
 
         {loadState === 'loading' ? (
           <View style={styles.loadingCard}>
@@ -582,7 +597,7 @@ export default function ExpiringRoute(): JSX.Element {
           </View>
         ) : groupedItems.length > 0 ? (
           groupedItems.map((bucket) => (
-            <View key={bucket.id} style={styles.section}>
+            <View key={bucket.id} style={styles.section} testID={`expiring.bucket.${bucket.id}`}>
               <Text style={styles.sectionEyebrow}>
                 {bucket.title} · {bucket.items.length}
               </Text>
@@ -609,7 +624,7 @@ export default function ExpiringRoute(): JSX.Element {
             </View>
           ))
         ) : (
-          <View style={styles.emptyCard}>
+          <View style={styles.emptyCard} testID="expiring.empty">
             <View aria-hidden style={styles.emptyGlyph}>
               <Text style={styles.emptyGlyphText}>✓</Text>
             </View>

@@ -508,6 +508,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.screen}
+      testID="receipt-review.screen"
     >
       <ScrollView
         pointerEvents={saveState === 'saving' ? 'none' : 'auto'}
@@ -524,6 +525,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
             accessibilityRole="button"
             onPress={() => router.back()}
             style={styles.backButton}
+            testID="receipt-review.back"
           >
             <ChevronLeftIcon />
           </Pressable>
@@ -533,16 +535,17 @@ export default function ReceiptReviewRoute(): JSX.Element {
             accessibilityRole="button"
             onPress={reloadReview}
             style={styles.reloadButton}
+            testID="receipt-review.reload"
           >
             <Text style={styles.reloadText}>↻</Text>
           </Pressable>
         </View>
 
         <View style={styles.headerBlock}>
-          <Text style={styles.title}>
+          <Text style={styles.title} testID="receipt-review.title">
             Review <Text style={styles.titleItalic}>{draft.length} items</Text>
           </Text>
-          <Text style={styles.subtitle}>
+          <Text style={styles.subtitle} testID="receipt-review.store">
             {review.receipt.storeName ?? 'Receipt'} ·{' '}
             {formatReceiptDate(review.receipt.purchasedOn)} · {formatTotal(review)}
           </Text>
@@ -552,30 +555,38 @@ export default function ReceiptReviewRoute(): JSX.Element {
         </View>
 
         <View style={styles.chipRow}>
-          <View style={styles.sageChip}>
+          <View style={styles.sageChip} testID="receipt-review.confident-count">
             <Text style={styles.sageChipText}>✓ {confidentCount} confident</Text>
           </View>
-          <View style={styles.amberChip}>
+          <View style={styles.amberChip} testID="receipt-review.needs-review-count">
             <Text style={styles.amberChipText}>{needsReviewCount} needs review</Text>
           </View>
         </View>
 
         {conflict ? (
-          <View style={styles.conflictCard}>
+          <View style={styles.conflictCard} testID="receipt-review.conflict">
             <Text style={styles.conflictText}>{statusMessage}</Text>
-            <Pressable accessibilityRole="button" onPress={reloadReview}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={reloadReview}
+              testID="receipt-review.conflict-reload"
+            >
               <Text style={styles.conflictAction}>Reload latest review</Text>
             </Pressable>
           </View>
         ) : null}
         {statusMessage && !conflict ? (
-          <Text accessibilityLiveRegion="polite" style={styles.statusText}>
+          <Text
+            accessibilityLiveRegion="polite"
+            style={styles.statusText}
+            testID="receipt-review.status"
+          >
             {statusMessage}
           </Text>
         ) : null}
 
         {draft.length === 0 ? (
-          <View style={styles.emptyCard}>
+          <View style={styles.emptyCard} testID="receipt-review.empty">
             <Text style={styles.emptyTitle}>No items yet</Text>
             <Text style={styles.emptyBody}>
               Add the groceries you want to keep from this receipt.
@@ -585,30 +596,37 @@ export default function ReceiptReviewRoute(): JSX.Element {
                 accessibilityRole="button"
                 onPress={handleAddManualLine}
                 style={styles.addRow}
+                testID="receipt-review.empty-add"
               >
                 <Text style={styles.addRowText}>＋ Add missing item</Text>
               </Pressable>
             ) : null}
           </View>
         ) : (
-          <View style={styles.listCard}>
-            {draft.map((line) => {
+          <View style={styles.listCard} testID="receipt-review.lines">
+            {draft.map((line, index) => {
               const key = lineKey(line);
               const lineNeedsReview = line.reviewState !== 'reviewed';
               return (
                 <View
                   key={key}
                   style={[styles.lineRow, !line.included ? styles.lineRowExcluded : null]}
+                  testID={`receipt-review.line.${index}`}
                 >
                   <Pressable
                     accessibilityLabel={`Edit ${line.name || 'receipt item'}`}
                     accessibilityRole="button"
                     onPress={() => setSelectedLineKey(key)}
                     style={styles.lineMain}
+                    testID={`receipt-review.line.${index}.edit`}
                   >
                     <CategoryTile category={line.categoryId} />
                     <View style={styles.lineCopy}>
-                      <Text numberOfLines={1} style={styles.lineName}>
+                      <Text
+                        numberOfLines={1}
+                        style={styles.lineName}
+                        testID={`receipt-review.line.${index}.name`}
+                      >
                         {line.name || 'Unnamed item'}
                         {lineNeedsReview ? <Text style={styles.reviewDot}> · check</Text> : null}
                       </Text>
@@ -616,7 +634,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
                         {line.rawText ??
                           (line.source === 'manual' ? 'Added manually' : 'No parser text')}
                       </Text>
-                      <Text style={styles.lineMeta}>
+                      <Text style={styles.lineMeta} testID={`receipt-review.line.${index}.meta`}>
                         {line.qtyValueText || '—'} {line.qtyUnit ?? 'unit'} ·{' '}
                         {line.included ? 'included' : 'excluded'} · {expirySummary(line)}
                       </Text>
@@ -636,6 +654,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
                           setDraft((lines) => setDraftLineIncluded(lines, key, !line.included));
                       }}
                       style={styles.smallAction}
+                      testID={`receipt-review.line.${index}.toggle-include`}
                     >
                       <Text style={styles.smallActionText}>
                         {line.included ? 'Exclude' : 'Include'}
@@ -663,6 +682,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
                         styles.reviewButton,
                         lineNeedsReview ? styles.reviewButtonAmber : null,
                       ]}
+                      testID={`receipt-review.line.${index}.mark-reviewed`}
                     >
                       <Text
                         style={[
@@ -682,6 +702,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
                 accessibilityRole="button"
                 onPress={handleAddManualLine}
                 style={styles.addRow}
+                testID="receipt-review.add-line"
               >
                 <Text style={styles.addRowText}>＋ Add missing item</Text>
               </Pressable>
@@ -701,6 +722,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
             accessibilityState={{ disabled: true }}
             disabled
             style={styles.disabledPlacement}
+            testID="receipt-review.continue-placement"
           >
             <Text style={styles.disabledPlacementText}>Continue to placement</Text>
           </Pressable>
@@ -714,6 +736,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
           disabled={saveState === 'saving'}
           onPress={() => void handleSaveReview()}
           style={[styles.saveButton, saveState === 'saving' ? styles.buttonDisabled : null]}
+          testID="receipt-review.save"
         >
           {saveState === 'saving' ? (
             <ActivityIndicator color={colors.ink} />
@@ -734,6 +757,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
             accessibilityRole="button"
             onPress={handleDoneForNow}
             style={styles.doneForNowButton}
+            testID="receipt-review.done-for-now"
           >
             <Text style={styles.doneForNowText}>Done for now</Text>
           </Pressable>
@@ -749,6 +773,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalBackdrop}
+          testID="receipt-review.edit"
         >
           <ScrollView
             keyboardShouldPersistTaps="handled"
@@ -769,6 +794,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
               placeholder="e.g. Milk"
               placeholderTextColor={colors.muteSoft}
               style={styles.input}
+              testID="receipt-review.edit.name"
               value={selectedLine?.name ?? ''}
             />
             <Text style={styles.fieldLabel}>Quantity</Text>
@@ -782,6 +808,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
                 placeholder="1"
                 placeholderTextColor={colors.muteSoft}
                 style={[styles.input, styles.quantityInput]}
+                testID="receipt-review.edit.quantity"
                 value={selectedLine?.qtyValueText ?? ''}
               />
               <ScrollView
@@ -802,6 +829,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
                       styles.unitChip,
                       selectedLine?.qtyUnit === unit ? styles.unitChipSelected : null,
                     ]}
+                    testID={`receipt-review.edit.unit.${unit}`}
                   >
                     <Text
                       style={[
@@ -834,6 +862,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
                     styles.categoryChoice,
                     selectedLine?.categoryId === category.id ? styles.categoryChoiceSelected : null,
                   ]}
+                  testID={`receipt-review.edit.category.${category.id}`}
                 >
                   <CategoryTile category={category.id} />
                   <Text style={styles.categoryChoiceText}>{category.label}</Text>
@@ -848,6 +877,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
               accessibilityLabel="Expiry date choice"
               accessibilityRole="radiogroup"
               style={styles.expiryChoices}
+              testID="receipt-review.edit.expiry-choices"
             >
               {(
                 [
@@ -876,6 +906,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
                     styles.expiryChoice,
                     selectedLine?.expiryState === state ? styles.expiryChoiceSelected : null,
                   ]}
+                  testID={`receipt-review.edit.expiry-state.${state}`}
                 >
                   <Text style={styles.expiryChoiceText}>{label}</Text>
                 </Pressable>
@@ -900,6 +931,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
                   placeholder="YYYY-MM-DD"
                   placeholderTextColor={colors.muteSoft}
                   style={styles.input}
+                  testID="receipt-review.edit.expiry"
                   value={selectedLine.expiryDateInput}
                 />
                 {normaliseReceiptExpiryDate(selectedLine.expiryDateInput) ? (
@@ -913,7 +945,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
               </>
             ) : null}
             {selectedLine ? (
-              <View style={styles.modalErrors}>
+              <View style={styles.modalErrors} testID="receipt-review.edit.errors">
                 <DraftErrorText error={errorFor(lineKey(selectedLine), 'name')} />
                 <DraftErrorText error={errorFor(lineKey(selectedLine), 'qtyValue')} />
                 <DraftErrorText error={errorFor(lineKey(selectedLine), 'qtyUnit')} />
@@ -926,6 +958,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
                 accessibilityRole="button"
                 onPress={() => setSelectedLineKey(null)}
                 style={styles.cancelButton}
+                testID="receipt-review.edit.close"
               >
                 <Text style={styles.cancelText}>Close</Text>
               </Pressable>
@@ -939,6 +972,7 @@ export default function ReceiptReviewRoute(): JSX.Element {
                   setSelectedLineKey(null);
                 }}
                 style={styles.modalSaveButton}
+                testID="receipt-review.edit.mark-reviewed"
               >
                 <Text style={styles.modalSaveText}>Mark reviewed</Text>
               </Pressable>
@@ -960,13 +994,18 @@ function StateCard(props: {
   readonly title: string;
 }): JSX.Element {
   return (
-    <View style={styles.stateScreen}>
+    <View style={styles.stateScreen} testID="receipt-review.state">
       <View style={styles.stateCard}>
         {props.busy ? <ActivityIndicator color={colors.sageDeep} /> : null}
         <Text style={styles.stateTitle}>{props.title}</Text>
         <Text style={styles.stateBody}>{props.body}</Text>
         {props.actionLabel && props.onAction ? (
-          <Pressable accessibilityRole="button" onPress={props.onAction} style={styles.stateAction}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={props.onAction}
+            style={styles.stateAction}
+            testID="receipt-review.state-action"
+          >
             <Text style={styles.stateActionText}>{props.actionLabel}</Text>
           </Pressable>
         ) : null}
@@ -975,6 +1014,7 @@ function StateCard(props: {
             accessibilityRole="button"
             onPress={props.onSecondary}
             style={styles.stateSecondary}
+            testID="receipt-review.state-secondary"
           >
             <Text style={styles.stateSecondaryText}>{props.secondaryLabel}</Text>
           </Pressable>

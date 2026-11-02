@@ -1,0 +1,9 @@
+{
+  "description": "Home shows the chosen storage zones.",
+  "steps": [
+    { "do": "tap", "id": "tabs.home" },
+    { "do": "assertVisible", "id": "home.storage.fridge" },
+    { "do": "assertVisible", "id": "home.storage.pantry" },
+    { "do": "screenshot", "name": "home-zones" }
+  ]
+}

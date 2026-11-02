@@ -1,0 +1,11 @@
+{
+  "description": "Suggestions list -> open a recipe.",
+  "steps": [
+    { "do": "open", "route": "/suggestions" },
+    { "do": "assertVisible", "id": "suggestions.list", "timeout": 20000 },
+    { "do": "screenshot", "name": "suggestions" },
+    { "do": "tap", "id": "suggestions.card.*.show" },
+    { "do": "assertVisible", "id": "recipe.title", "timeout": 20000 },
+    { "do": "screenshot", "name": "recipe" }
+  ]
+}

@@ -106,7 +106,11 @@ export default function SettingsRoute() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.screen} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={styles.screen}
+      keyboardShouldPersistTaps="handled"
+      testID="settings.screen"
+    >
       <Logo />
       <View style={styles.content}>
         <Text style={styles.eyebrow}>Settings</Text>
@@ -134,6 +138,7 @@ export default function SettingsRoute() {
                 }}
                 placeholder="Europe/Vienna"
                 style={styles.input}
+                testID="settings.time-zone"
                 value={calendarInput}
               />
               <Text style={styles.copy}>
@@ -150,6 +155,7 @@ export default function SettingsRoute() {
                     void saveCalendar();
                   }}
                   style={styles.button}
+                  testID="settings.save-calendar"
                 >
                   <Text style={styles.buttonText}>{isSaving ? 'Saving…' : 'Save calendar'}</Text>
                 </Pressable>
@@ -160,7 +166,7 @@ export default function SettingsRoute() {
             <Text style={styles.copy}>No household is available yet.</Text>
           ) : null}
           {message ? (
-            <Text accessibilityLiveRegion="polite" style={styles.copy}>
+            <Text accessibilityLiveRegion="polite" style={styles.copy} testID="settings.message">
               {message}
             </Text>
           ) : null}
@@ -169,6 +175,7 @@ export default function SettingsRoute() {
               accessibilityRole="button"
               onPress={() => setRetry((value) => value + 1)}
               style={styles.button}
+              testID="settings.retry"
             >
               <Text style={styles.buttonText}>Retry loading settings</Text>
             </Pressable>
@@ -180,6 +187,7 @@ export default function SettingsRoute() {
             void signOut();
           }}
           style={styles.button}
+          testID="settings.sign-out"
         >
           <Text style={styles.buttonText}>Sign out</Text>
         </Pressable>

@@ -182,8 +182,18 @@ async function loadWritableZones(
   return { household, zones: resolveZoneOptions(zones, household.zones) };
 }
 
-function FieldError({ message }: { readonly message: string | undefined }): JSX.Element | null {
-  return message ? <Text style={styles.errorText}>{message}</Text> : null;
+function FieldError({
+  message,
+  testID,
+}: {
+  readonly message: string | undefined;
+  readonly testID?: string;
+}): JSX.Element | null {
+  return message ? (
+    <Text style={styles.errorText} testID={testID}>
+      {message}
+    </Text>
+  ) : null;
 }
 
 export default function AddItemRoute(): JSX.Element {
@@ -371,6 +381,7 @@ export default function AddItemRoute(): JSX.Element {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.screen}
+      testID="add-item.screen"
     >
       <ScrollView
         contentContainerStyle={[
@@ -391,6 +402,7 @@ export default function AddItemRoute(): JSX.Element {
               router.back();
             }}
             style={({ pressed }) => [styles.roundButton, pressed ? styles.pressed : null]}
+            testID="add-item.back"
           >
             <ChevronLeftIcon />
           </Pressable>
@@ -414,9 +426,10 @@ export default function AddItemRoute(): JSX.Element {
               placeholderTextColor={colors.muteSoft}
               returnKeyType="next"
               style={styles.nameInput}
+              testID="add-item.name"
               value={name}
             />
-            <FieldError message={errors.name} />
+            <FieldError message={errors.name} testID="add-item.name-error" />
           </View>
 
           <View style={styles.fieldGroup}>
@@ -440,6 +453,7 @@ export default function AddItemRoute(): JSX.Element {
                       setCategoryId(category.id);
                     }}
                     style={[styles.categoryChip, isSelected ? styles.categoryChipSelected : null]}
+                    testID={`add-item.category.${category.id}`}
                   >
                     <CategoryTile category={category.id} />
                     <Text style={styles.categoryChipText}>{category.label}</Text>
@@ -465,6 +479,7 @@ export default function AddItemRoute(): JSX.Element {
                   updateQuantity(quantityValue - quantityStep);
                 }}
                 style={({ pressed }) => [styles.stepButton, pressed ? styles.pressed : null]}
+                testID="add-item.quantity-decrease"
               >
                 <Text style={styles.stepButtonText}>-</Text>
               </Pressable>
@@ -478,6 +493,7 @@ export default function AddItemRoute(): JSX.Element {
                   }
                 }}
                 style={styles.quantityInput}
+                testID="add-item.quantity"
                 value={quantityInput}
               />
               <Pressable
@@ -488,11 +504,12 @@ export default function AddItemRoute(): JSX.Element {
                   updateQuantity(quantityValue + quantityStep);
                 }}
                 style={({ pressed }) => [styles.stepButton, pressed ? styles.pressed : null]}
+                testID="add-item.quantity-increase"
               >
                 <Text style={styles.stepButtonText}>+</Text>
               </Pressable>
             </View>
-            <FieldError message={errors.quantity} />
+            <FieldError message={errors.quantity} testID="add-item.quantity-error" />
 
             <View style={styles.segmentedRow}>
               {itemQuantityUnits.map((unit) => {
@@ -509,6 +526,7 @@ export default function AddItemRoute(): JSX.Element {
                       setQuantityUnit(unit);
                     }}
                     style={[styles.segment, isSelected ? styles.segmentSelected : null]}
+                    testID={`add-item.unit.${unit}`}
                   >
                     <Text
                       style={[styles.segmentText, isSelected ? styles.segmentTextSelected : null]}
@@ -529,7 +547,7 @@ export default function AddItemRoute(): JSX.Element {
                 <Text style={styles.metaText}>Loading zones</Text>
               </View>
             ) : (
-              <View style={styles.zoneGrid}>
+              <View style={styles.zoneGrid} testID="add-item.zones">
                 {zoneOptions.map((zone) => {
                   const isSelected = zone.key === selectedZoneKey;
 
@@ -547,6 +565,7 @@ export default function AddItemRoute(): JSX.Element {
                         }
                       }}
                       style={[styles.zoneSegment, isSelected ? styles.zoneSegmentSelected : null]}
+                      testID={`add-item.zone.${zone.key}`}
                     >
                       <Text
                         style={[
@@ -561,7 +580,7 @@ export default function AddItemRoute(): JSX.Element {
                 })}
               </View>
             )}
-            <FieldError message={errors.zone} />
+            <FieldError message={errors.zone} testID="add-item.zone-error" />
           </View>
 
           <View style={styles.fieldGroup}>
@@ -584,6 +603,7 @@ export default function AddItemRoute(): JSX.Element {
               placeholder="YYYY-MM-DD"
               placeholderTextColor={colors.muteSoft}
               style={styles.expiryInput}
+              testID="add-item.expiry"
               value={expiryInput}
             />
             <Text style={styles.metaText}>
@@ -591,10 +611,14 @@ export default function AddItemRoute(): JSX.Element {
                 ? 'Adding this item confirms the date you entered.'
                 : `Estimated from ${selectedCategory.label.toLowerCase()} in ${(selectedZone?.label ?? 'storage').toLowerCase()}. Type a date to confirm it; leaving this blank uses the estimate.`}
             </Text>
-            <FieldError message={errors.expiry} />
+            <FieldError message={errors.expiry} testID="add-item.expiry-error" />
           </View>
 
-          {statusMessage ? <Text style={styles.formStatusText}>{statusMessage}</Text> : null}
+          {statusMessage ? (
+            <Text style={styles.formStatusText} testID="add-item.status">
+              {statusMessage}
+            </Text>
+          ) : null}
 
           <View style={styles.actionRow}>
             <Pressable
@@ -604,6 +628,7 @@ export default function AddItemRoute(): JSX.Element {
                 router.back();
               }}
               style={({ pressed }) => [styles.cancelButton, pressed ? styles.pressed : null]}
+              testID="add-item.cancel"
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </Pressable>
@@ -618,6 +643,7 @@ export default function AddItemRoute(): JSX.Element {
                 isLocked ? styles.submitButtonDisabled : null,
                 pressed ? styles.submitButtonPressed : null,
               ]}
+              testID="add-item.save"
             >
               {isSaving ? (
                 <ActivityIndicator color={colors.ink} size="small" />

@@ -11,14 +11,15 @@ type TabConfig = {
   readonly label: string;
   readonly name: string;
   readonly primary?: boolean | undefined;
+  readonly testID: string;
 };
 
 const tabs: readonly TabConfig[] = [
-  { icon: 'home', label: 'Home', name: 'index' },
-  { icon: 'grid', label: 'Stock', name: 'stock' },
-  { icon: 'scan', label: 'Scan', name: 'scan', primary: true },
-  { icon: 'clock', label: 'Expiring', name: 'expiring' },
-  { icon: 'settings', label: 'Settings', name: 'settings' },
+  { icon: 'home', label: 'Home', name: 'index', testID: 'tabs.home' },
+  { icon: 'grid', label: 'Stock', name: 'stock', testID: 'tabs.stock' },
+  { icon: 'scan', label: 'Scan', name: 'scan', primary: true, testID: 'tabs.scan' },
+  { icon: 'clock', label: 'Expiring', name: 'expiring', testID: 'tabs.expiring' },
+  { icon: 'settings', label: 'Settings', name: 'settings', testID: 'tabs.settings' },
 ];
 
 const typography =
@@ -104,6 +105,7 @@ function SackerlTabBar({ descriptors, navigation, state }: BottomTabBarProps): J
               }
             }}
             style={[styles.tab, tab.primary ? styles.primaryTab : null]}
+            testID={tab.testID}
           >
             {tab.primary ? (
               <View style={styles.fab}>

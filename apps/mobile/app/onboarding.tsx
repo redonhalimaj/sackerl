@@ -45,7 +45,7 @@ export default function OnboardingRoute(): JSX.Element {
   const router = useRouter();
 
   return (
-    <View style={styles.screen}>
+    <View style={styles.screen} testID="onboarding.screen">
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -98,6 +98,7 @@ export default function OnboardingRoute(): JSX.Element {
             router.push('/storage-zones');
           }}
           style={styles.primaryButton}
+          testID="onboarding.get-started"
         >
           <Text style={styles.primaryButtonText}>Get started</Text>
           <ArrowRight />
@@ -109,6 +110,7 @@ export default function OnboardingRoute(): JSX.Element {
             router.push('/auth');
           }}
           style={styles.secondaryButton}
+          testID="onboarding.have-account"
         >
           <Text style={styles.secondaryButtonText}>I already have an account</Text>
         </Pressable>

@@ -122,10 +122,12 @@ function RoundIconButton({
   children,
   label,
   onPress,
+  testID,
 }: {
   readonly children: JSX.Element;
   readonly label: string;
   readonly onPress?: (() => void) | undefined;
+  readonly testID?: string | undefined;
 }): JSX.Element {
   return (
     <Pressable
@@ -133,6 +135,7 @@ function RoundIconButton({
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [styles.roundButton, pressed ? styles.pressed : null]}
+      testID={testID}
     >
       {children}
     </Pressable>
@@ -366,10 +369,12 @@ function LocationRow({
   isLast,
   item,
   onPress,
+  testID,
 }: {
   readonly isLast: boolean;
   readonly item: StockItem;
   readonly onPress: () => void;
+  readonly testID?: string | undefined;
 }): JSX.Element {
   const isUrgent = item.expiresOn ? daysUntilIsoDate(item.expiresOn) <= 2 : false;
 
@@ -385,10 +390,15 @@ function LocationRow({
         isLast ? null : styles.itemRowDivider,
         pressed ? styles.itemRowPressed : null,
       ]}
+      testID={testID}
     >
       <CategoryTile category={item.categoryId} />
       <View style={styles.itemCopy}>
-        <Text numberOfLines={1} style={styles.itemName}>
+        <Text
+          numberOfLines={1}
+          style={styles.itemName}
+          testID={testID ? `${testID}.name` : undefined}
+        >
           {item.name}
         </Text>
         <Text numberOfLines={1} style={styles.itemMeta}>
@@ -774,7 +784,7 @@ export default function StockRoute(): JSX.Element {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={styles.screen} testID="stock.screen">
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -790,10 +800,11 @@ export default function StockRoute(): JSX.Element {
             onPress={() => {
               router.back();
             }}
+            testID="stock.back"
           >
             <ChevronLeftIcon />
           </RoundIconButton>
-          <RoundIconButton label="More storage actions">
+          <RoundIconButton label="More storage actions" testID="stock.more-actions">
             <DotsIcon />
           </RoundIconButton>
         </View>
@@ -835,6 +846,7 @@ export default function StockRoute(): JSX.Element {
                     router.setParams({ zone: zone.key });
                   }}
                   style={[styles.zoneChip, isSelected ? styles.zoneChipSelected : null]}
+                  testID={`stock.zone-chip.${zone.key}`}
                 >
                   <Text
                     style={[styles.zoneChipText, isSelected ? styles.zoneChipTextSelected : null]}
@@ -860,6 +872,7 @@ export default function StockRoute(): JSX.Element {
               setSelectedCategory('all');
             }}
             style={[styles.categoryChip, selectedCategory === 'all' ? styles.chipSelected : null]}
+            testID="stock.category-chip.all"
           >
             <Text
               style={[
@@ -883,6 +896,7 @@ export default function StockRoute(): JSX.Element {
                   setSelectedCategory(category.id);
                 }}
                 style={[styles.categoryChip, isSelected ? styles.chipSelected : null]}
+                testID={`stock.category-chip.${category.id}`}
               >
                 <Text
                   style={[styles.categoryChipText, isSelected ? styles.chipSelectedText : null]}
@@ -894,7 +908,11 @@ export default function StockRoute(): JSX.Element {
           })}
         </ScrollView>
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <Text style={styles.errorText} testID="stock.error">
+            {errorMessage}
+          </Text>
+        ) : null}
 
         {loadState === 'loading' ? (
           <View style={styles.loadingCard}>
@@ -902,7 +920,7 @@ export default function StockRoute(): JSX.Element {
             <Text style={styles.loadingText}>Loading {activeZone.label}</Text>
           </View>
         ) : !hasItems ? (
-          <View style={styles.emptyCard}>
+          <View style={styles.emptyCard} testID="stock.empty">
             <Text style={styles.emptyTitle}>Nothing in your {activeZone.label} yet.</Text>
             <Text style={styles.emptyBody}>
               Add items manually or scan a receipt to fill this zone.
@@ -913,12 +931,13 @@ export default function StockRoute(): JSX.Element {
                 router.push({ pathname: '/add-item', params: { zone: activeZone.key } });
               }}
               style={({ pressed }) => [styles.inlineAddButton, pressed ? styles.pressed : null]}
+              testID="stock.empty-add"
             >
               <Text style={styles.inlineAddButtonText}>Add item</Text>
             </Pressable>
           </View>
         ) : !hasFilteredItems ? (
-          <View style={styles.emptyCard}>
+          <View style={styles.emptyCard} testID="stock.empty-filtered">
             <Text style={styles.emptyTitle}>
               No {selectedCategoryLabel} in your {activeZone.label}.
             </Text>
@@ -927,7 +946,7 @@ export default function StockRoute(): JSX.Element {
         ) : (
           <>
             {useSoonItems.length > 0 ? (
-              <View style={styles.useSoonSection}>
+              <View style={styles.useSoonSection} testID="stock.use-soon-list">
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionEyebrow}>Use soon</Text>
                   <View style={styles.sortLabel}>
@@ -944,6 +963,7 @@ export default function StockRoute(): JSX.Element {
                       onPress={() => {
                         openItemDetail(item);
                       }}
+                      testID={`stock.row.${item.id}`}
                     />
                   ))}
                 </View>
@@ -960,6 +980,7 @@ export default function StockRoute(): JSX.Element {
                     onPress={() => {
                       openItemDetail(item);
                     }}
+                    testID={`stock.row.${item.id}`}
                   />
                 ))}
               </SectionCard>
@@ -980,6 +1001,7 @@ export default function StockRoute(): JSX.Element {
             { bottom: 34 },
             pressed ? styles.addFabPressed : null,
           ]}
+          testID="stock.add"
         >
           <PlusIcon />
         </Pressable>
@@ -1004,13 +1026,14 @@ export default function StockRoute(): JSX.Element {
               closeItemDetail();
             }}
             style={styles.modalBackdrop}
+            testID="stock.detail.backdrop"
           />
-          <View style={styles.detailSheet}>
+          <View style={styles.detailSheet} testID="stock.detail">
             <View style={styles.sheetHandle} />
             <View style={styles.sheetHeader}>
               <View style={styles.sheetTitleGroup}>
                 <Text style={styles.sheetEyebrow}>Item detail</Text>
-                <Text numberOfLines={1} style={styles.sheetTitle}>
+                <Text numberOfLines={1} style={styles.sheetTitle} testID="stock.detail.title">
                   {selectedItem?.name ?? 'Item'}
                 </Text>
               </View>
@@ -1022,6 +1045,7 @@ export default function StockRoute(): JSX.Element {
                   closeItemDetail();
                 }}
                 style={({ pressed }) => [styles.sheetCloseButton, pressed ? styles.pressed : null]}
+                testID="stock.detail.close"
               >
                 <XIcon />
               </Pressable>
@@ -1043,9 +1067,14 @@ export default function StockRoute(): JSX.Element {
                     }
                   }}
                   style={styles.detailInput}
+                  testID="stock.detail.name"
                   value={editName}
                 />
-                {editErrors.name ? <Text style={styles.detailError}>{editErrors.name}</Text> : null}
+                {editErrors.name ? (
+                  <Text style={styles.detailError} testID="stock.detail.name-error">
+                    {editErrors.name}
+                  </Text>
+                ) : null}
               </View>
 
               <View style={styles.detailField}>
@@ -1072,6 +1101,7 @@ export default function StockRoute(): JSX.Element {
                           styles.editCategoryChip,
                           isSelected ? styles.editCategoryChipSelected : null,
                         ]}
+                        testID={`stock.detail.category.${category.id}`}
                       >
                         <CategoryTile category={category.id} />
                         <Text style={styles.editCategoryChipText}>{category.label}</Text>
@@ -1095,6 +1125,7 @@ export default function StockRoute(): JSX.Element {
                       styles.editStepButton,
                       pressed ? styles.pressed : null,
                     ]}
+                    testID="stock.detail.quantity-decrease"
                   >
                     <Text style={styles.editStepButtonText}>-</Text>
                   </Pressable>
@@ -1108,6 +1139,7 @@ export default function StockRoute(): JSX.Element {
                       }
                     }}
                     style={styles.editQuantityInput}
+                    testID="stock.detail.quantity"
                     value={editQuantityInput}
                   />
                   <Pressable
@@ -1121,12 +1153,15 @@ export default function StockRoute(): JSX.Element {
                       styles.editStepButton,
                       pressed ? styles.pressed : null,
                     ]}
+                    testID="stock.detail.quantity-increase"
                   >
                     <Text style={styles.editStepButtonText}>+</Text>
                   </Pressable>
                 </View>
                 {editErrors.quantity ? (
-                  <Text style={styles.detailError}>{editErrors.quantity}</Text>
+                  <Text style={styles.detailError} testID="stock.detail.quantity-error">
+                    {editErrors.quantity}
+                  </Text>
                 ) : null}
 
                 <View style={styles.editSegmentRow}>
@@ -1144,6 +1179,7 @@ export default function StockRoute(): JSX.Element {
                           setEditQuantityUnit(unit);
                         }}
                         style={[styles.editSegment, isSelected ? styles.editSegmentSelected : null]}
+                        testID={`stock.detail.unit.${unit}`}
                       >
                         <Text
                           style={[
@@ -1174,6 +1210,7 @@ export default function StockRoute(): JSX.Element {
                       setIsMoveMode((value) => !value);
                     }}
                     style={({ pressed }) => [styles.moveButton, pressed ? styles.pressed : null]}
+                    testID="stock.detail.move"
                   >
                     <Text style={styles.moveButtonText}>Move to...</Text>
                   </Pressable>
@@ -1200,6 +1237,7 @@ export default function StockRoute(): JSX.Element {
                             styles.editZoneChip,
                             isSelected ? styles.editZoneChipSelected : null,
                           ]}
+                          testID={`stock.detail.zone.${zone.key}`}
                         >
                           <Text
                             style={[
@@ -1214,7 +1252,11 @@ export default function StockRoute(): JSX.Element {
                     })}
                   </View>
                 ) : null}
-                {editErrors.zone ? <Text style={styles.detailError}>{editErrors.zone}</Text> : null}
+                {editErrors.zone ? (
+                  <Text style={styles.detailError} testID="stock.detail.zone-error">
+                    {editErrors.zone}
+                  </Text>
+                ) : null}
               </View>
 
               <View style={styles.detailField}>
@@ -1232,13 +1274,16 @@ export default function StockRoute(): JSX.Element {
                   placeholder="YYYY-MM-DD"
                   placeholderTextColor={colors.muteSoft}
                   style={styles.detailInput}
+                  testID="stock.detail.expiry"
                   value={editExpiryInput}
                 />
                 <Text style={styles.detailMeta}>
                   Type a date to confirm it, or leave blank to clear this expiry date.
                 </Text>
                 {editErrors.expiry ? (
-                  <Text style={styles.detailError}>{editErrors.expiry}</Text>
+                  <Text style={styles.detailError} testID="stock.detail.expiry-error">
+                    {editErrors.expiry}
+                  </Text>
                 ) : null}
               </View>
 
@@ -1260,7 +1305,9 @@ export default function StockRoute(): JSX.Element {
               </View>
 
               {detailErrorMessage ? (
-                <Text style={styles.detailStatusText}>{detailErrorMessage}</Text>
+                <Text style={styles.detailStatusText} testID="stock.detail.status">
+                  {detailErrorMessage}
+                </Text>
               ) : null}
 
               <View style={styles.sheetActions}>
@@ -1275,6 +1322,7 @@ export default function StockRoute(): JSX.Element {
                     isDetailSaving ? styles.saveButtonDisabled : null,
                     pressed ? styles.saveButtonPressed : null,
                   ]}
+                  testID="stock.detail.save"
                 >
                   {isDetailSaving ? (
                     <ActivityIndicator color={colors.ink} size="small" />
@@ -1292,6 +1340,7 @@ export default function StockRoute(): JSX.Element {
                       styles.secondarySheetButton,
                       pressed ? styles.pressed : null,
                     ]}
+                    testID="stock.detail.consume"
                   >
                     <Text style={styles.secondarySheetButtonText}>Mark as used</Text>
                   </Pressable>
@@ -1303,6 +1352,7 @@ export default function StockRoute(): JSX.Element {
                       styles.deleteSheetButton,
                       pressed ? styles.pressed : null,
                     ]}
+                    testID="stock.detail.delete"
                   >
                     <Text style={styles.deleteSheetButtonText}>Delete</Text>
                   </Pressable>

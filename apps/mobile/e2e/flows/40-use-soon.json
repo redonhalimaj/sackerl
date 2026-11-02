@@ -1,0 +1,11 @@
+{
+  "description": "The item expiring tomorrow shows in Expiring; mark it used.",
+  "steps": [
+    { "do": "tap", "id": "tabs.expiring" },
+    { "do": "assertVisible", "id": "expiring.row.*", "timeout": 20000 },
+    { "do": "assertText", "text": "E2E Milk" },
+    { "do": "tap", "id": "expiring.row.*.used" },
+    { "do": "tapIfPresent", "id": "Mark as used" },
+    { "do": "assertNotVisible", "id": "expiring.row.*", "timeout": 15000 }
+  ]
+}

@@ -164,6 +164,7 @@ function ZoneCard({
         isSelected ? styles.zoneCardSelected : null,
         pressed ? styles.zoneCardPressed : null,
       ]}
+      testID={`storage-zones.row.${zone.id}`}
     >
       <ZoneGlyph zone={zone} />
 
@@ -283,7 +284,7 @@ export default function StorageZonesRoute(): JSX.Element {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={styles.screen} testID="storage-zones.screen">
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -303,6 +304,7 @@ export default function StorageZonesRoute(): JSX.Element {
                 router.back();
               }}
               style={styles.iconButton}
+              testID="storage-zones.back"
             >
               <ChevronLeftIcon />
             </Pressable>
@@ -329,7 +331,7 @@ export default function StorageZonesRoute(): JSX.Element {
             </View>
           </View>
 
-          <View style={styles.grid}>
+          <View style={styles.grid} testID="storage-zones.list">
             {zones.map((zone) => (
               <ZoneCard
                 isSelected={selectedZones.has(zone.id)}
@@ -348,6 +350,7 @@ export default function StorageZonesRoute(): JSX.Element {
                 setShowCustomSheet(true);
               }}
               style={({ pressed }) => [styles.addCard, pressed ? styles.zoneCardPressed : null]}
+              testID="storage-zones.add"
             >
               <View style={styles.addGlyph}>
                 <PlusIcon />
@@ -360,7 +363,7 @@ export default function StorageZonesRoute(): JSX.Element {
           </View>
 
           {message ? (
-            <View accessibilityRole="alert" style={styles.message}>
+            <View accessibilityRole="alert" style={styles.message} testID="storage-zones.message">
               <View style={styles.messageDot} />
               <Text style={styles.messageText}>{message}</Text>
             </View>
@@ -389,6 +392,7 @@ export default function StorageZonesRoute(): JSX.Element {
             void handleContinue();
           }}
           style={[styles.primaryButton, !canContinue ? styles.disabledButton : null]}
+          testID="storage-zones.continue"
         >
           {isSaving ? (
             <ActivityIndicator color={colors.ink} />
@@ -419,6 +423,7 @@ export default function StorageZonesRoute(): JSX.Element {
               setShowCustomSheet(false);
             }}
             style={StyleSheet.absoluteFill}
+            testID="storage-zones.sheet-close"
           />
           <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom + space[5], 34) }]}>
             <Text style={styles.sheetTitle}>Custom place</Text>
@@ -432,6 +437,7 @@ export default function StorageZonesRoute(): JSX.Element {
               placeholderTextColor={colors.muteSoft}
               returnKeyType="done"
               style={styles.input}
+              testID="storage-zones.custom-name"
               value={customName}
             />
             <Pressable
@@ -439,6 +445,7 @@ export default function StorageZonesRoute(): JSX.Element {
               disabled={!customName.trim()}
               onPress={handleSaveCustomZone}
               style={[styles.sheetButton, !customName.trim() ? styles.disabledButton : null]}
+              testID="storage-zones.custom-save"
             >
               <Text style={styles.sheetButtonText}>Save</Text>
             </Pressable>

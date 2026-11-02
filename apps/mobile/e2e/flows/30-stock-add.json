@@ -1,0 +1,16 @@
+{
+  "description": "Empty stock -> manual add item with an expiry tomorrow -> row appears in Stock.",
+  "steps": [
+    { "do": "tap", "id": "tabs.stock" },
+    { "do": "assertVisible", "id": "stock.empty" },
+    { "do": "tap", "id": "tabs.scan" },
+    { "do": "tap", "id": "scan.manual" },
+    { "do": "assertVisible", "id": "add-item.name" },
+    { "do": "type", "id": "add-item.name", "text": "E2E Milk" },
+    { "do": "tap", "id": "add-item.zone.fridge" },
+    { "do": "type", "id": "add-item.expiry", "text": "${TOMORROW}" },
+    { "do": "tap", "id": "add-item.save" },
+    { "do": "assertVisible", "id": "stock.row.*", "timeout": 20000 },
+    { "do": "assertText", "text": "E2E Milk" }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "description": "Settings -> sign out.",
+  "steps": [
+    { "do": "tap", "id": "tabs.settings" },
+    { "do": "tap", "id": "settings.sign-out" },
+    { "do": "tapIfPresent", "id": "Sign out" },
+    { "do": "assertNotVisible", "id": "tabs.home", "timeout": 15000 },
+    { "do": "screenshot", "name": "signed-out" }
+  ]
+}
