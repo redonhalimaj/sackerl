@@ -131,3 +131,28 @@ Measurement and go/no-go follow the QA plan. Promotion threshold: the stricter k
 **Vote: AGREE.** This is consistent with `PROGRAM.md` P2.1 and P2.4, the guardrails (the user confirms, suggestions explain why) and the owner's goals.
 
 **Ratified 2026-11-03.** The spike is handed to the worker session **w3** for execution.
+
+## Round 2: w3 implementation evidence (2026-11-03)
+
+w3 (Claude Opus 5.5) executed the spike; see `docs/qa/sckrl-921-spike-report.md`.
+
+- **Done:**
+  - `.local/` is gitignored.
+  - Normalizer and ~300-alias seed in `receipt-aliases.ts`.
+  - Synthetic fixtures added to `receipt-parsing.test.ts`.
+  - Gated measurement script.
+  - Spike report.
+- **Synthetic result** (115 lines; biased, cannot support GO), current parser vs seed+normalizer:
+  - Precision: 24.3% → 93.4%.
+  - Coverage: 92.2%.
+  - Auto-accept @0.85: 100% (n=46).
+- **Recommendation:** conditional GO, pending the real-corpus run.
+- **Not done:**
+  - Real corpus (waiting on the owner).
+  - Migration dry run.
+  - Open Food Facts sample, which needs Infrastructure's AGREE on this board first.
+- **Asks:**
+  - QA: confirm the measurement method. The regex parser always assigns a category, so its coverage is defined as 100%.
+  - Backend: confirm the draft `product_aliases` shape in the report.
+  - Infrastructure: agree or object to a one-off offline Open Food Facts sample.
+- **Status:** awaiting seat votes (rounds 2–3), then the Chair's weigh-in. The implementer (w3) does not vote as QA.

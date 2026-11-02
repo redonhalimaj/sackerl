@@ -98,7 +98,21 @@ const abbreviations: Readonly<Record<string, string>> = {
 };
 
 // Tokens that are pure noise on receipts.
-const noiseTokens = new Set(['stk', 'st', 'x', 'pkg', 'pkt', 'aktion', 'ak', 'kl', 'gr', 'gew', 'a', 'b', 'c']);
+const noiseTokens = new Set([
+  'stk',
+  'st',
+  'x',
+  'pkg',
+  'pkt',
+  'aktion',
+  'ak',
+  'kl',
+  'gr',
+  'gew',
+  'a',
+  'b',
+  'c',
+]);
 
 export function foldGerman(value: string): string {
   return value
