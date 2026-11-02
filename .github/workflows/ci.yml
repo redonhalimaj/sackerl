@@ -6,11 +6,21 @@ on:
     branches:
       - main
       - dev
+  workflow_dispatch:
+
+# Jobs run on the owner's self-hosted laptop runner (labels: self-hosted, sackerl).
+# The repository is public, so code from forks must never reach that machine:
+# every job only runs for pushes, manual dispatch, or PRs whose head branch lives
+# in this repository. Fork PRs are skipped entirely.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   checks:
     name: Install, lint, typecheck, test
-    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, sackerl]
 
     steps:
       - name: Checkout
@@ -42,3 +52,29 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+  migrations-dev:
+    name: Apply Supabase migrations to dev
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    runs-on: [self-hosted, sackerl]
+    environment: dev
+    env:
+      SUPABASE_DB_URL: ${{ secrets.DEV_DATABASE_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require database secret
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::DEV_DATABASE_URL secret is not configured for the dev environment."
+            exit 1
+          fi
+
+      - name: Show pending migrations
+        run: supabase db push --dry-run --db-url "$SUPABASE_DB_URL"
+
+      - name: Apply pending migrations
+        run: supabase db push --yes --db-url "$SUPABASE_DB_URL"

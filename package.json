@@ -19,7 +19,11 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,cjs,json,yml,yaml,css}\" \"README.md\" \"docs/environment.md\" \"docs/monorepo.md\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,cjs,json,yml,yaml,css}\" \"README.md\" \"docs/environment.md\" \"docs/monorepo.md\"",
     "code:map": "node scripts/update-code-map.mjs",
-    "code:map:check": "node scripts/update-code-map.mjs --check"
+    "code:map:check": "node scripts/update-code-map.mjs --check",
+    "db:status": "scripts/db.sh status",
+    "db:plan": "scripts/db.sh plan",
+    "db:push": "scripts/db.sh push",
+    "db:new": "scripts/db.sh new"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
