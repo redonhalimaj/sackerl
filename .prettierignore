@@ -13,3 +13,6 @@ Design
 .claude
 **/.obsidian/**
 apps/mobile/expo-env.d.ts
+apps/web/e2e/.results
+apps/web/e2e/.report
+apps/web/e2e/.ledger
