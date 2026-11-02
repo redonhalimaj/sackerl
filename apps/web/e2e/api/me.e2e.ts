@@ -32,6 +32,18 @@ test.describe('/me', () => {
     await expectJson(await owner.patch('/me', { locale: 42 }), 400);
   });
 
+  test('PATCH returns 400 for a malformed JSON body', async ({ owner, request }) => {
+    await expectJson(await owner.get('/me'), 200);
+    const headers = {
+      Authorization: `Bearer ${owner.user.accessToken}`,
+      'Content-Type': 'application/json',
+    };
+    // A string would be JSON-encoded by Playwright; send raw bytes so the body is malformed.
+    const data = Buffer.from('{not json');
+    const response = await request.patch('/me', { data, headers });
+    expect((await expectJson(response, 400)).error).toBe('Invalid JSON body.');
+  });
+
   test('profiles are per user', async ({ owner, outsider }) => {
     const a = await expectJson<ProfileBody>(await owner.get('/me'), 200);
     const b = await expectJson<ProfileBody>(await outsider.get('/me'), 200);

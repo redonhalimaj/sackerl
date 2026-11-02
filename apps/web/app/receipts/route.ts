@@ -3,6 +3,7 @@ import { ApiRequestError, type ReceiptStatus } from '@sackerl/api-client';
 import { getRequestAuthContext, jsonResponse } from '../../lib/api-auth';
 import { getRequestHousehold } from '../../lib/items';
 import { readCreateReceiptBody } from '../../lib/receipt-payload';
+import { readJsonBody } from '../../lib/request-json';
 import { getWebReceiptsClient, receiptApiErrorResponse } from '../../lib/receipts';
 
 export async function GET(request: Request): Promise<Response> {
@@ -50,7 +51,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    const body = readCreateReceiptBody(await request.json());
+    const body = readCreateReceiptBody(await readJsonBody(request));
     const receipt = await getWebReceiptsClient().createReceipt(context, {
       ...body,
       householdId: household.id,

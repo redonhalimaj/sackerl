@@ -1,7 +1,7 @@
-import { ApiRequestError } from '@sackerl/api-client';
 import { getRequestAuthContext, jsonResponse } from '../../../../lib/api-auth';
 import { getRequestHousehold } from '../../../../lib/items';
 import { readSaveReceiptReviewBody } from '../../../../lib/receipt-review-payload';
+import { readJsonBody } from '../../../../lib/request-json';
 import { getWebReceiptsClient, receiptApiErrorResponse } from '../../../../lib/receipts';
 
 type ReceiptItemsRouteContext = {
@@ -36,14 +36,6 @@ export async function GET(request: Request, context: ReceiptItemsRouteContext): 
   }
 }
 
-async function readJson(request: Request): Promise<unknown> {
-  try {
-    return (await request.json()) as unknown;
-  } catch {
-    throw new ApiRequestError('Invalid JSON body.', 400);
-  }
-}
-
 export async function PUT(request: Request, context: ReceiptItemsRouteContext): Promise<Response> {
   const authContext = await getRequestAuthContext(request);
 
@@ -59,7 +51,7 @@ export async function PUT(request: Request, context: ReceiptItemsRouteContext): 
 
   try {
     const { id } = await context.params;
-    const body = readSaveReceiptReviewBody(await readJson(request));
+    const body = readSaveReceiptReviewBody(await readJsonBody(request));
     const review = await getWebReceiptsClient().saveReceiptReview(authContext, {
       ...body,
       householdId: household.id,

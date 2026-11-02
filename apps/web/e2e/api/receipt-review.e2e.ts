@@ -75,6 +75,19 @@ test.describe('receipt review: GET/PUT /receipts/[id]/items', () => {
     await expectJson(await owner.put(`/receipts/${receipt.id}/items`, both), 400);
   });
 
+  test('save returns 400 for a malformed JSON body', async ({ owner, request }) => {
+    await ensureHousehold(owner);
+    const receipt = await createReceipt(owner);
+    const headers = {
+      Authorization: `Bearer ${owner.user.accessToken}`,
+      'Content-Type': 'application/json',
+    };
+    // A string would be JSON-encoded by Playwright; send raw bytes so the body is malformed.
+    const data = Buffer.from('{not json');
+    const response = await request.put(`/receipts/${receipt.id}/items`, { data, headers });
+    expect((await expectJson(response, 400)).error).toBe('Invalid JSON body.');
+  });
+
   test('outsider cannot read or save another household review', async ({ owner, outsider }) => {
     await ensureHousehold(owner);
     await ensureHousehold(outsider, 'Outsider household');
