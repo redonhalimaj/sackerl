@@ -44,8 +44,10 @@ The publication documentation snapshot is `SCKRL-311-testing-handover-publicatio
 `859ae08530ee3603b77865431d818713f25780101b02618b1cb23e7e890fbd5e` (69 entries, one deletion).
 B and independent C freshly Supported this exact snapshot after source/hash and scope checks;
 Chair integration passes. GitHub connectivity was restored using a TTY and the source push succeeded.
-No PR, merge or deployment was performed. The only remaining Codex action is publishing this
-status/Council bookkeeping checkpoint; use Git history/upstream HEAD to identify the latest commit.
+At the owner's subsequent request, [PR #7](https://github.com/redonhalimaj/sackerl/pull/7) is open
+from `feature/SCKRL-311-astra-luna` into `dev`, with the validation record and owner/Claude testing
+handover documented. No merge or deployment was performed. Use Git history/upstream HEAD for
+the latest publication checkpoint; implementation/test writing ownership remains released.
 
 ### Historical review continuation — 2026-11-01
 

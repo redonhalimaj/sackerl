@@ -548,3 +548,8 @@ completed and implementation/test file ownership is released. Source-v4 acceptan
 user-directed v5-r2 documentation verification remain unchanged; SCKRL-311 stays Review and all
 remaining gates stay open. This status/Council-only checkpoint records the verified source push;
 its own commit is identified by Git history rather than a self-referential hash in this text.
+
+The owner subsequently explicitly requested a PR. [PR #7](https://github.com/redonhalimaj/sackerl/pull/7)
+was opened from `feature/SCKRL-311-astra-luna` into `dev`, carrying the local validation record,
+open activation/product gates and owner/Claude testing handover. No merge or deployment occurred;
+the PR and this metadata update do not alter accepted source or test ownership.
