@@ -8,7 +8,12 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "e2e:api": "playwright test --project=api",
+    "e2e:smoke": "playwright test --project=smoke-mobile",
+    "e2e:install": "playwright install chromium",
+    "e2e:dev": "E2E_BACKEND=1 playwright test"
   },
   "dependencies": {
     "@sackerl/api-client": "workspace:*",
@@ -19,8 +24,10 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.51.1",
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.7",
-    "@types/react-dom": "^19.0.3"
+    "@types/react-dom": "^19.0.3",
+    "dotenv": "16.4.7"
   }
 }
