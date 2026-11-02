@@ -1,17 +1,26 @@
 import { readE2eEnv, requireE2eEnv } from './env';
-import { deleteLedgerUsers } from './supabase-admin';
+import { deleteLedgerUsers, pendingLedgerRunIds } from './supabase-admin';
 
-/** Backup sweep: removes any of this run's users that per-test cleanup missed. */
+/**
+ * Backup sweep: removes users that per-test cleanup missed, for this run and any earlier run whose
+ * ledger is still on disk. Skipped entirely with E2E_KEEP_DATA=1 (ledgers stay for a later sweep).
+ */
 export default async function globalTeardown(): Promise<void> {
-  const runId = process.env.E2E_RUN_ID;
-  if (!readE2eEnv() || !runId || process.env.E2E_KEEP_DATA === '1') {
+  if (!readE2eEnv() || process.env.E2E_KEEP_DATA === '1') {
     return;
   }
-  const { deleted, failed } = await deleteLedgerUsers(requireE2eEnv(), runId);
-  console.log(
-    `[e2e] teardown sweep for run ${runId}: ${deleted} confirmed absent, ${failed} failed.`,
-  );
-  if (failed > 0) {
-    throw new Error(`[e2e] ${failed} synthetic user(s) could not be deleted; see the run ledger.`);
+  const env = requireE2eEnv();
+  let totalFailed = 0;
+  for (const runId of pendingLedgerRunIds()) {
+    const { deleted, failed } = await deleteLedgerUsers(env, runId);
+    totalFailed += failed;
+    console.log(
+      `[e2e] teardown sweep for run ${runId}: ${deleted} confirmed absent, ${failed} failed.`,
+    );
+  }
+  if (totalFailed > 0) {
+    throw new Error(
+      `[e2e] ${totalFailed} synthetic user(s) could not be deleted; see e2e/.ledger.`,
+    );
   }
 }

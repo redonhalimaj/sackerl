@@ -58,15 +58,17 @@ shell, `apps/web/e2e/.env.e2e`, `apps/web/.env.local` and the repo-root `.env` (
   `E2E_ALLOWED_SUPABASE_HOSTS`. Any host or `E2E_TARGET_LABEL`/`APP_ENV`/`NEXT_PUBLIC_APP_ENV`
   containing "prod" is refused.
 - Against a hosted target the run is serial (`workers: 1`). Parallel bursts of Auth admin user
-  creation returned Cloudflare 521/500 from the dev project.
+  creation returned Cloudflare 521/500 from the dev project. An existing dev server is never reused
+  on a hosted target, so the app and the tests always share one Supabase project.
 
 ## Fixtures and cleanup
 
 - Each test creates its own users `e2e+<runId>-<worker>-<label>-<rand>@sackerl.test` via the Auth
   admin API, tagged with `user_metadata.e2e_run_id`. Each id is written to a per-run ledger
-  (`e2e/.results/ledger/<runId>.jsonl`) before sign-in.
+  (`e2e/.ledger/<runId>.jsonl`, ignored, outside Playwright's wiped `outputDir`) before sign-in.
 - In a `finally` block, the fixture deletes exactly the users that test created. The global teardown
-  re-sweeps the run's ledger and fails the run if any delete fails. `E2E_KEEP_DATA=1` keeps the data.
+  re-sweeps every ledger on disk (this run and earlier failed runs) and fails the run if any delete
+  fails. `E2E_KEEP_DATA=1` keeps the data and its ledger, and the next backend run sweeps it.
 - Users are **never listed**. A delete also re-checks the `e2e+…@sackerl.test` pattern.
 - Profiles, households and all household-owned rows cascade from `auth.users`.
 

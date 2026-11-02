@@ -36,3 +36,14 @@ required exact cleanup that never lists users.
 | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------- | ------------------------------------------- | ------- |
 | Orchestrator | Removed the list-and-delete cleanup and its project. Users are now deleted by exact id in the fixture `finally`, with a ledger sweep that fails loudly. Opt-in `E2E_BACKEND=1`; credentials come from ignored env files; serial on hosted. Added the placement schema gate. Fixed 3 test-setup bugs (receipt stock now built via placement because of the 311 lineage guard; real recipe id for the FK; raw-bytes malformed JSON). Run record in the doc. | Fresh QA vote | none     | Remote dev: 82/82 passed, cleanup confirmed | AGREE   |
 | QA C         | pending fresh review                                                                                                                                                                                                                                                                                                                                                                                                                                      |               |          |                                             | pending |
+
+## Round 3 — Council Proposal
+
+The Orchestrator fixed both of QA C's low findings: the ledger moved to the ignored `e2e/.ledger/`,
+teardown sweeps every pending ledger, and `reuseExistingServer` is false on hosted targets. The
+schema-probe nit is accepted, since the host allow-list already validates the base URL. Rechecked:
+typecheck, eslint and vitest 76/76 pass; offline Playwright has 6 passed and 76 skipped; a dev
+spot-check (me spec) passed 6/6 and the sweep found 0 failures.
+
+**Unanimous: Orchestrator AGREE, Backend A AGREE, Backend B AGREE, QA C AGREE.** This is ready for
+the Chair's weigh-in.

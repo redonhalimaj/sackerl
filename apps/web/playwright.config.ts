@@ -39,7 +39,8 @@ export default defineConfig({
         ? { NEXT_PUBLIC_SUPABASE_ANON_KEY: env.anonKey, NEXT_PUBLIC_SUPABASE_URL: env.supabaseUrl }
         : {}),
     },
-    reuseExistingServer: !process.env.CI,
+    // Never reuse a server on a hosted target: it might point at a different Supabase project.
+    reuseExistingServer: !process.env.CI && !hostedTarget,
     timeout: 180_000,
     url: `${baseURL}/`,
   },

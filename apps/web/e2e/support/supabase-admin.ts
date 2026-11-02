@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import path from 'node:path';
 
 import type { E2eEnv } from './env';
@@ -12,7 +12,8 @@ export type SyntheticUser = {
   readonly accessToken: string;
 };
 
-const LEDGER_DIR = path.resolve(__dirname, '..', '.results', 'ledger');
+/** Outside Playwright's outputDir, which is wiped at the start of every run. */
+const LEDGER_DIR = path.resolve(__dirname, '..', '.ledger');
 
 function ledgerFile(runId: string): string {
   return path.join(LEDGER_DIR, `${runId}.jsonl`);
@@ -113,4 +114,14 @@ export async function deleteLedgerUsers(
     rmSync(file);
   }
   return { deleted, failed };
+}
+
+/** Run ids with a ledger still on disk (this run plus any earlier failed or KEEP_DATA runs). */
+export function pendingLedgerRunIds(): string[] {
+  if (!existsSync(LEDGER_DIR)) {
+    return [];
+  }
+  return readdirSync(LEDGER_DIR)
+    .filter((file) => file.endsWith('.jsonl'))
+    .map((file) => file.slice(0, -'.jsonl'.length));
 }
