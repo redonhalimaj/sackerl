@@ -382,7 +382,7 @@ describe('items API client', () => {
           qty_value: 1,
           removal_reason: null,
           removed_on: null,
-          source: 'receipt',
+          source: 'manual',
           zone_id: 'zone-123',
         },
       ]),
@@ -399,7 +399,7 @@ describe('items API client', () => {
             name: 'Milk',
             qtyUnit: 'l',
             qtyValue: 1,
-            source: 'receipt',
+            source: 'manual',
             zoneId: 'zone-123',
           },
         ],
@@ -419,12 +419,43 @@ describe('items API client', () => {
       name: 'Milk',
       qty_unit: 'l',
       qty_value: 1,
-      source: 'receipt',
+      source: 'manual',
       zone_id: 'zone-123',
     });
     expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({
       method: 'POST',
     });
+  });
+
+  it('surfaces the server rejection for new generic receipt-source stock', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        jsonResponse(
+          { code: 'PT422', message: 'Receipt placement lineage is required.' },
+          { status: 422 },
+        ),
+      );
+    const client = createSackerlItemsClient(config, { fetch: fetchMock });
+
+    await expect(
+      client.createItemsBatch(context, {
+        householdId: 'household-123',
+        items: [
+          {
+            categoryId: 'dairy',
+            name: 'Milk',
+            qtyUnit: 'l',
+            qtyValue: 1,
+            source: 'receipt',
+            zoneId: 'zone-123',
+          },
+        ],
+      }),
+    ).rejects.toMatchObject({
+      message: 'Receipt placement lineage is required.',
+      status: 422,
+    } satisfies Partial<ApiRequestError>);
   });
 
   it('updates and soft-deletes items by household id', async () => {

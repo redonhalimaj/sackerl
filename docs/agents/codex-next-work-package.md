@@ -1,4 +1,58 @@
-# Next session handover — GPT / Codex
+# Codex QA and continuation checkpoint
+
+## Current continuation — 2026-11-01
+
+Use the latest [status checkpoint](../../status.md).
+The owner's latest instruction assigns the remaining testing to the owner using Claude and asks
+Codex to update the handover and push this branch. Use the [Claude testing handover](claude-next-work-package.md).
+Codex is not the assigned executor for those remaining tests. Source-v4 local acceptance is
+ratified; the later user-directed testing/publication documentation is tracked in the
+[publication manifest](../qa/sckrl-311-handover-publication-manifest.json).
+
+The continuation preferences below are historical for this testing assignment. Future independent
+review still applies to any implementation fixes, and hosted/product gates remain open.
+
+### Historical implementation/QA split
+
+After the current SCKRL-311 work, the owner requests Claude implementation and Codex independent QA;
+use [the Claude package](claude-next-work-package.md) for subsequent topics. Do not treat the older
+GPT-only continuation preference below as current or start a new implementation before its gates.
+The root Chair analyzes, orchestrates, synthesizes evidence and directly instructs the Lunas.
+Astra performs brief model routing and participates only in work reviews. This owner direction
+supersedes broader Deputy duties in older checkpoints; retain independent QA and unanimous votes.
+
+Continue the inherited local SCKRL-311 source on `feature/SCKRL-311-astra-luna` under the ratified
+[placement v1](council-decisions/COUNCIL-20261015-02-placement.md). A owns database/SQL fixtures,
+B client/web/tests, C independent QA, and Chair integration/status/policy/code maps. Do not use the
+historical branch instructions below as the current checkout or repeat accepted simulator QA.
+Source checks, disposable SQL execution, hosted installation and product activation are separate
+evidence gates. Preserve all inherited edits and consult status for the final review outcome.
+
+The server restart preserved the working tree; no source-v2 acceptance was recorded before it.
+The old v1/v2/v3 manifests remain historical and unratified. Use the separate source-v4 manifest and
+its exact Council result once published. Replacement raw SQL evidence is archived under the ignored
+`.env.qa-sckrl311-evidence-20261101` directory; verify its registry and logs, rather than relying
+on expired temporary paths. The October 23 development metadata probe reported the expected
+connection and absent 311 objects at that time. Its raw artifacts have expired and do not establish
+current target/schema state. Fresh target verification and full baseline/executor/connected
+acceptance remain outstanding in the [development plan](../qa/sckrl-311-development-migration-plan.md).
+Continue the first incomplete local review action in status; a failed disposable run is retained
+evidence, never a pass. Preparing the Claude package does not enable blocked placement UI.
+
+## Historical routing override — 2026-10-15
+
+The owner-directed current policy is a root Chair, `gpt-6-astra` Deputy/model router, and exactly
+three `gpt-6-luna` worker seats. The root records its actual model/effort and does not claim Astra.
+Assign Business Process Analysis, Frontend, Backend, Infrastructure, DevOps, and QA dynamically
+among those three seats. Junior support is a bounded non-voting mode within an assigned Luna seat,
+not a separate fourth agent. Do not use Terra, Sol, or GPT-5.5 for current routing.
+
+Use the current fast, standard, or complex Council path, four-slot concurrency limit (root included),
+predeclared voters, fresh unanimous votes per revision, and independent QA rotation in [TEAM.md](../../TEAM.md)
+and [the agent operating model](../../AGENTS.md). Existing branch names, model routes, and completion
+states in the dated checkpoint sections below are historical evidence; read [status.md](../../status.md)
+for the current checkout and ticket state. Do not infer current branch or remote state from those
+older sections.
 
 Updated: 2026-10-12. Start with the current checkout/merged baseline and remaining QA sections
 in [status.md](../../status.md). Earlier source/runtime decisions remain in their immutable Council

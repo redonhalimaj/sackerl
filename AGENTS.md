@@ -10,7 +10,7 @@ The foundation scaffold, Phase 1 design-system implementation, Slice 1 auth/prof
 
 - [PROGRAM.md](PROGRAM.md): long-term product direction, capability review, staged delivery program, and agent ownership. It does not replace live ticket status or accepted ticket scope.
 - [TEAM.md](TEAM.md): canonical team composition, model assignment, delegation contract, escalation rules, and handoff workflow.
-- [Council workflow](docs/agents/council-workflow.md): The Team and GPT-5.5 Deputy prepare unanimous recommendations, followed by reciprocal Chair review and unanimous final decisions.
+- [Council workflow](docs/agents/council-workflow.md): issue-sized review uses explicit unanimous votes, independent QA, reciprocal Chair review where required, and fresh votes for each revision.
 - [Codex ↔ Claude handoff](docs/agents/codex-claude-handoff.md): conditional handover or parallel-work workflow; use the current work checkpoint in `status.md` first.
 - [epic.md](epic.md): product epics and high-level delivery map.
 - [features.md](features.md): feature index and feature-document rules.
@@ -45,38 +45,38 @@ Default Slice 1 provider recommendation: Supabase Auth plus Supabase/Postgres un
 
 ## Agent Roster
 
-`TEAM.md` is authoritative for model assignments and routing. This table is the repository-startup summary.
+`TEAM.md` is authoritative for model assignments and routing. The current topology has a root Chair,
+an Astra Deputy, and exactly three Luna worker seats. Functional specialties are assigned among
+those seats per issue; they are not additional agents.
 
-| Agent                      | Model          | Reasoning | Primary Ownership                                                                                                                      |
-| -------------------------- | -------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Chair / Agent Orchestrator | `gpt-6-astra`  | `xhigh`   | Expert refinement, reciprocal Council review, final integration and program stage gates.                                               |
-| Deputy                     | `gpt-5.5`      | `xhigh`   | Coordinates The Team's detailed work, synthesizes evidence and obtains explicit unanimous recommendations.                             |
-| Business Process Analyst   | `gpt-5.6-luna` | `high`    | Turns product goals into journeys, business rules, metrics, acceptance criteria, open decisions, and SCKRL tickets.                    |
-| Frontend                   | `gpt-5.6-luna` | `high`    | Implements scoped mobile/web UI, accessibility, correction flows, drag/tap alternatives, and visible prediction uncertainty.           |
-| Backend                    | `gpt-5.5`      | `xhigh`   | Owns domain models, transactional APIs, receipt/OCR workflows, event history, notifications, and recommendation logic.                 |
-| Infrastructure             | `gpt-5.5`      | `xhigh`   | Owns architecture, privacy, persistence, media, jobs, environments, external services, reliability, and provider boundaries.           |
-| DevOps                     | `gpt-5.6-luna` | `high`    | Owns scoped CI/CD, build tooling, environment automation, observability wiring, release checks, and deployment mechanics.              |
-| QA                         | `gpt-5.5`      | `high`    | Owns stage-gate validation, integration and journey coverage, accessibility, data quality, recommendation evaluation, and risk.        |
-| Junior support             | `gpt-6-luna`   | `low`     | Small, self-contained mechanical coding and documentation tasks for the Chair, Deputy and all specialists; supervisor review required. |
+| Seat                      | Model                                            | Default reasoning                                                                                              | Assignment                                                                                                      |
+| ------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Root Chair / Orchestrator | Actual root runtime model, recorded when exposed | Actual effort, recorded when exposed                                                                           | Analysis, Luna instructions, orchestration, evidence synthesis, review and integration; records actual runtime. |
+| Deputy / model router     | `gpt-6-astra`                                    | `high` standard; `xhigh` complex                                                                               | Brief model routing and work reviews only; no ongoing coordination.                                             |
+| Luna worker A             | `gpt-6-luna`                                     | `low` fast mechanical; `high` bounded implementation or QA; `xhigh` complex domain review with Chair and Astra | Dynamically assigned functional specialty.                                                                      |
+| Luna worker B             | `gpt-6-luna`                                     | `low` fast mechanical; `high` bounded implementation or QA; `xhigh` complex domain review with Chair and Astra | Dynamically assigned functional specialty.                                                                      |
+| Luna worker C             | `gpt-6-luna`                                     | `low` fast mechanical; `high` bounded implementation or QA; `xhigh` complex domain review with Chair and Astra | Dynamically assigned functional specialty.                                                                      |
 
-## Model Routing Rules
+Functional specialties are Business Process Analysis, Frontend, Backend, Infrastructure, DevOps, and
+QA. Assign them among the three Luna seats for each issue; one agent covering multiple specialties
+has one vote. There is no separate fourth junior agent. Junior work is a bounded, non-voting mode
+for an assigned Luna seat.
 
-The roster above lists Codex defaults. The user-authorized Claude
-profile in `TEAM.md` overrides GPT-specific routing when Claude takes over. Preserve the same role
-ownership, escalation and independent QA gates; record actual provider/model and file ownership in
-`status.md`. Checkpoint at milestones so either assistant can recover after an abrupt limit.
+Current owner direction (2026-10-19): the Chair leads analysis, orchestration, evidence synthesis
+and direct Luna instructions. Astra performs brief model routing and participates only in work
+reviews. Preserve independent QA, reciprocal review and unanimous acceptance.
 
-- Use the exact model and reasoning effort in the roster when the runtime supports explicit agent selection. Do not silently substitute another model.
-- The Council Chair's preferred route is `gpt-6-astra` at `xhigh`; the root session remains Chair and must record its actual runtime model when exposed rather than claim a model switch. The `gpt-5.5` Deputy at `xhigh` coordinates the detailed work.
-- Use `gpt-5.5` for the highest-risk specialist reasoning: schemas and transactions, architecture and privacy, asynchronous workflows, recommendation logic, and QA or safety evaluation.
-- Use `gpt-5.6-luna` for well-scoped, high-volume work with stable contracts: ticket refinement, UI implementation, CI wiring, documentation, and focused validation.
-- A Luna-owned task must be escalated to the Orchestrator before it expands into unresolved cross-layer architecture, destructive migration design, authentication or RLS policy, health safety, or recommendation-policy decisions.
-- Model routing does not change ownership. Every ticket still has one primary role owner and passes through QA before Done.
-- Any senior role may delegate easy mechanical tasks to Junior support with short task-local
-  context (`fork_turns: "none"`), exact files, examples and checks. The supervisor reviews the
-  result and retains ownership; Junior has no Council vote or QA signoff. Ambiguity or changes to
-  auth/RLS/secrets, schemas/transactions, architecture, privacy/providers or policy return to the
-  supervisor. See [TEAM.md](TEAM.md#junior-support) and [the junior brief](docs/agents/junior.md).
+## Model Routing And Council Rules
+
+- Do not route current work to Terra, Sol, or GPT-5.5. Record actual model identity and effort; never imply a preferred route changed the running root session.
+- The four-concurrency limit includes root. Without Astra running, root may run all three Lunas (two owners and independent QA); during Astra review, at most two Lunas run. Complete a wave and verify actual capacity; idle or waiting status does not prove a free slot.
+- Fast path: for a new bounded, reversible, low-risk decision, assign an owner and an independent reviewer. Put the proposal in one brief and require both workers to explicitly Support the same revision, followed by lightweight Chair integration. Direct factual source retrieval and routine execution already covered by an accepted decision need no new decision or vote. Fast path excludes policy, auth/RLS, secrets, privacy, safety, transactions, new contracts, and unresolved architecture.
+- Standard path: one to three workstreams analyzed and coordinated by the Chair with affected Luna owners; Astra joins work reviews. Shared contracts require votes from all affected owners and domain reviewers. Final integrated acceptance requires Chair, Astra, owners, and independent QA.
+- Complex path: root Chair, Astra, responsible domain Luna, and independent QA jointly design and accept. Require preliminary unanimity, reciprocal Chair review, and fresh unanimous final votes.
+- Declare voters before findings. No proxy, silence, majority, Chair override, or removal of a dissenter counts as assent. Every revised proposal or voter set receives fresh votes; allow at most two rounds on the same evidence.
+- Independent QA does not implement accepted changes. Reserve one of the three Luna seats for QA during implementation (at most two writers) and rotate the QA seat per ticket.
+- Keep file ownership, contracts, and dependencies explicit across streams. No automatic migrations, deployment, merge, external writes, or scope expansion.
+- Escalate unresolved architecture, auth/RLS, secrets, privacy, safety, transactions, contracts, and policy questions to the applicable standard or complex path. Preserve ticket ownership and independent QA before Done.
 
 ## Scrum Ticket Model
 
@@ -97,26 +97,24 @@ Ticket states:
 
 ## Delivery Flow
 
-Use the [Council workflow](docs/agents/council-workflow.md) around substantive decisions and final
-acceptance. The specialist group is **The Team**. Deputy and required Team members explicitly
-endorse one recommendation before Chair review; after discussion, all participants including the
-Chair endorse the same final revision. Preserve independent QA, visible dissent and bounded review
-rounds. Routine implementation continues under the accepted decision without repeated votes.
+Use the [Council workflow](docs/agents/council-workflow.md) and the fast, standard, or complex path
+specified above. Routine execution under an accepted decision does not need a new vote. Preserve
+independent QA, visible dissent, predeclared voters, and fresh unanimous votes for each revision.
 
-1. The Agent Orchestrator checks the applicable `PROGRAM.md` stage and gate, then assigns one primary owner with the roster model and reasoning effort.
+1. The root Chair checks the applicable `PROGRAM.md` stage and gate, uses brief Astra model routing when needed, and directly instructs the Lunas. The Chair records actual model/effort, owners, reviewers, voters, dependencies and file boundaries.
 2. The Business Process Analyst resolves product ambiguity and refines the outcome, rules, metrics, edge cases, and acceptance criteria.
 3. Infrastructure records an ADR before work that changes storage, jobs, providers, privacy, data retention, security boundaries, or deployment topology.
 4. Backend publishes stable contracts, migrations, deterministic behavior, and fixtures before dependent frontend implementation begins.
 5. Frontend and DevOps implement only accepted, bounded tickets and coordinate changes through the primary owner.
 6. QA validates acceptance criteria, failure paths, regression risk, and the applicable program exit criteria before work is considered Done.
-7. The Agent Orchestrator performs cross-workstream integration review and returns incomplete or mock-only acceptance claims to the owning role.
-8. After code is merged into `main`, the Agent Orchestrator updates [AGENTS.md](AGENTS.md), [PROGRAM.md](PROGRAM.md) when strategic direction changed, [CLAUDE.md](CLAUDE.md), [status.md](status.md), and relevant feature docs with durable knowledge.
+7. The root Chair performs cross-workstream integration review and returns incomplete or mock-only acceptance claims to the owning specialty.
+8. After code is merged into `main`, the root Chair updates [AGENTS.md](AGENTS.md), [PROGRAM.md](PROGRAM.md) when strategic direction changed, [CLAUDE.md](CLAUDE.md), [status.md](status.md), and relevant feature docs with durable knowledge.
 
 ## Coordination Rules
 
 - Keep task ownership explicit. A ticket should have one primary agent owner even when other agents support it.
 - Avoid overlapping edits between agents. Split by feature area, layer, or file ownership.
-- Delegation prompts must name the ticket, owned files or layer, required outputs, dependencies, model, reasoning effort, and validation expected before handoff.
+- Assignments must name the ticket, functional specialty and worker seat, owned files or layer, required outputs, dependencies, model, reasoning effort, voters, and validation expected before handoff.
 - Specialist agents must report assumptions, changed contracts, verification evidence, unresolved risks, and follow-up tickets to the Orchestrator.
 - QA is a gate before merge, not a cleanup step after merge.
 - Update `status.md` whenever a ticket changes state.

@@ -1,165 +1,148 @@
 # Council workflow
 
-Adopted: 2026-09-28. Policy version: 2 (junior support added 2026-10-11).
+Updated: 2026-10-19. Policy version: 4 (owner-directed responsibility update).
 
-The Council combines detailed work by **The Team**, coordination by a **Deputy**, and expert
-review by the **Chair**. The Deputy and The Team reach a unanimous recommendation before normal
-Chair review. The Chair challenges and refines it, hears their responses, and can change their
-own position. The final decision requires everyone's explicit agreement on the same revision.
+The Council uses the root assistant as **Chair**, a separate `gpt-6-astra` **Deputy**, and exactly
+three peer `gpt-6-luna` worker seats. The three workers take issue-specific roles from Business
+Process Analyst, Frontend, Backend, Infrastructure, DevOps and QA. They are not six permanent
+agents, separate Terra/Sol or GPT-5.5 routes, or a path to nested junior agents. Low-effort
+mechanical support is a non-voting task mode within a worker seat.
 
-[TEAM.md](../../TEAM.md) owns model routing. This document defines the decision process; it does
-not launch a background service, change the current session's model, or run agents automatically.
+[TEAM.md](../../TEAM.md) owns model routing. This process does not change a running session's model,
+launch agents automatically, or authorize external writes. Record actual model and effort. The root
+remains Chair; do not claim a preferred Astra Chair route. The current launcher exposes Astra and
+Luna. Use official model references: [GPT-6 Astra](https://developers.openai.com/api/docs/models/gpt-6-astra), [GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna).
+
+Owner direction (2026-10-19): the Chair owns analysis, orchestration, direct Luna instructions and
+evidence synthesis. Astra is invoked briefly for model routing and otherwise only during work
+reviews, including complex design reviews and final acceptance. It has no standing implementation
+coordination role. Reuse ratified decisions and completed evidence; do not reopen routine execution
+or rewrite historical votes. The Chair records revision packets and authentic reviewer votes.
 
 ## Seats and responsibilities
 
-| Seat                       | Assignment                                                   | Responsibility                                                                                                                    |
-| -------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| Chair / Agent Orchestrator | Root assistant; preferred Codex route `gpt-6-astra`, `xhigh` | Frame scope, challenge assumptions, examine cross-domain tradeoffs, refine the recommendation and own final integration.          |
-| Deputy                     | `gpt-5.5`, `xhigh`                                           | Organize the detailed work, route specialist assignments, reconcile evidence, collect votes and present a concise recommendation. |
-| The Team                   | Relevant specialists from the TEAM.md roster                 | Investigate, design, implement and test within assigned boundaries; review each other's evidence and speak independently.         |
+| Seat                       | Assignment                                                      | Responsibility                                                                     |
+| -------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Chair / Agent Orchestrator | Root assistant; record actual model and effort                  | Lead analysis, instruct Lunas, coordinate work, synthesize evidence and integrate. |
+| Deputy                     | `gpt-6-astra`; `high`, `xhigh` for complex work                 | Brief model routing and work reviews only; no ongoing implementation coordination. |
+| Worker A                   | `gpt-6-luna`; `low` mechanical, `high` default, `xhigh` complex | Assigned role; may investigate, own, implement, vote or independently review.      |
+| Worker B                   | `gpt-6-luna`; `low` mechanical, `high` default, `xhigh` complex | Assigned role; may investigate, own, implement, vote or independently review.      |
+| Worker C                   | `gpt-6-luna`; `low` mechanical, `high` default, `xhigh` complex | Assigned role; may investigate, own, implement, vote or independently review.      |
 
-The Team comprises Business Process Analyst, Frontend, Backend, Infrastructure, DevOps and QA.
-Only the roles needed for the particular decision participate. A role is not an extra agent unless
-assigned actual work. The Deputy is a distinct participant, not a substitute for all specialist
-opinions. The Chair remains accountable for integration; one specialist remains primary owner of
-each ticket. Record actual model/effort when exposed, or unknown; a preferred route is not proof of
-the root session's identity. Never silently substitute an unavailable model.
+## Select the lane and participants
 
-The Chair, Deputy and every Team member may use **Junior support** (`gpt-6-luna`, `low`) for
-small mechanical tasks under [TEAM.md](../../TEAM.md#junior-support). The junior receives only
-task-local instructions and the supervisor reviews its work. It is a supporting worker, has no
-Council vote, and cannot replace a specialist decision or independent QA. Its assignment does
-not add a voting seat or change unanimity requirements. Count it against the concurrency limit;
-schedule it in a free slot instead of adding an unbounded nested team.
+Risk, not prompt length, determines the review lane. Use only the necessary participants. Before
+findings are collected, name the voters, issue roles, primary owner, file boundaries, expected
+evidence and checks. Run at most three issue streams. For any implementation, one of the three Luna
+workers must independently QA the final diff; an author may vote on recommendations but cannot
+provide independent QA or sole acceptance of their own changes. No agent counts as two voters by
+taking multiple roles.
 
-## When to use it
+- **Fast lane:** A Chair may delegate a bounded, reversible, low-risk task to an owner and separate
+  reviewer under one brief. Require both workers' Support on the same revision and lightweight Chair
+  integration. Root may retrieve a factual source or execute routine work already covered by an
+  accepted decision without opening a new decision. Fast lane excludes policy, auth/RLS, secrets,
+  privacy, safety, transactions, new contracts and unresolved architecture.
+- **Standard lane:** The Chair directs one to three streams, using brief Astra model routing
+  when needed. The Chair and affected workers resolve local decisions; Astra joins work reviews. Shared contracts require every affected owner and relevant domain reviewer.
+  Final integrated acceptance requires Chair, Deputy, owners and independent QA; each implementation
+  stream has its own independent QA evidence.
+- **Complex or high-risk lane:** Chair, Astra, the responsible Luna domain owner and independent QA
+  participate during design and final acceptance. Collect preliminary unanimity, conduct reciprocal
+  Chair challenge, then collect fresh final votes on the revised decision and actual final diff.
+  This applies to unresolved architecture, security, privacy, transactions, safety and other
+  escalations in TEAM.md.
 
-Use the Council for an authorized ticket's substantive design/contract decisions, material changes
-to an accepted approach, and final acceptance. Routine edits within an accepted decision continue
-without a vote on every line. Batch related questions into one decision brief. Existing migrations,
-release permissions, scope exclusions and program gates still apply.
+The four-slot runtime includes the root. With Astra absent, root plus all three Lunas may run
+(two implementation owners and independent QA). During Astra review, at most two Lunas may run;
+complete a wave before resuming Astra. A waiting or idle agent does not automatically release a slot.
+Completed investigations can be reused. Do not spawn nested agents. Full use of all three workers
+is not required for small work.
 
-The Chair declares the scope and required participating roles before seeing their votes. Include
-the primary owner and a separate QA reviewer for implementation acceptance. Include Infrastructure
-for the persistence/security/privacy/provider changes that already require an ADR. Include affected
-Backend, Frontend or product roles where the decision changes their contract or user outcome.
-For high-risk decisions covered by TEAM.md's mandatory escalation rules, include independent QA
-and the responsible domain specialist during design as well as final acceptance. Record why other
-roles are not implicated; a narrow documentation decision need not convene unrelated implementers.
-Do not remove an objector to achieve unanimity. Newly discovered impact adds the relevant role;
-changing membership or substance requires a new revision and fresh votes.
+Parallel streams must have independent scopes and non-overlapping ownership. Version shared
+cross-stream contracts and record dependencies before dependent work proceeds. A shared-contract
+decision requires every affected owner and QA reviewers appropriate to its risk; Support within one
+stream does not constitute integrated acceptance of other streams.
 
 ## Decision cycle
 
-1. **Chair frames the work.** State the ticket or explicit user request, outcome, exclusions,
-   acceptance criteria, relevant stage, participating roles, ownership and resource limits.
-   Delegate detailed exploration to the Deputy; avoid prescribing a preferred answer prematurely.
-2. **Deputy and The Team investigate.** Specialists first report independent findings and options.
-   Then compare evidence, challenge assumptions and resolve conflicts. Prompts must follow the
-   delegation contract in TEAM.md. Each assignment has a concrete output and disjoint file ownership.
-3. **Deputy gathers preliminary consensus.** Publish one versioned recommendation containing the
-   proposed decision, alternatives, strongest counterargument, evidence, limitations and consequences.
-   Collect explicit votes from every required Team participant and from the Deputy on that revision.
-   Only a unanimous recommendation is presented as ready for normal Chair review.
-4. **Chair reviews and responds.** Inspect the relevant source/evidence and identify agreement,
-   objections, missing evidence or a refinement. Explain conclusions and tradeoffs concisely.
-   The Deputy and specialists respond; the Chair must address a supported counterargument and may
-   adopt their better approach. Model rank is never evidence that a position is correct.
-5. **Reconcile and ratify.** The Deputy publishes the final revision with the Chair's input and
-   the team's responses. The Deputy, every required Team participant and the Chair explicitly vote
-   on that exact revision. Chair edits invalidate earlier votes; no silent override or majority vote
-   counts as a Council decision. Ratification requires all votes to be Support.
-6. **Execute and verify.** For a design decision, implement within the ratified scope and let the
-   Deputy handle routine coordination. For final acceptance, independent QA must inspect the actual
-   final diff and required checks before voting. Return material discoveries to the cycle. Record the
-   decision and remaining gates in the ticket ledger; the Chair updates status.md.
+The cycle below is the default for standard and complex work. Fast lane uses its declared single
+brief, owner and reviewer unanimity, then lightweight Chair integration; routine execution already
+covered by an accepted decision needs no new vote.
 
-Planning consensus approves an approach, not an unimplemented outcome. Final acceptance uses
-separate evidence and votes. Documentation-only work needs source/link/consistency review rather
-than application tests. No ticket reaches Done merely because everyone agrees.
+1. **Chair frames scope.** State the SCKRL ticket or explicit request, outcome, exclusions, stage,
+   acceptance criteria, lane, participants, owner and resource limits.
+2. **Chair coordinates independent work.** Directly instruct the Lunas and gather findings before reconciliation. Each assignment
+   states role, model/effort, owner, disjoint files, dependencies, exclusions, deliverables and
+   validation. Keep one writer per file set.
+3. **Preliminary decision.** Chair publishes one immutable revision with options, recommendation,
+   strongest counterargument, evidence, limitations and consequences. Every predeclared voter casts
+   an explicit Support, Object or Needs evidence vote on that exact revision. Only unanimity is
+   presented as a preliminary recommendation.
+4. **Reciprocal Chair review.** Chair checks source evidence and challenges assumptions. Deputy and
+   workers respond; the Chair may revise its view. Preserve supported dissent and explain what
+   changes. Model rank is not evidence.
+5. **Fresh final vote.** Publish a new revision for any material change or new voter. Collect fresh
+   explicit votes from Chair, Deputy and all required workers on that exact revision. For
+   implementation acceptance, QA inspects the actual final diff and required checks before voting.
+6. **Execute and record.** After a decision is ratified, execute only its bounded scope. Record
+   evidence and remaining gates in the shared ledger and status.md. Consensus does not itself
+   authorize migration, deployment, external communication, commit, merge or other external write.
 
-## Honest unanimity and disagreements
+Documentation-only changes need source, link and consistency review. Done requires the actual final
+diff and applicable checks; agreement alone does not complete work.
 
-Votes are **Support**, **Object**, or **Needs evidence**. Include a short rationale and the revision
-reviewed. Silence, unavailability, abstention, conditional approval and "no response yet" are not
-Support. The Deputy cannot vote for another agent or invent an absent role's review. A replaced
-reviewer must independently review the current evidence and the predecessor's unresolved objections.
+## Honest unanimity and disagreement
 
-Support may accept a named non-blocking residual risk when the applicable acceptance criteria allow
-it; it cannot waive an unmet gate. A missing required check is still Needs evidence for final
-acceptance, even if a design recommendation can proceed before that check exists.
+Votes are **Support**, **Object** or **Needs evidence**, with a short rationale and revision ID.
+Silence, absence, abstention, conditional approval and proxy votes are not Support. No majority
+decision, Chair override or removal of an objector can create unanimity. Keep the voter set fixed for
+each revision. A material change or new voter requires a new revision and fresh votes; never rewrite
+historical votes as approval of changed text.
 
-Allow at most two reconciliation rounds on the same evidence. If disagreement remains, the Deputy
-sends the Chair an explicitly **unresolved dispute**, not a unanimous recommendation: positions,
-evidence, missing fact and the smallest experiment or decision needed. The Chair directs that next
-step and hears the responses. Resume voting only with new evidence, a materially revised proposal
-or an explicit user decision. Continue independent work that does not depend on the dispute.
-Do not repeat debate until a dissenter gives in. Seek user input only for an actual missing product
-preference, authorization boundary or irreconcilable requirement; ordinary technical disagreement
-belongs with the Council. If unresolved, checkpoint it as pending; never manufacture agreement.
-
-## Independence and resource discipline
-
-- QA must not have implemented the changes it accepts. If the Chair or Deputy writes code, retain
-  a separate QA agent. A correction after QA needs review appropriate to the changed evidence.
-- Spend specialist effort on source inspection, implementation and verification. Give the Chair a
-  concise brief plus direct evidence links so it can inspect consequential claims, rather than
-  reproduce all of the work. Cost savings are an objective, not a claimed pricing comparison.
-- Reuse completed investigations; reopen checks only when new changes or evidence justify it.
-  Prefer relevant specialists over convening all six roles for every small question.
-- Respect the runtime's actual concurrency limit. With four slots, use Chair + Deputy + at most
-  two specialists at once. Work in waves and retain explicit votes; voters need not run concurrently.
-  A waiting Deputy can release its active slot and resume after specialists finish.
-- The root schedules agent launches when the runtime requires it; the Deputy still prepares the
-  assignments and coordinates the substance. Avoid competing launchers or unbounded nested teams.
-- Use one writer per file set. The Chair owns status.md by default; delegate ownership of a
-  decision record explicitly if the Deputy will maintain it. Neither consensus nor this workflow
-  authorizes a migration, deployment, external message, commit, merge or unrelated feature.
+Allow at most two reconciliation rounds on the same evidence. If disagreement remains, record the
+unresolved positions, evidence, missing fact and smallest experiment or decision needed. Continue
+independent work that does not depend on the dispute. Do not force agreement. Reopen voting only on
+new evidence, a materially revised proposal or an explicit user decision.
 
 ## Shared decision record
 
-Keep a brief in the ticket's existing shared ledger, or a dedicated file under
-`docs/agents/council-decisions/` for a cross-ticket or explicit workflow request. Link it from
-status.md. Record decisions and evidence summaries, not private internal reasoning transcripts.
-Use an identifier such as `COUNCIL-20260928-01` and immutable revisions (`v1`, `v2`, ...), each tied
-to named files/diff and evidence. Preserve old votes; do not relabel them as approval of a new text.
+Use the ticket ledger or a dedicated file under `docs/agents/council-decisions/` for cross-ticket or
+workflow decisions, and link it from status.md. Record evidence summaries, not private reasoning
+transcripts. Give each revision an immutable identifier tied to named files, diff and evidence.
 
 ```markdown
 # Council decision: <ticket or explicit request> — <short title>
 
-Revision: <unique version; identify the diff/files/evidence snapshot>
-State: Investigating | Team consensus | Chair review | Ratified | Pending evidence/dispute
-Outcome and exclusions:
-Participants: Chair; Deputy; required Team roles, agent IDs, actual models/efforts
-File ownership and primary ticket owner:
-Recommendation and alternatives:
-Evidence: commands/results/source links; unrun checks; material risks
-Strongest counterargument and response:
+Revision: <immutable version; files/diff/evidence snapshot>
+State: Investigating | Preliminary unanimity | Chair review | Ratified | Pending evidence/dispute
+Lane and scope:
+Participants: Chair; Astra Deputy; predeclared Luna voters, actual models/efforts and roles
+File ownership and primary owner:
+Recommendation, alternatives and strongest counterargument:
+Evidence, checks, limitations and material risks:
 
 ## Preliminary votes — <revision>
 
-| Participant                | Vote           | Evidence/rationale |
-| -------------------------- | -------------- | ------------------ |
-| Deputy                     | Needs evidence | ...                |
-| <each required specialist> | Needs evidence | ...                |
+| Participant            | Vote           | Evidence/rationale |
+| ---------------------- | -------------- | ------------------ |
+| each predeclared voter | Needs evidence | ...                |
 
 ## Chair review and responses
 
 Chair findings/refinement:
-Deputy/Team responses:
-What changed and why (including any change in the Chair's position):
+Deputy and worker responses:
+What changed and why:
 
 ## Final votes — <revision>
 
-| Participant                | Vote           | Evidence/rationale |
-| -------------------------- | -------------- | ------------------ |
-| Chair                      | Needs evidence | ...                |
-| Deputy                     | Needs evidence | ...                |
-| <each required specialist> | Needs evidence | ...                |
+| Participant         | Vote           | Evidence/rationale |
+| ------------------- | -------------- | ------------------ |
+| each required voter | Needs evidence | ...                |
 
 Decision, remaining gates and next owner:
 ```
 
-When continuing in Claude, preserve the same Council roles, evidence and unanimity requirements
-using TEAM.md's authorized provider profile. Record the actual model rather than pretending the
-GPT assignment ran. A handover preserves pending objections and invalidates no restrictions.
+Preserve prior authorized provider/handoff exceptions as history. For a genuine Claude handover,
+follow TEAM.md and record the actual model; do not claim that an unavailable GPT route ran. A
+handover preserves pending objections, evidence and restrictions.

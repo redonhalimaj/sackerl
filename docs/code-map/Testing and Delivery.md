@@ -58,6 +58,27 @@ visual/accessibility acceptance. See [SCKRL-304 QA](../qa/sckrl-304-review.md) a
 current results. Adding a route may require Expo to regenerate ignored `.expo/types/router.d.ts`
 before typecheck; do not work around stale route types with an unsafe cast.
 
+## SCKRL-311 verification
+
+Placement client and HTTP tests cover strict commands, canonical responses, typed domain errors,
+uncertain outcomes, current-household authorization, no-store responses and authoritative discovery
+without fallback. See [client tests](../../packages/api-client/src/receipts.test.ts) and
+[placement route tests](../../apps/web/app/receipts/[id]/placement/route.test.ts).
+The [disposable runner](../../supabase/tests/run_sckrl_311.py) prints its plan by default; its
+separately reviewed execution path creates a socket-only PostgreSQL 14 cluster with isolated
+clean/populated placement and 310/406/312 regression databases. Logs and source hashes bind executed
+evidence. Check status and the current QA report for actual results; prepared fixtures alone prove
+neither database behavior nor connected Auth/PostgREST and device acceptance.
+
+The concurrency helper uses actual blocker PIDs. Its zone-order scenario first observes a
+lower-zone deletion blocked by the high-first placement while that placement waits on a higher
+zone gate. A bounded lock-timeout probe rolls back before the second, opposing-order placement
+starts; a final deletion must wait on a recorded placement PID and then fail its stock foreign key.
+Canonical result, stock and acquisition-event mappings must agree. See the
+[database evidence](../qa/sckrl-311-database-review.md), including the historical failed observer
+attempt and current workspace-archived replay, and the separate
+[development/connected plan](../qa/sckrl-311-development-migration-plan.md).
+
 ## Maintenance workflow
 
 1. Start with the changed source and its caller. Update the matching table, diagram, and source link in this folder.

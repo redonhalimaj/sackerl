@@ -1,6 +1,6 @@
 # Sackerl Agent Team
 
-Last reviewed: 2026-10-11
+Last reviewed: 2026-10-19
 
 Status: Canonical team, model-routing, delegation, and handoff policy.
 
@@ -9,10 +9,10 @@ Status: Canonical team, model-routing, delegation, and handoff policy.
 This document defines which agent roles Sackerl uses, which model and reasoning effort each role
 receives, how work moves between roles, and when a task must be escalated.
 
-The specialist group is named **The Team**. The user-authorized **Council workflow** adds a
-GPT-5.5 **Deputy** for detailed coordination and a **Chair** for expert review and final integration.
-The Deputy and participating Team members reach a unanimous recommendation; after reciprocal
-Chair review, all participants must endorse the same final revision. See
+The specialist group is named **The Team**. The Council has the root assistant as **Chair**, a
+separate `gpt-6-astra` **Deputy**, and exactly three `gpt-6-luna` worker seats. The Deputy and
+required participating workers reach a unanimous recommendation; after reciprocal Chair review,
+all required participants endorse the same final revision. See
 [Council workflow](docs/agents/council-workflow.md) for voting, disagreements and resource limits.
 
 - `PROGRAM.md` defines long-term product stages, gates, safety constraints, and program outcomes.
@@ -38,10 +38,16 @@ work: Codex prepares the next bounded issue for Claude, and Claude prepares the 
 Codex. Follow the [handoff workflow](docs/agents/codex-claude-handoff.md); retain honest ticket states,
 independent QA and one writer per file set. A prepared handover does not launch the other assistant.
 
-Current owner preference (2026-09-29): prepare continuation for a future GPT/Codex session;
+Historical owner preference (2026-09-29; superseded for work after SCKRL-311): prepare continuation for a future GPT/Codex session;
 Claude is not the next recipient. Use [the Codex handover](docs/agents/codex-next-work-package.md).
 This supersedes mandatory alternation. Preserve the Council, independent QA and shared checkpoint;
 only involve Claude again on an explicit owner request. No roster/model changes are implied.
+
+Current owner preference (2026-10-19): finish the active SCKRL-311 work in Codex first, then prepare
+a Claude handoff for the next bounded program topics. Claude will implement subsequent assigned
+work and Codex will provide independent QA. Preparing a package does not start Claude, release an
+unfinished ticket gate or permit overlapping writes. The current Council topology and provider
+profiles remain; Codex reviewers must not implement changes they independently accept.
 
 - **Codex profile:** use the exact roster below for delegated work when available. Existing
   running sessions retain their actual model; record it honestly.
@@ -61,51 +67,45 @@ substitution. Switching providers needs no repeated permission within the existi
 It does not authorize new feature scope, simultaneous overlapping writers, or external writes.
 The profile rules take precedence over provider-specific wording elsewhere in the repo.
 
+Current owner direction (2026-10-15): use Astra and exactly three Luna worker seats for Council
+work. The current root remains Chair and records its actual model and effort; this direction does
+not switch a running root session to Astra. The separate Deputy routes to `gpt-6-astra`. The three
+peer worker seats take whichever of Business Process Analyst, Frontend, Backend, Infrastructure,
+DevOps or QA roles the issue needs. They are seats, not six permanent agents or Terra/Sol/GPT-5.5
+routes. Mechanical low-effort work is a task mode within these seats, not a fourth junior seat.
+This current roster supersedes earlier model assignments; keep dated provider and handoff
+exceptions as historical records without rewriting prior votes or work.
+
+Current owner direction (2026-10-19): the root Chair is the analyzer, orchestrator and direct
+instructor of the Lunas. Astra performs brief model routing and participates only in work reviews;
+it does not coordinate implementation or maintain a parallel analysis stream. The Chair prepares
+review packets and records votes. Existing unanimity, reciprocal review, independent QA and stage
+gates remain in force. This supersedes broader Deputy duties in the 2026-10-15 policy; historical
+decisions and votes remain unchanged.
+
 ## Team Matrix (Codex Defaults)
 
-| Role                       | Model          | Reasoning | Primary responsibility                                                                                                                 |
-| -------------------------- | -------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Chair / Agent Orchestrator | `gpt-6-astra`  | `xhigh`   | Expert refinement, program reasoning, reciprocal Council review, final integration and stage-gate enforcement                          |
-| Deputy                     | `gpt-5.5`      | `xhigh`   | Detailed work coordination, evidence synthesis, specialist assignments and unanimous Council recommendations                           |
-| Business Process Analyst   | `gpt-5.6-luna` | `high`    | User journeys, business rules, success metrics, open decisions, acceptance criteria, and SCKRL ticket refinement                       |
-| Frontend                   | `gpt-5.6-luna` | `high`    | Bounded mobile/web UI, accessibility, correction flows, interaction states, and visible uncertainty                                    |
-| Backend                    | `gpt-5.5`      | `xhigh`   | Domain models, migrations, transactional commands, OCR/jobs, inventory events, notifications, and recommendation logic                 |
-| Infrastructure             | `gpt-5.5`      | `xhigh`   | Architecture, security, privacy, storage, job topology, data lifecycle, environments, provider boundaries, backup, and restore         |
-| DevOps                     | `gpt-5.6-luna` | `high`    | Bounded CI/CD, environment automation, deployment, migration execution, observability wiring, and release checks                       |
-| QA                         | `gpt-5.5`      | `high`    | Acceptance challenge, stage-gate evidence, regression analysis, accessibility, data quality, and recommendation safety                 |
-| Junior support             | `gpt-6-luna`   | `low`     | Small, self-contained mechanical coding and documentation tasks for the Chair, Deputy and every specialist; supervisor review required |
+| Seat / role                       | Model          | Reasoning effort                                  | Responsibility                                                                          |
+| --------------------------------- | -------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Chair / Agent Orchestrator (root) | Actual runtime | Record actual; do not imply a switch              | Analysis, Luna instructions, orchestration, evidence synthesis, review and integration. |
+| Deputy                            | `gpt-6-astra`  | `high`; `xhigh` for complex work                  | Brief model routing and independent work review; no ongoing coordination.               |
+| Worker A                          | `gpt-6-luna`   | `low` mechanical; `high` default; `xhigh` complex | Assigned issue-specific role; investigate, own, implement or independently review.      |
+| Worker B                          | `gpt-6-luna`   | `low` mechanical; `high` default; `xhigh` complex | Assigned issue-specific role; investigate, own, implement or independently review.      |
+| Worker C                          | `gpt-6-luna`   | `low` mechanical; `high` default; `xhigh` complex | Assigned issue-specific role; investigate, own, implement or independently review.      |
 
 ## Assignment Rationale
 
-- `gpt-6-astra` is the preferred Chair route for the user's requested highest-tier expert review.
-  The root session remains Chair; documentation does not switch its model. Record the actual
-  runtime identity when exposed, or unknown. Earlier Sol review records remain historical evidence.
-- `gpt-5.5` Deputy handles detailed coordination so the Chair can focus on consequential claims,
-  counterarguments and refinements. This is a work allocation policy, not a pricing guarantee.
-- `gpt-5.5` is assigned to specialist roles with the highest correctness cost: schema and
-  transactional behavior, architecture and privacy, asynchronous processing, model-policy
-  evaluation, and adversarial QA.
-- `gpt-5.6-luna` is assigned to well-bounded, higher-volume delivery work after product rules,
-  architecture, and contracts are stable.
-- `gpt-6-luna` at `low` is the junior route added at the owner's request on 2026-10-11.
-  It is the cheapest model exposed by this runtime's agent launcher. Published standard API
-  rates for short context are $0.10 input, $0.01 cached input and $0.50 output per million tokens;
-  these rates do not establish this session's billing. The cheaper GPT-5 nano is deprecated and
-  unavailable in this launcher, so it is not the junior route. See the official
-  [GPT-6 Luna model page](https://developers.openai.com/api/docs/models/gpt-6-luna) and
-  [GPT-5 nano model page](https://developers.openai.com/api/docs/models/gpt-5-nano).
-
-Existing specialist model references:
-
-- [GPT-5.6 Sol](https://developers.openai.com/api/docs/models/gpt-5.6-sol)
-- [GPT-5.5](https://developers.openai.com/api/docs/models/gpt-5.5)
-- [GPT-5.6 Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna)
-- [GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna)
+Use no more workers than the issue requires. Select roles and owners before evidence collection,
+with at most three active issue streams. The three Lunas are peers: they may vote and review when
+assigned. Set `low` for quick factual or mechanical work, `high` for implementation and independent
+QA, and `xhigh` for complex or domain-sensitive work led by the Chair with Astra at review. Record the
+actual model and effort for each participant. Official model references: [GPT-6 Astra](https://developers.openai.com/api/docs/models/gpt-6-astra) and [GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna).
 
 ## Operating Topology
 
-The Council is Chair-led and ticket-driven. The Team's specialists are assigned as needed rather
-than kept permanently active. The Deputy coordinates detailed work under the Chair's scope.
+The Council is Chair-led and ticket-driven. The three Luna seats take issue-specific specialist
+roles as needed rather than remaining six permanent agents. The Chair analyzes the work, instructs the Lunas, coordinates execution and synthesizes evidence.
+Astra is used briefly for model routing and returns only for work reviews.
 
 1. The Orchestrator is the single integration owner.
 2. Specialist agents are created for explicit SCKRL tickets or explicit user requests.
@@ -125,39 +125,27 @@ explicit routing. It does not change the model of an agent session that is alrea
 
 ### Junior support
 
-The Chair, Deputy and every specialist may assign a junior a small task within already accepted
-scope. Suitable work includes mechanical edits, formatting, scoped file inventories and fixtures
-from supplied examples. Give it only task-local instructions, exact allowed files, examples,
-exclusions, expected output and checks. Use `fork_turns: "none"` where available rather than
-copying the full conversation. Do not spawn a junior when explaining and checking the task would
-cost more than completing it directly.
-
-The assigning agent remains the supervisor and retains ticket ownership. It reviews the actual
-diff and checks before using the result. Junior support has no Council vote, acceptance authority
-or independent QA role, and does not delegate further. Ambiguity, authentication/RLS/secrets,
-schema/transaction changes, architecture, privacy/provider or policy decisions return immediately
-to the supervisor and responsible specialist. See [the junior brief](docs/agents/junior.md).
+Mechanical support uses `low` effort within Worker A, B or C; it adds no agent or seat. This mode
+has no Council vote or independent QA authority. The supervising worker reviews its result, and a
+different worker independently QA's implementation changes. See the
+[junior brief](docs/agents/junior.md) for task-local instructions and boundaries.
 
 ## Model Routing Rules
 
-- Use the exact model and reasoning effort in the Team Matrix when supported by the runtime.
-- Do not silently substitute a different model or effort. Report the unavailable route and make the
-  fallback decision explicit.
-- Use the Chair for cross-program dependencies, conflicting evidence, scope decisions, expert
-  refinement, final integration and stage-gate judgment; use the Deputy for detailed coordination.
-- Use GPT-5.5 Backend for schema evolution, transactions, inventory or purchase events, OCR and job
-  behavior, notification logic, deterministic recommendations, and model boundaries.
-- Use GPT-5.5 Infrastructure for security, RLS and trust boundaries, privacy, health-data handling,
-  data retention, external processing, object storage, jobs, backups, and production topology.
-- Use GPT-5.5 QA for adversarial validation, cross-layer regression risk, OCR and recommendation
-  evaluation, data-quality gates, and allergy or health-safety tests.
-- Use Luna roles only after their ticket has stable scope, contracts, exclusions, and validation
-  requirements.
+- Use the exact current roster and record actual model and effort. Do not route current work to
+  Terra, Sol, GPT-5.5 or extra junior agents.
+- Select only the roles needed from the three Luna seats. For implementation, reserve one of the
+  three for independent QA. No agent accepts its own implementation, and an agent cannot count as
+  two voters by taking two roles.
+- Use Astra only for bounded model routing and work reviews. The Chair leads analysis, assignments,
+  implementation coordination and evidence synthesis; domain ownership remains explicit.
+- Low-effort mechanical support is a non-voting task mode within an assigned seat. It does not add a
+  fourth seat or provide independent QA for its own work.
 
 ## Mandatory Escalation
 
-A Luna-owned task returns to the Orchestrator and the relevant GPT-5.5 specialist before continuing
-when it encounters:
+A Luna-owned task returns to the Chair and relevant Luna domain owner for analysis, with Astra
+involved in the resulting design/work review before dependent implementation, when it encounters:
 
 - Unresolved cross-layer architecture.
 - Authentication, authorization, RLS, or secret-handling changes.
@@ -168,8 +156,8 @@ when it encounters:
 - Recommendation eligibility, ranking policy, confidence, or autonomous action.
 - A requirement that contradicts `PROGRAM.md`, an accepted ticket, or an existing contract.
 
-Escalation transfers the decision, not necessarily the implementation. After the specialist and
-Orchestrator establish a stable decision, the bounded task can return to its original owner.
+Escalation transfers the decision, not necessarily the implementation. After the domain owner,
+Chair and reviewers establish a stable decision, the bounded task can return to its original owner.
 
 ## Delivery Workflow
 
@@ -231,14 +219,13 @@ Every returning agent must report:
 - [Infrastructure](docs/agents/infrastructure.md)
 - [DevOps](docs/agents/devops.md)
 - [QA](docs/agents/qa.md)
-- [Junior support](docs/agents/junior.md)
 
 ## Maintenance
 
 - The Orchestrator owns this file.
 - Update it only when team composition, model assignment, routing, escalation, or handoff policy
   changes.
-- Keep the model matrix in `AGENTS.md`, `PROGRAM.md`, and `docs/agents/README.md` synchronized with
-  this file.
+- Keep the current roster summary in `AGENTS.md` and other current routing summaries synchronized
+  with this file.
 - Record model-routing decisions in `status.md`.
 - Do not store API keys, credentials, user data, or temporary session notes here.

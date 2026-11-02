@@ -1,12 +1,95 @@
 # Database tests
 
-These SQL fixtures exercise SCKRL-310, SCKRL-406 and SCKRL-312 against a disposable local PostgreSQL database. They
-use synthetic records, an `auth.uid()` stub and Supabase-like default grants. Run them as
-the owner of an **empty test database**, never against a hosted or application database.
-Hosted Auth, PostgREST and device journeys require separate integration evidence.
+These SQL fixtures are prepared source for a disposable local PostgreSQL database. They use
+synthetic records, an `auth.uid()` stub and Supabase-like default grants. Do not run any fixture
+against a hosted, development, or application database. Hosted Auth, PostgREST and device journeys
+require separate integration evidence.
 
-Set `PGHOST`, `PGPORT`, `PGUSER` and `PGDATABASE` to the disposable instance. From the
-repository root, replay a populated pre-upgrade schema:
+## SCKRL-311 atomic receipt placement
+
+The SCKRL-311 fixtures require a disposable local PostgreSQL database with the SCKRL-310, 406,
+and 312 migrations already replayed. The separately reviewed and authorized 2026-11-01 disposable
+run passed the receipt-save, parse-promotion, calendar-boundary, multi-zone assignment,
+normalized replay and pending-list assertions, plus the corrected concurrent zone-order proof. See
+[the evidence and limits](../../docs/qa/sckrl-311-database-review.md). A future replay still requires
+the reviewed runner and applicable execution permission. Never use hosted Supabase, a development
+database, or the application connection. Use separate empty databases for clean and populated-upgrade
+checks.
+
+The latest synthetic results and all step logs are preserved in the ignored workspace directory
+`.env.qa-sckrl311-evidence-20261101`. Its capture wrapper pins the unchanged reviewed runner/helper,
+defaults to plan-only, and records hashes and incomplete/error states without copying the database
+data directory or loading application env files. The raw results retain original temporary paths;
+review archived logs by matching basenames and the archive registry after temporary paths expire.
+
+The plan-by-default entry point is `python3 supabase/tests/run_sckrl_311.py --pg-bin /path/to/postgresql14/bin`.
+Adding `--execute` creates its own fresh socket-only cluster; it accepts no existing database coordinates.
+It includes clean/populated 311 and isolated 310/406/312 regression databases, retains source hashes
+and logs, and records cluster shutdown. It does not grant permission for another run.
+
+For the populated upgrade, run the baseline migrations through the 312 migration, then seed the
+unlinked legacy receipt-source item and saved receipt before installing 311:
+
+```sh
+psql -X -v ON_ERROR_STOP=1 -f supabase/tests/local_bootstrap.sql
+for migration in supabase/migrations/*.sql; do
+  case "$migration" in
+    *sckrl_311*) break ;;
+  esac
+  psql -X -v ON_ERROR_STOP=1 --single-transaction -f "$migration" || exit 1
+done
+psql -X -v ON_ERROR_STOP=1 -f supabase/tests/sckrl_311_legacy_seed.sql
+psql -X -v ON_ERROR_STOP=1 --single-transaction \
+  -f supabase/migrations/20261015100000_sckrl_311_atomic_receipt_placement.sql
+psql -X -v ON_ERROR_STOP=1 -f supabase/tests/sckrl_311_legacy_assert.sql
+psql -X -v ON_ERROR_STOP=1 -f supabase/tests/sckrl_311_placement_commands.sql
+psql -X -v ON_ERROR_STOP=1 -f supabase/tests/sckrl_311_adversarial.sql
+```
+
+The legacy assertion verifies that migration preserves the receipt review and its unlinked legacy
+receipt-source stock without inventing placement records. Command and adversarial fixtures manage
+rollback-only transactions; do not add `--single-transaction` around them. They exercise atomic
+stock/fact/event/result writes, exact source-line lineage, all expiry states, normalized replay,
+key conflicts, status/list pagination, placed review/parse/header freeze, preserved eighteen item
+column grants, direct-lineage denial for authenticated and service roles, generic receipt-source
+rejection, parent deletion behavior and injected partial-write rollback. The clean-schema check
+replays the same migrations into a separate empty database, omits the seed and populated fixtures,
+and runs `sckrl_311_clean_assert.sql` after the 311 migration.
+
+The main command fixture assigns three included lines across two zones, verifies the household day
+can differ from UTC, exercises reversed/uppercase normalized replay, and checks pending-list totals
+and adjacent pages after placement. Two parser-only seed receipts are saved by the helper immediately
+before review-save and parse-promotion contenders. The two-session test is intentionally run last on a
+fresh populated disposable replay. It observes PostgreSQL blocking by application name and checks
+same-key replay, alternate-key canonical results, same household key across different receipts with
+loser rollback, review-save/parse-promotion/parse-failure versus placement, membership revocation
+ordering and a zone-delete race. A combined scenario uses fresh zones and opposing assignment
+orders; an A-only lower-zone delete probe proves the high-first placer took the lower lock before
+the higher gate. The probe rolls back before the second placement starts. A later deletion must
+wait on an actual observed placement PID, then reject with `23503` after both placements commit.
+Exact canonical, stock and event mappings are checked. This is nine scenarios including the eight
+earlier races; the combined scenario has four observed-blocker phases. Each subprocess has bounded
+waits and is terminated on failure. Pass
+the reviewed psql executable and disposable socket coordinates explicitly; the runner never falls
+back to `PATH` or infers a database:
+
+```sh
+python3 supabase/tests/sckrl_311_concurrency.py \
+  --psql-bin /path/to/reviewed/psql --host /path/to/disposable/socket \
+  --port 55432 --user postgres --database sckrl311_test
+```
+
+These instructions do not authorize replay, migration application, hosted connection, activation
+or SCKRL-311 completion. Those remain separate gates.
+
+## SCKRL-310 receipt review
+
+This fixture procedure is retained for separately reviewed disposable replays. The 2026-10-19
+SCKRL-311 runner includes these post-upgrade regressions; its completed execution does not authorize
+another run or hosted migration. Never point these commands at hosted Supabase, development, or
+application databases. When a replay is
+authorized, set `PGHOST`, `PGPORT`, `PGUSER` and `PGDATABASE` to the disposable instance and run
+from the repository root:
 
 ```sh
 psql -X -v ON_ERROR_STOP=1 -f supabase/tests/local_bootstrap.sql
@@ -23,6 +106,10 @@ psql -X -v ON_ERROR_STOP=1 -f supabase/tests/sckrl_310_legacy_assert.sql
 psql -X -v ON_ERROR_STOP=1 -f supabase/tests/sckrl_310_review_commands.sql
 psql -X -v ON_ERROR_STOP=1 -f supabase/tests/sckrl_310_adversarial.sql
 ```
+
+For a clean schema replay, use a second empty database and omit the legacy seed, assertion and
+command test files. The command files manage their own transaction and roll back their mutations;
+do not wrap them in `--single-transaction`.
 
 The legacy assertion checks that original line IDs, parser values and receipt headers survive,
 high confidence remains unresolved, and missing financial values remain null. For a clean
@@ -108,9 +195,9 @@ the later one active.
 
 ## SCKRL-312 receipt-line expiry
 
-The SCKRL-312 migration and fixtures are prepared source only. **The current work checkpoint
-prohibits applying or replaying migrations anywhere.** The procedure below is for a later
-authorized test pass; it is not permission to run it now. Use an empty disposable database,
+The SCKRL-312 fixtures are included in the separately authorized 2026-10-19 post-311 regression
+run. The procedure below documents a disposable test pass; it does not itself authorize another
+run or any hosted migration. Use an empty disposable database,
 synthetic records and `local_bootstrap.sql`, never a hosted or application database.
 
 For a populated pre-312 schema, apply earlier migrations, seed accepted parser/manual review rows

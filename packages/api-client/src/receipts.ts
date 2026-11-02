@@ -7,6 +7,19 @@ import {
 } from './items';
 import { ApiRequestError, type AuthenticatedUserContext } from './profile';
 import {
+  ReceiptPlacementApiError,
+  normalizePlacementUuid,
+  parseFinalizeReceiptPlacementResult,
+  parseReceiptPlacementErrorCode,
+  parseReceiptPlacementStatus,
+  validateReceiptPlacementCommandBody,
+  type FinalizeReceiptPlacementInput,
+  type FinalizeReceiptPlacementResult,
+  type GetReceiptPlacementInput,
+  type ListUnplacedReceiptReviewsInput,
+  type ReceiptPlacementStatus,
+} from './receipt-placement';
+import {
   confidenceLevelForScore,
   isReceiptItemConfidenceLevel,
   type ParsedReceiptDocument,
@@ -279,6 +292,11 @@ export type ReceiptPagination = {
   readonly page: number;
   readonly pageSize: number;
   readonly total: number | null;
+};
+
+export type ListUnplacedReceiptReviewsResult = {
+  readonly pagination: Omit<ReceiptPagination, 'total'> & { readonly total: number };
+  readonly receipts: readonly Receipt[];
 };
 
 export type ReceiptReviewSummary = {
@@ -842,6 +860,33 @@ function clampPageSize(value: number | undefined): number {
   return Math.min(parsePositiveInteger(value, 25), 100);
 }
 
+function requirePlacementPositiveInteger(
+  value: number | undefined,
+  fallback: number,
+  field: string,
+): number {
+  if (value === undefined) {
+    return fallback;
+  }
+  if (!Number.isSafeInteger(value) || value < 1) {
+    throw new ReceiptPlacementApiError(`${field} must be a positive integer.`, 400, {
+      code: 'INVALID_PLACEMENT_INPUT',
+    });
+  }
+  return value;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value != null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function readObject(value: unknown): Record<string, unknown> {
+  if (!isRecord(value)) {
+    throw new TypeError('Expected an object.');
+  }
+  return value;
+}
+
 function parseTotalFromContentRange(value: string | null): number | null {
   const total = value?.match(/\/(\d+|\*)$/)?.[1];
 
@@ -860,6 +905,53 @@ async function readErrorMessage(response: Response): Promise<string> {
   } catch {
     return `Request failed with status ${response.status}.`;
   }
+}
+
+async function readPlacementApiError(response: Response): Promise<ReceiptPlacementApiError> {
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = undefined;
+  }
+
+  const error = isRecord(payload) ? payload : {};
+  let details: Record<string, unknown> = {};
+  if (typeof error.details === 'string') {
+    try {
+      const parsed = JSON.parse(error.details) as unknown;
+      if (isRecord(parsed)) {
+        details = parsed;
+      }
+    } catch {
+      details = {};
+    }
+  } else if (isRecord(error.details)) {
+    details = error.details;
+  }
+  const code = parseReceiptPlacementErrorCode(details.code ?? error.code);
+  const messages = {
+    INVALID_PLACEMENT_INPUT: 'Placement input is invalid.',
+    AUTH_REQUIRED: 'Authentication is required.',
+    HOUSEHOLD_ACCESS_REQUIRED: 'Current household membership is required.',
+    RECEIPT_NOT_FOUND: 'Receipt not found.',
+    PLACEMENT_KEY_REUSED: 'Placement key was already used for a different command.',
+    STALE_RECEIPT_REVIEW: 'Receipt review has changed.',
+    RECEIPT_ALREADY_PLACED: 'Receipt has already been placed.',
+    RECEIPT_NOT_REVIEWED: 'Receipt review is incomplete.',
+    EMPTY_RECEIPT_PLACEMENT: 'Receipt has no included lines to place.',
+    PLACEMENT_LINE_SET_MISMATCH: 'Placement assignments do not match the included receipt lines.',
+    INVALID_PLACEMENT_LINE: 'A receipt line is not valid for placement.',
+    INVALID_PLACEMENT_ZONE: 'A placement zone is not valid for this household.',
+    RECEIPT_LINEAGE_REQUIRED: 'Receipt stock must be created through placement.',
+  } satisfies Record<NonNullable<typeof code>, string>;
+  const message = code ? messages[code] : `Request failed with status ${response.status}.`;
+
+  return new ReceiptPlacementApiError(message, response.status, {
+    code,
+    field: typeof details.field === 'string' ? details.field : undefined,
+    receiptItemId: typeof details.receiptItemId === 'string' ? details.receiptItemId : undefined,
+  });
 }
 
 function unresolvedFieldsForItem(
@@ -976,8 +1068,7 @@ export class SackerlReceiptsClient {
   }
 
   /**
-   * Discover saved active reviews for durable Home resume, scoped by the current session and household.
-   * SCKRL-311 must add its authoritative unplaced filter when placement metadata becomes available.
+   * Legacy Home discovery remains unchanged until SCKRL-305 activates the authoritative method.
    */
   async listPendingReceiptReviews(
     context: AuthenticatedUserContext,
@@ -1010,6 +1101,211 @@ export class SackerlReceiptsClient {
       pagination: { page, pageSize, total: result.total },
       receipts: result.rows.map(mapReceiptRow),
     };
+  }
+
+  async finalizeReceiptPlacement(
+    context: AuthenticatedUserContext,
+    input: FinalizeReceiptPlacementInput,
+  ): Promise<FinalizeReceiptPlacementResult> {
+    if (input == null || typeof input !== 'object' || Array.isArray(input)) {
+      throw new ReceiptPlacementApiError('Placement input must be an object.', 400, {
+        code: 'INVALID_PLACEMENT_INPUT',
+      });
+    }
+    const allowedInputKeys = new Set([
+      'assignments',
+      'expectedReviewRevision',
+      'generationId',
+      'householdId',
+      'idempotencyKey',
+      'receiptId',
+    ]);
+    if (Object.keys(input).some((key) => !allowedInputKeys.has(key))) {
+      throw new ReceiptPlacementApiError('Placement input contains an unsupported field.', 400, {
+        code: 'INVALID_PLACEMENT_INPUT',
+      });
+    }
+    const householdId = normalizePlacementUuid(input.householdId, 'householdId');
+    const receiptId = normalizePlacementUuid(input.receiptId, 'receiptId');
+    const command = validateReceiptPlacementCommandBody({
+      assignments: input.assignments,
+      expectedReviewRevision: input.expectedReviewRevision,
+      generationId: input.generationId,
+      idempotencyKey: input.idempotencyKey,
+    });
+    const body = {
+      p_assignments: command.assignments.map((assignment) => ({
+        receiptItemId: assignment.receiptItemId,
+        zoneId: assignment.zoneId,
+      })),
+      p_expected_review_revision: command.expectedReviewRevision,
+      p_generation_id: command.generationId,
+      p_household_id: householdId,
+      p_idempotency_key: command.idempotencyKey,
+      p_receipt_id: receiptId,
+    };
+
+    if (!context.accessToken) {
+      throw new ReceiptPlacementApiError('Missing auth access token.', 401, {
+        code: 'AUTH_REQUIRED',
+      });
+    }
+
+    let response: Response;
+    try {
+      response = await this.fetch(`${this.restUrl}/rpc/finalize_receipt_placement`, {
+        body: JSON.stringify(body),
+        headers: {
+          Accept: 'application/json',
+          apikey: this.anonKey,
+          Authorization: `Bearer ${context.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      });
+    } catch {
+      throw new ReceiptPlacementApiError(
+        'Placement outcome is unknown; check status and retry the exact command.',
+        0,
+        {
+          outcomeUnknown: true,
+        },
+      );
+    }
+
+    if (response.status === 408 || response.status >= 500) {
+      throw new ReceiptPlacementApiError(
+        'Placement outcome is unknown; check status and retry the exact command.',
+        response.status,
+        {
+          outcomeUnknown: true,
+        },
+      );
+    }
+    if (!response.ok) {
+      throw await readPlacementApiError(response);
+    }
+    if (response.status !== 200) {
+      throw new ReceiptPlacementApiError(
+        'Placement response was malformed; check status and retry the exact command.',
+        502,
+        {
+          outcomeUnknown: true,
+        },
+      );
+    }
+
+    try {
+      const result = parseFinalizeReceiptPlacementResult(await response.json());
+      if (
+        result.placement.householdId !== householdId ||
+        result.placement.receiptId !== receiptId ||
+        (result.outcome !== 'already_placed' &&
+          (result.placement.generationId !== command.generationId ||
+            result.placement.reviewRevision !== command.expectedReviewRevision ||
+            result.placement.idempotencyKey !== command.idempotencyKey))
+      ) {
+        throw new TypeError('Placement result does not match the submitted command.');
+      }
+      return result;
+    } catch {
+      throw new ReceiptPlacementApiError(
+        'Placement response was malformed; check status and retry the exact command.',
+        502,
+        {
+          outcomeUnknown: true,
+        },
+      );
+    }
+  }
+
+  async getReceiptPlacement(
+    context: AuthenticatedUserContext,
+    input: GetReceiptPlacementInput,
+  ): Promise<ReceiptPlacementStatus> {
+    const householdId = normalizePlacementUuid(input.householdId, 'householdId');
+    const receiptId = normalizePlacementUuid(input.receiptId, 'receiptId');
+    const idempotencyKey =
+      input.idempotencyKey === undefined
+        ? null
+        : normalizePlacementUuid(input.idempotencyKey, 'idempotencyKey');
+    const value = await this.requestPlacementRpcJson<unknown>('get_receipt_placement', context, {
+      p_household_id: householdId,
+      p_idempotency_key: idempotencyKey,
+      p_receipt_id: receiptId,
+    });
+
+    try {
+      const status = parseReceiptPlacementStatus(value);
+      if (
+        status.receiptId !== receiptId ||
+        (idempotencyKey === null && status.keyMatches !== null) ||
+        (idempotencyKey !== null &&
+          status.state === 'placed' &&
+          status.keyMatches !== (status.placement?.idempotencyKey === idempotencyKey))
+      ) {
+        throw new TypeError('Placement status key or receipt does not match the request.');
+      }
+      return status;
+    } catch {
+      throw new ReceiptPlacementApiError('Placement status response was malformed.', 502);
+    }
+  }
+
+  async listUnplacedReceiptReviews(
+    context: AuthenticatedUserContext,
+    input: ListUnplacedReceiptReviewsInput,
+  ): Promise<ListUnplacedReceiptReviewsResult> {
+    const householdId = normalizePlacementUuid(input.householdId, 'householdId');
+    const page = requirePlacementPositiveInteger(input.page, 1, 'page');
+    const pageSize = requirePlacementPositiveInteger(input.pageSize, 25, 'pageSize');
+    if (page > 2_147_483_647 || pageSize > 100) {
+      throw new ReceiptPlacementApiError(
+        'page must fit a positive integer and pageSize must be at most 100.',
+        400,
+        {
+          code: 'INVALID_PLACEMENT_INPUT',
+        },
+      );
+    }
+
+    const value = await this.requestPlacementRpcJson<unknown>(
+      'list_unplaced_receipt_reviews',
+      context,
+      {
+        p_household_id: householdId,
+        p_page: page,
+        p_page_size: pageSize,
+      },
+    );
+    const record = readObject(value);
+    if (
+      !isRecord(record) ||
+      Object.keys(record).sort().join(',') !== 'pagination,receipts' ||
+      !Array.isArray(record.receipts) ||
+      !isRecord(record.pagination) ||
+      Object.keys(record.pagination).sort().join(',') !== 'page,pageSize,total' ||
+      record.pagination.page !== page ||
+      record.pagination.pageSize !== pageSize ||
+      !Number.isSafeInteger(record.pagination.total) ||
+      Number(record.pagination.total) < 0 ||
+      record.receipts.some((receipt) => !isRecord(receipt) || receipt.household_id !== householdId)
+    ) {
+      throw new ReceiptPlacementApiError('Pending placement response was malformed.', 502);
+    }
+
+    try {
+      return {
+        pagination: {
+          page,
+          pageSize,
+          total: Number(record.pagination.total),
+        },
+        receipts: record.receipts.map((receipt) => mapReceiptRow(receipt as DatabaseReceiptRow)),
+      };
+    } catch {
+      throw new ReceiptPlacementApiError('Pending placement response was malformed.', 502);
+    }
   }
 
   async listReceipts(
@@ -1320,6 +1616,43 @@ export class SackerlReceiptsClient {
     }
 
     return (await response.json()) as T;
+  }
+
+  private async requestPlacementRpcJson<T>(
+    functionName: string,
+    context: AuthenticatedUserContext,
+    body: object,
+  ): Promise<T> {
+    if (!context.accessToken) {
+      throw new ReceiptPlacementApiError('Missing auth access token.', 401, {
+        code: 'AUTH_REQUIRED',
+      });
+    }
+
+    let response: Response;
+    try {
+      response = await this.fetch(`${this.restUrl}/rpc/${functionName}`, {
+        body: JSON.stringify(body),
+        headers: {
+          Accept: 'application/json',
+          apikey: this.anonKey,
+          Authorization: `Bearer ${context.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      });
+    } catch {
+      throw new ReceiptPlacementApiError('Placement read failed.', 0);
+    }
+    if (!response.ok) {
+      throw await readPlacementApiError(response);
+    }
+
+    try {
+      return (await response.json()) as T;
+    } catch {
+      throw new ReceiptPlacementApiError('Placement read response was malformed.', 502);
+    }
   }
 
   private async request<T>(

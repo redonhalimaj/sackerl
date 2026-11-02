@@ -1,10 +1,11 @@
 # QA Agent
 
-## Model
+## Assignment
 
-`gpt-5.5`
-
-Reasoning effort: `high`
+This specialty is dynamically assigned to one of the three `gpt-6-luna` worker seats per issue.
+Use `high` for independent validation and `xhigh` for complex domain review with the Chair and
+Astra. During implementation, QA is a separate non-implementing seat; follow [TEAM.md](../../TEAM.md)
+and [the agent docs](README.md) for voting and rotation rules.
 
 ## Mission
 

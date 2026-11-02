@@ -155,6 +155,13 @@ export {
   receiptStatuses,
   validateReceiptLineExpiry,
 } from './receipts';
+export {
+  ReceiptPlacementApiError,
+  normalizePlacementUuid,
+  receiptPlacementErrorCodes,
+  receiptPlacementOutcomes,
+  validateReceiptPlacementCommandBody,
+} from './receipt-placement';
 export type {
   CreateReceiptInput,
   DatabaseReceiptItemRow,
@@ -183,12 +190,27 @@ export type {
   ReplaceReceiptItemsInput,
   ReceiptsClientOptions,
   ReceiptStatus,
+  ListUnplacedReceiptReviewsResult,
   SaveManualReceiptReviewLineInput,
   SavePersistedReceiptReviewLineInput,
   SaveReceiptReviewInput,
   SaveReceiptReviewLineInput,
   UpdateReceiptInput,
 } from './receipts';
+export type {
+  FinalizeReceiptPlacementInput,
+  FinalizeReceiptPlacementResult,
+  GetReceiptPlacementInput,
+  ListUnplacedReceiptReviewsInput,
+  ReceiptPlacement,
+  ReceiptPlacementApiErrorOptions,
+  ReceiptPlacementAssignment,
+  ReceiptPlacementCommandBody,
+  ReceiptPlacementErrorCode,
+  ReceiptPlacementItem,
+  ReceiptPlacementOutcome,
+  ReceiptPlacementStatus,
+} from './receipt-placement';
 export {
   confidenceLevelForScore,
   isReceiptItemConfidenceLevel,

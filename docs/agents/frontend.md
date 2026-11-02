@@ -1,10 +1,10 @@
 # Frontend Agent
 
-## Model
+## Assignment
 
-`gpt-5.6-luna`
-
-Reasoning effort: `high`
+This specialty is dynamically assigned to one of the three `gpt-6-luna` worker seats per issue.
+Use `high` for bounded implementation and `xhigh` for complex domain review with the Chair and
+Astra. Follow current routing and Council rules in [TEAM.md](../../TEAM.md) and [the agent docs](README.md).
 
 ## Mission
 

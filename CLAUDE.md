@@ -9,18 +9,27 @@ role assignments are not a barrier to Claude takeover. Record actual model ident
 preserve existing staged/unstaged work, and keep one writer per file set. Save checkpoints after
 milestones and before limits; independent QA is still required before Done.
 
-Use the [Council workflow](docs/agents/council-workflow.md) for substantive decisions and final
-acceptance. **The Team** does detailed work with a **Deputy**; the **Chair** provides expert review.
-Deputy and participating specialists first reach unanimity, then hear the Chair's refinements and
-reconfirm the same final revision together. No silent assent or Chair override counts as consensus.
-TEAM.md defines the GPT-5.5 Deputy and preferred GPT-6 Astra Chair routes for Codex; the authorized
-Claude profile preserves these responsibilities using explicitly recorded available Claude models.
+Owner direction (2026-10-19): finish current SCKRL-311 work first, then use
+[the Claude implementation package](docs/agents/claude-next-work-package.md). Claude implements
+subsequent assigned work; Codex independently reviews it and returns findings for Claude to fix.
+Preserve pending feature gates and confirm file ownership is released before writing.
 
-In the Codex profile, the Chair, Deputy and every specialist can use Junior support
-(`gpt-6-luna`, `low`) for self-contained mechanical tasks with short task-local context. The
-assigning agent reviews the output and retains ticket ownership. Junior support has no Council
-vote or independent QA authority; follow [TEAM.md](TEAM.md#junior-support) and
-[the junior brief](docs/agents/junior.md) for exclusions and escalation.
+Use the [Council workflow](docs/agents/council-workflow.md) for substantive decisions and final
+acceptance. The **Chair** analyzes, orchestrates and directly instructs the Lunas, and prepares
+review evidence. Astra performs brief model routing and participates only in work reviews, per the
+owner's 2026-10-19 direction. Required reviewers first reach unanimity, then hear the Chair's refinements and
+reconfirm the same final revision together. No silent assent or Chair override counts as consensus.
+The current Codex routing is a root Chair plus `gpt-6-astra` Deputy and exactly three
+`gpt-6-luna` worker seats. The root records its actual runtime model and effort; it does not claim
+to be Astra. Functional specialties are assigned dynamically among the three Lunas. When Claude
+continues, follow its explicitly recorded provider profile while retaining this topology and Council
+rules.
+
+Current work uses no Terra, Sol, or GPT-5.5 routes and no separate fourth junior agent. A Luna seat
+may be assigned bounded junior mode (`low`, non-voting) for mechanical work. Standard Luna work uses
+`high`; complex domain review uses `xhigh` with the Chair and Astra. The applicable fast, standard,
+or complex Council path, concurrency limit, voting rules, and independent QA requirements are in
+[AGENTS.md](AGENTS.md) and [TEAM.md](TEAM.md).
 
 ## Repo Context
 

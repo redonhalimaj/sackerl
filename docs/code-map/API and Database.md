@@ -38,6 +38,13 @@ Direct PostgREST CRUD is appropriate for ordinary resource operations: `SackerlI
 | Recipes  | `GET /suggestions`                                                                                                          | [`suggestions/route.ts`](../../apps/web/app/suggestions/route.ts)                                              |
 | Shopping | `GET/POST /shopping-list`, `POST /shopping-list/batch`, `PATCH/DELETE /shopping-list/:id`, `GET /shopping-list/suggestions` | [`apps/web/app/shopping-list`](../../apps/web/app/shopping-list/route.ts)                                      |
 
+The SCKRL-311 source adds authenticated `GET/POST /receipts/:id/placement` and
+`GET /receipts/pending-placement`. They use `finalize_receipt_placement`,
+`get_receipt_placement` and `list_unplaced_receipt_reviews` through the shared client.
+The command accepts assignments and revision/idempotency tokens only; the database reads all item
+and expiry values. New routes use `Cache-Control: no-store`. Current Home discovery stays on its
+existing contract until placement activation. See the [311 contract](../features/sckrl-311-atomic-receipt-placement.md).
+
 ## Persistence map
 
 | Migration                                                                                                                        | Durable boundary                                                                                                                                                                     |
@@ -53,6 +60,8 @@ Direct PostgREST CRUD is appropriate for ordinary resource operations: `SackerlI
 | [`20260804100000_sckrl_303_receipt_parsing.sql`](../../supabase/migrations/20260804100000_sckrl_303_receipt_parsing.sql)         | `receipt_items`, parsed metadata, confidence, receipt-item RLS.                                                                                                                      |
 | [`20260911110000_sckrl_310_receipt_review_data.sql`](../../supabase/migrations/20260911110000_sckrl_310_receipt_review_data.sql) | Parse generations, review enums/columns, legacy backfill, grants, four RPC commands.                                                                                                 |
 | [`20260916100000_sckrl_406_expiry_provenance.sql`](../../supabase/migrations/20260916100000_sckrl_406_expiry_provenance.sql)     | Append-only `item_expiry_facts`, item projection and declaration columns, the sync and history-guard triggers, `households.calendar_time_zone`, legacy backfill, select-only grants. |
+| [SCKRL-312 receipt expiry](../../supabase/migrations/20260930100000_sckrl_312_receipt_expiry.sql)                                | Persists receipt-line unknown/dated/no-date choices and separate expiry-editor attribution.                                                                                          |
+| [SCKRL-311 placement](../../supabase/migrations/20261015100000_sckrl_311_atomic_receipt_placement.sql)                           | Protected stock lineage, immutable placement/results, acquisition events, locked command/status/list RPCs and placed-source freeze.                                                  |
 
 Stock, receipt, zone, and shopping-list rows carry `household_id` and use household-membership checks where their migrations define them. `users`, `households`, and `household_members` use user/owner policies, with member household SELECT added by SCKRL-406; categories and recipes are not universally household-scoped. The SCKRL-310 migration revokes authenticated direct insert/update/delete access for review-owned rows and exposes authenticated reads plus bounded receipt header writes. Its schema is required before using the new review RPCs. Codex has not applied it; hosted migration state must be verified separately.
 
@@ -74,5 +83,14 @@ and [[Recipes and Shopping]] describes its consumers. The pending migration also
 to SELECT their household through `is_household_member`, while UPDATE remains owner-only.
 
 The database is the source of truth for atomicity and conflict handling. TypeScript maps snake_case rows to camelCase models and computes UI-ready effective values in [`mapReceiptItemRow`](../../packages/api-client/src/receipts.ts), while SQL functions return one receipt-plus-items snapshot.
+
+SCKRL-311 adds protected `items.source_receipt_item_id`, immutable `receipt_placements` and
+acquisition-only `inventory_acquisition_events`. One placement transaction creates stock and
+applicable 406 facts from the saved 312 choices. Membership and zone locks protect authorization
+and placement races; legacy review/parse wrappers and source guards freeze placed receipts.
+New receipt-source generic item writes require placement-owned lineage; legacy unlinked receipt
+items retain ordinary edits. Receipt deletion preserves stock and clears nullable lineage;
+item/household deletion removes acquisition events. Original placement results remain immutable
+after stock edits or deletion. Source presence does not establish hosted migration or activation.
 
 Use [[Method Index]] for every exported method and [[Maintenance]] when a route, client contract, migration, RLS policy, or RPC changes.

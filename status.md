@@ -2,9 +2,276 @@
 
 ## Session Handoff
 
-Last updated: 2026-10-12
+Last updated: 2026-11-02
 
-### Current checkout and merged baseline
+### Current testing/publication checkpoint — 2026-11-02
+
+The owner's latest instruction assigns the remaining testing to the owner using **Claude** and
+authorizes Codex to update the handover and **commit/push the current branch**. Codex owns only
+this publication closeout now; no further application/device/connected tests are started here.
+Use the [Claude testing handover](docs/agents/claude-next-work-package.md), including its ordered
+test checklist and ready-to-use resume prompt. Do not return those remaining tests automatically
+to Codex. Independent review still applies to any later implementation fixes.
+
+Source-v4 is unanimously ratified after preliminary unanimity, reciprocal Chair review and all
+five fresh final Support votes. It accepts the bounded local source/evidence increment only.
+The subsequent user-directed testing/publication documentation is a separate revision tracked by
+the [publication manifest](docs/qa/sckrl-311-handover-publication-manifest.json); the accepted v4
+handover hashes intentionally differ. Implementation, contracts and SQL are unchanged.
+
+Checkout: `feature/SCKRL-311-astra-luna`, reviewed base dev `7547916`. Publication is being
+prepared; no commit/push success is claimed until verified below. SCKRL-311 remains **Review**,
+SCKRL-304/406/312 remain Review, SCKRL-908 In Progress, SCKRL-305 Blocked and Stage 1 incomplete.
+No hosted installation or UI activation occurred. The October hosted probe is historical only.
+
+The local November 1 replay passes 95 steps/32 inputs; independent QA verified the 98-file archive
+and shutdown. Raw evidence stays in ignored
+`.env.qa-sckrl311-evidence-20261101/run-zu04vnsp` and is **not pushed**. Code/reports/manifests
+are included in this publication; testing from another machine requires separately transferring that synthetic
+archive or recording its absence. Credentials remain ignored and are never included in publication.
+
+Next: finish bounded documentation review and publication checks, commit/push, record the actual
+source publication and release writing ownership. The owner's manual Claude takeover starts with
+the published checkout/manifest/archive verification, then a fresh read-only target/schema
+preflight and preparation of the remaining execution artifacts before any separately authorized
+hosted write. No new feature starts from this testing assignment.
+
+The publication documentation snapshot is `SCKRL-311-testing-handover-publication-v5-r2`, SHA-256
+`859ae08530ee3603b77865431d818713f25780101b02618b1cb23e7e890fbd5e` (69 entries, one deletion).
+B and independent C freshly Supported this exact snapshot after source/hash and scope checks;
+Chair integration passes. GitHub connectivity was restored and verified using a TTY. The remote
+feature branch does not yet exist; staging, commit and push follow this checkpoint.
+
+### Historical review continuation — 2026-11-01
+
+The owner requests status during the authorized continuation. All 66 frozen source-v2 entries
+still match manifest `d9b1414da2536ba83cc889ad46099a81bac79dd83e73110d8279fb6da4d881b5`.
+No delegated sessions survived the intervening session reset, and no preliminary worker votes or
+final source acceptance were recorded. Source-v2 remains unratified. SCKRL-311 remains **Review**;
+no hosted migration, activation, publication or next feature has started.
+
+The October 24 passing SQL run and independent QA are recorded below, but its temporary raw
+artifacts are no longer present. Restore evidence with the unchanged reviewed runner/helper,
+then archive the synthetic logs/results in an ignored workspace directory so another temporary
+directory cleanup cannot erase the review packet. This is a reproducibility/evidence gap, not a
+new product defect. Unchanged app checks and the accepted ordinary simulator run are not repeated.
+
+Before new findings, source-v3 retains voter seats Chair, Astra, A (Backend/Infrastructure),
+B (client/web/handover) and C (independent QA). Routes remain Luna A/C `gpt-6-luna`/`xhigh`,
+B `gpt-6-luna`/`high`, Astra `gpt-6-astra`/`xhigh` for work review only; root is GPT-6-based with
+precise variant/effort unexposed. Root owns integration/archive/status/handover/manifest; C owns
+QA reports; owners/reviewers do not edit the implementation they independently accept.
+Preserve immutable v1/v2 manifests and proposals; replacement evidence receives a new revision
+and fresh votes. No former vote, interrupted task or silence is assent.
+
+Evidence restoration completed with the unchanged runner/helper. The permissioned replay and
+durable capture passed; selected archive is
+`.env.qa-sckrl311-evidence-20261101/run-zu04vnsp`. Its raw results SHA-256 is
+`efa909150f3d978780f1c7d2f6b7592b9e0670096cf46094bfc617b0f0ba4a8f` and archive registry SHA-256 is
+`8a0b142dc49881794823bbf848a9a1822e4517663a5cca57c700bfa4c7b9e48c`.
+All 95 steps/logs pass, all 32 inputs match and all 98 archived file hashes match. The owned
+cluster stopped, its PID file is absent and no PostgreSQL data directory was archived. C inspected
+both the archive and originals independently; C did not rerun SQL. The first sandbox attempt
+`run-4v3a77e6` is preserved as an initdb/shared-memory permission failure, not a SQL pass.
+The reviewed plan-by-default capture wrapper is SHA-256
+`ca93893bf80a129eb8f5e9793ba784780fbd99ca70e5487d27f2d72f68eaf361`.
+
+Source-v3 will bind the new durable evidence and updated handover/QA guidance. App/backend source,
+the runner and concurrency semantics are unchanged. Historical v1/v2 remain immutable and
+unratified; their temporary evidence paths are not current review artifacts. The October 23 hosted
+metadata probe is reported history only and must be repeated as part of a future full preflight.
+Next: freeze the source-v3 manifest after QA report release, obtain fresh preliminary votes,
+perform reciprocal Chair review and collect all five fresh final votes; then record ownership
+release and the exact first manual Claude action. Hosted writes and new features remain gated.
+
+V3 preliminary review was not unanimous: B and Astra found undated present-tense references to
+the expired October probe. Root corrected both handovers; implementation and evidence remain
+unchanged. Source-v4 is frozen at
+`2bfc5a157fd747cb90f0f4f3d6127f742ede89dd1a16882e8fa004294152a3c9` (68 entries, one deletion).
+Chair/A/B/C/Astra have each freshly Supported preliminary v4 after exact hash checks. Reciprocal
+Chair review preserves failed-vs-passed archive evidence, historical-only hosted observations and
+all activation gates. Fresh final peer votes are pending on the same unchanged v4 revision;
+handover ownership has not yet been released. Earlier v1/v2/v3 remain unratified history.
+
+### Current work checkpoint — 2026-10-24
+
+Recovered after a server restart. The checkout remains `feature/SCKRL-311-astra-luna`, HEAD
+`7547916`, with inherited local changes preserved. Codex retains SCKRL-311 local closeout and
+handover ownership; no Claude or next implementation has started. SCKRL-311 remains **Review**.
+
+The restart-recovered concurrency helper was SHA-256
+`d94fa3a7094767c48be47e4631ad479f35cb80e37267d0a3fb2d094edfbbc7ee`.
+It includes isolated synthetic zones, direct result/stock/event mapping assertions and immediate
+subtransaction rollback for an unexpected successful zone deletion. Fresh permissioned execution at
+`/private/tmp/sckrl311-validation.8b941dfv` reached all 95 steps: only concurrency step 94 failed;
+step 95 stopped the cluster successfully, and its PID file is absent. The overly strict requirement
+to observe both delete blockers simultaneously was not satisfied. Both placements were observed
+blocked by the gate; no successful new-case outcome is claimed for that failed attempt. A corrected this observer with
+an A-only lower-zone witness before the second placement, preserving the intended proof. Source
+and transaction contracts remain unchanged. The failed evidence is retained for independent review.
+
+The corrected helper is SHA-256
+`d8a138c27c8fd98b8667650256d97019dae1ce0e9e6c0af269928ace38767ad1`.
+After fresh C/Astra packet Support, the separately permissioned 2026-10-24 replay at
+`/private/tmp/sckrl311-validation.a3vvont4` passes all 95 subprocess steps; all 95 logs exist and
+all 32 input hashes match. `checksPassed`/`clusterStopped` are true and the PID file is absent.
+Result SHA-256 is `5c79d11c6b2e58e462a5136dc24487723656707f1566bddb42580871e0f2967a`.
+Nine scenarios comprise the existing eight races plus one combined zone scenario with four
+observed-blocker phases. The A-only lower-zone probe proves lower-before-higher locking despite
+high-first input, then rolls back before B starts; the final deletion waits on a recorded placement
+PID and rejects with `23503` after both placements succeed. Exact stock/event/result mappings
+pass. C independently inspected the actual new artifacts and released both formatted QA reports.
+
+The reviewed metadata-only development probe was resumed with sandbox permission and succeeded
+over TLSv1.3, binding the expected project/database/user/port and read-only catalog session. The
+311 placement/acquisition tables and lineage column are absent; 312 expiry and expiry facts are
+present. This limited probe does not establish the full baseline or authorize hosted writes.
+
+No delegated sessions survived the restart. Before new findings, retain the fixed v2 voter seats
+Chair, Astra, A, B and independent QA C, with fresh explicit votes only. Resume routes are Luna A/C
+`gpt-6-luna`/`xhigh`, Luna B `gpt-6-luna`/`high`, Astra `gpt-6-astra`/`xhigh`; root remains GPT-6-based
+with precise variant/effort unexposed. A owns helper corrections if required; C owns QA reports;
+B reviews the client/web and connected packet; Chair owns integration, status, manifest and handover.
+Run the A/C/Astra review wave within four active sessions; B returns only after a seat completes.
+
+Source-v2 is frozen in `docs/qa/sckrl-311-source-v2-manifest.json`: 66 entries including one
+deletion, SHA-256 `d9b1414da2536ba83cc889ad46099a81bac79dd83e73110d8279fb6da4d881b5`.
+All entries, format/diff checks, 458 local Markdown targets and the generated map match. Historical
+v1 is preserved unratified. The bounded v2 proposal and fresh vote ledger are in the
+[current Council record](docs/agents/council-decisions/COUNCIL-20261019-01-placement-source.md).
+
+Next: obtain fresh preliminary/final unanimous votes after reciprocal Chair review. Reuse unchanged successful
+2026-10-22 build, focused tests, 18-task cache validation and code-map checks; repeat only checks
+affected by subsequent source edits. Hosted target/schema/connected acceptance remain separate.
+
+### Current continuation — 2026-10-22
+
+The owner requests continuation after the status/handover check. Codex retains writing ownership
+for SCKRL-311 local review closeout and preparation of a truthful Claude implementation/Codex QA
+handoff. Checkout is `feature/SCKRL-311-astra-luna`, HEAD `7547916`; inherited uncommitted and
+untracked work is preserved. No subsequent feature, hosted migration, deployment or publication
+is started. SCKRL-311 remains **Review**; Stage 1 remains incomplete.
+
+Before new findings, the source-v2 voters are declared: Chair, Astra, Luna A (Backend/Infrastructure),
+Luna B (client/web and connected-execution planning) and Luna C (independent QA). Root is GPT-6-based;
+the precise variant and reasoning setting are not exposed. Delegated routes are `gpt-6-luna`/`xhigh`
+for A and C, `gpt-6-luna`/`high` for B, and `gpt-6-astra`/`xhigh` for work review only. Complete the
+three-Luna wave before invoking Astra; at most four sessions including root run concurrently.
+
+File boundaries: A owns the SCKRL-311 concurrency helper and any necessary synthetic fixture
+extensions; B owns client/web corrections if needed and a new development/connected execution
+packet; C owns independent QA reports and does not implement source. Chair owns status, Council
+bookkeeping, exact-source manifest, handover, generated maps and integration checks. The ratified
+placement contract is unchanged. No prior v1 vote accepts revised source.
+
+First actions: verify the inherited HTTP-200-to-502 correction, add the two missing zone-order
+cases using observed blocking in the disposable runner, independently review their execution
+packet, then execute only with applicable sandbox permission. Refresh affected checks, publish an
+immutable v2 manifest and obtain fresh preliminary and final votes after reciprocal Chair review.
+Hosted schema/real Auth/PostgREST and mobile activation remain separate gates; a concrete target
+and execution packet must precede any hosted authorization request. The accepted ordinary
+simulator journey is not repeated.
+
+The Claude package exists but is not yet released: its accepted-source wording and 370-test
+snapshot are stale. Five entries differ from the historical v1 manifest, including the package,
+QA report and HTTP correction/tests. Refresh these facts before release; do not treat handover
+preparation as source ratification or full-ticket completion.
+
+Current verification: integrated `pnpm exec turbo run lint typecheck test` passes 18/18 tasks,
+all 18 from matching cache (372 recorded tests: API client 169, web 76, mobile 116, UI eight,
+tokens three). B freshly reproduced 58 receipt-client and 12 placement-route tests. Root's fresh
+`pnpm --filter @sackerl/web build` succeeds, including both new placement routes, and root
+`pnpm format:check` and `git diff --check` pass. These checks do not execute SQL. The historical
+v1 manifest will remain immutable; v2 uses a new manifest file rather than overwriting old votes.
+
+### Chair-led continuation — 2026-10-19
+
+The owner requests efficient Council use: the root Chair leads analysis, orchestration, evidence
+synthesis and direct Luna instructions. Astra performs brief model routing and participates only
+in work reviews. This overrides the broader Deputy coordination duties in the historical policy
+below; independent QA, reciprocal review and unanimous acceptance remain required.
+
+The owner's subsequent direction is to finish this work first, then prepare a Claude handoff for
+the next program topics, with Claude implementing and Codex providing independent QA. The handoff
+is future work; no Claude writer or next feature is started during this SCKRL-311 continuation.
+
+Continuation preserves `feature/SCKRL-311-astra-luna` and its inherited uncommitted source.
+SCKRL-311 is **Review**: local implementation and disposable SQL verification are complete;
+independent evidence review and exact-source Council acceptance are in progress;
+hosted/connected gates remain. The ratified placement v1
+contract is unchanged. Current routes:
+Astra `gpt-6-astra`/`high` for routing and a fresh `xhigh` session for work review,
+Luna A `gpt-6-luna`/`xhigh` for database/fixtures,
+Luna B `gpt-6-luna`/`high` for client/web and Luna C `gpt-6-luna`/`xhigh` for independent QA.
+Root is GPT-6-based; its exact runtime variant/effort is not exposed. Astra completed routing
+before the three-Luna implementation/QA wave. Final source voters are Chair, Astra, A, B and C;
+historical design votes are preserved and do not accept the unfinished implementation. Source v1
+was not ratified: Astra found malformed HTTP 200 replies forwarded as successful errors, and QA
+requested explicit treatment of both missing zone-race cases. B is fixing the HTTP status with
+a real SDK/route regression; fresh v2 votes will follow independent QA.
+
+The Chair owns active operating guidance, status, handoff, integration and generated code maps.
+Database and API owners have disjoint files; independent QA does not implement their changes.
+The separately authorized disposable SQL run passed. Hosted schema installation, connected
+acceptance, placement UI and full-ticket completion remain separate gates. The accepted ordinary simulator run is not repeated.
+
+Source integration on 2026-10-19 passes all 18 Turbo lint/typecheck/test tasks (nine cached),
+with 370 recorded tests: API client 169, web 74, mobile 116, UI eight and tokens three. Root
+format and diff checks pass. Independent QA reproduced 103 focused client and 17 placement web
+tests. These checks do not execute SQL. A reviewed, plan-by-default disposable PostgreSQL 14
+runner at `supabase/tests/run_sckrl_311.py` passed all 95 subprocess steps after review and separate
+sandbox execution permission. Its five databases cover clean/populated installation and 310/406/312
+regressions; eight concurrent cases observe actual PostgreSQL blocking. All 32 input hashes match,
+all 95 logs exist and the owned cluster is stopped. See [database evidence](docs/qa/sckrl-311-database-review.md).
+Independent QA identified missing calendar boundary, multi-zone assignment, post-placement
+pagination and save/promote race coverage. Those additions now pass in the replacement final-source
+run, `/private/tmp/sckrl311-validation.6yvy7l5d`, with unchanged migration/runtime contracts. The
+actual zone-deletion race still covers one zone with deletion winning; concurrent multi-zone
+lock ordering and placement winning before a later zone deletion both remain evidence gates
+before activation. No full-ticket acceptance is inferred.
+The web production build, generated-map check (715 callables, 1,316 relationships, 88 modules, zero
+stale files), Python syntax and 367 local Markdown file targets also pass. No hosted write occurred.
+
+### Active Council and roadmap continuation — 2026-10-15
+
+Resumed 2026-10-18 at the owner's request. The saved branch and inherited edits are preserved.
+The SCKRL-311 design is in [Council02](docs/agents/council-decisions/COUNCIL-20261015-02-placement.md);
+its exact v1 contract is now unanimously ratified after preliminary consensus, reciprocal Chair
+review and five fresh final Support votes. Implementation has resumed; no migration execution
+occurred during the interruption or the design review.
+
+The owner requests the current root Chair, an Astra Deputy/router and exactly three Luna workers,
+with unanimous decisions, issue-dependent streams and review depth scaled to complexity. This
+supersedes the earlier Terra proposal and the old fixed specialist/junior roster. Current policy
+and review evidence are in [COUNCIL-20261015-01](docs/agents/council-decisions/COUNCIL-20261015-01-astra-three-lunas.md).
+The 16-file workflow policy snapshot is **unanimously ratified** after independent QA, reciprocal
+Chair review and fresh final Support from Astra and all three Lunas. Formatting, 198 local
+Markdown links/anchors across policy and ledgers, and diff checks passed; all 16 frozen hashes
+remain unchanged. This is a documentation-only policy acceptance, separate from roadmap delivery.
+
+Actual local baseline is **dev `7547916`**, whose Git history includes the merge of PR #6. The
+initial working tree was clean. Current local branch is **`feature/SCKRL-311-astra-luna`**, created
+from that baseline for this policy update and the owner's authorized next-roadmap continuation.
+The earlier open-PR and feature-checkout descriptions below are historical. No new remote merge,
+commit, push or deployment is claimed by this observation.
+
+Ownership: Chair owns this checkpoint and the decision record; Luna A owns canonical workflow,
+team and leadership briefs; Luna B owns operating summaries and functional role briefs; Luna C
+provides independent QA. Actual delegated routes are Astra `gpt-6-astra`/`xhigh` and the three
+Lunas `gpt-6-luna`/`high`. The root is GPT-6-based; its exact model variant/effort is not exposed.
+
+The owner also asks to continue the next program work item. SCKRL-311 is now **In Progress** for
+bounded contract refinement and local backend work, with
+Luna A as primary Backend owner, Luna B covering Infrastructure/API contracts and Luna C providing
+independent QA. The complex Council ratified the exact contract; Luna A is implementing the
+transaction/migration/fixtures and Luna B the typed client/web boundary. SQL execution remains
+unrun and separate from this design/local-source authorization. The already accepted ordinary simulator run must
+not be repeated. SCKRL-304/406/312
+remain **Review**, SCKRL-908 remains **In Progress**, and Stage 1 remains incomplete. Full SCKRL-908
+completion is not an added prerequisite for bounded SCKRL-311 contract work. No new hosted
+migration, provider change, production deployment or scope expansion is authorized here.
+
+### Historical checkout and merged baseline — 2026-10-12
 
 Active checkout: **`feature/SCKRL-908-council-junior`**, created from dev **`a0f5359`** on
 2026-10-11 for junior support and a bounded SCKRL-908 source recovery increment. The dev
@@ -889,7 +1156,7 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | SCKRL-930 | Todo        | Backend                   | Optional nutrition/calorie discovery; Stage 6.    | Phone-feedback triage 2026-09-13; criteria in features.md. Not started.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | SCKRL-506 | Done        | Backend                   | Recipe expiry eligibility.                        | Accepted by independent QA and Sol integration on 2026-09-13. 29 recipe tests and 122 workspace tests pass; expiry gate shared by list/detail and both apps. See docs/qa/sckrl-506-recipe-expiry-qa.md. Device validation not performed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | SCKRL-310 | Done        | Backend                   | Receipt review data upgrade.                      | Accepted locally 2026-09-13 after independent SQL QA, Infrastructure and integration review. Atomic generation/review snapshots, corrections/manual lines, conflict guards and hardened grants. 102 tests, checks/build, migration replay and SQL fixtures pass. Live dev migration still pending. See docs/features/sckrl-310-receipt-review-data.md.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| SCKRL-311 | Todo        | Backend                   | Atomic receipt placement command.                 | Added on 2026-09-06 after Backend/Infrastructure audit identified the missing transaction boundary. Implements idempotent receipt finalization, reviewed-line validation, stock lineage, expiry facts, acquisition events, and all-or-nothing placement. Depends on SCKRL-202, SCKRL-310, and SCKRL-406.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| SCKRL-311 | Review | Backend                   | Atomic receipt placement command.                 | 2026-10-24 backend source-v2 review: canonical placement/status/unplaced RPCs, protected lineage, expiry facts/events and immutable recovery. 372 recorded tests, fresh web build and corrected 95-step disposable replay pass; nine concurrency scenarios include observed multi-zone ordering and placement-before-delete. Failed observer attempt retained. Independent artifact review and fresh exact-source Council votes pending; hosted baseline/installation, real Auth/PostgREST and placement UI stay gated. No full-ticket Done claim. |
 | SCKRL-312 | Review      | Frontend                  | Receipt-line expiry and continuation.             | Accepted source snapshot is unchanged and integrated into dev via PR #4. SQL replay, bounded dev installation, connected Auth/PostgREST/shared-client and saved native Home resume after cold restart passed. Live HTTP34 and native stale-save conflict/reload passed. Edge-swipe, dirty account change, pending-navigation/offline/uncertain recovery, accessibility/device and final acceptance stay open; SCKRL-311 placement excluded.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | SCKRL-501 | Done        | Backend                   | Recipe matching engine.                           | Added an idempotent `recipes` table migration with 50 seeded recipes, shared recipe suggestion scoring from active household stock, and authenticated web `GET /suggestions?limit=5&min_score=0.7`. Focused API-client tests/typecheck/lint/build, web typecheck/lint/test/build, root format check, and recipe seed count validation passed on 2026-06-11. User applied the migration in Supabase SQL Editor; public PostgREST confirmed 50 recipes, and authenticated local route runtime QA passed with an isolated QA user: `tomato-pasta` returned as top suggestion with score `1`, 5/5 covered ingredients, and QA-user cleanup succeeded.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | SCKRL-206 | Done        | Frontend                  | Dashboard Suggestion card.                        | Implemented the Phase 2 sage "From your stock" dashboard card on mobile Home using the shared SCKRL-501 recipe suggestion client. The card reads one match, shows up to four covered ingredient chips, hides when no match is available, and routes "Show recipe" to a minimal `/recipe/[id]` SCKRL-505 placeholder. Focused mobile typecheck/lint/test, api-client typecheck, root format check, Expo web export, local Expo HTTP smoke check, temporary Supabase QA-user cleanup, and user Expo Go visual/runtime QA passed on 2026-06-11. Screenshots confirmed `Tomato Pasta`, ingredient chips, tab clearance, and placeholder navigation.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
