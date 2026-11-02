@@ -65,8 +65,7 @@ export function receiptPlacementApiErrorResponse(
       [401, 'AUTH_REQUIRED'],
       [403, 'HOUSEHOLD_ACCESS_REQUIRED'],
       [404, 'RECEIPT_NOT_FOUND'],
-      [409, 'STALE_RECEIPT_REVIEW'],
-      [422, 'INVALID_PLACEMENT_LINE'],
+      // 409/422 have several distinct causes; without a database code, none is implied (SCKRL-912).
     ]);
     return jsonResponse(
       {

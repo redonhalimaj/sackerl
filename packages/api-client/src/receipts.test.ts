@@ -1159,6 +1159,54 @@ describe('atomic receipt placement client', () => {
     });
   });
 
+  it('maps an integrity conflict inside finalize to PLACEMENT_CONFLICT (SCKRL-912)', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse(
+        {
+          code: 'PT409',
+          details: '{"code":"PLACEMENT_CONFLICT"}',
+          message: 'Placement conflicts with concurrent changes.',
+        },
+        { status: 409 },
+      ),
+    );
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+    await expect(
+      client.finalizeReceiptPlacement(context, {
+        assignments: [{ receiptItemId: ids.lineA, zoneId: ids.zone }],
+        expectedReviewRevision: 3,
+        generationId: ids.generationId,
+        householdId: ids.householdId,
+        idempotencyKey: ids.idempotencyKey,
+        receiptId: ids.receiptId,
+      }),
+    ).rejects.toMatchObject({
+      code: 'PLACEMENT_CONFLICT',
+      message: 'Placement conflicted with a concurrent change; reload and try again.',
+      outcomeUnknown: false,
+      status: 409,
+    });
+  });
+
+  it('leaves an uncoded 409 without a placement code', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        jsonResponse({ code: '23505', details: null, message: 'duplicate key' }, { status: 409 }),
+      );
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+    await expect(
+      client.finalizeReceiptPlacement(context, {
+        assignments: [{ receiptItemId: ids.lineA, zoneId: ids.zone }],
+        expectedReviewRevision: 3,
+        generationId: ids.generationId,
+        householdId: ids.householdId,
+        idempotencyKey: ids.idempotencyKey,
+        receiptId: ids.receiptId,
+      }),
+    ).rejects.toMatchObject({ code: undefined, outcomeUnknown: false, status: 409 });
+  });
+
   it('uses the opt-in status and pending-placement RPCs with bounded pagination', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

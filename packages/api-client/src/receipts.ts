@@ -937,6 +937,7 @@ async function readPlacementApiError(response: Response): Promise<ReceiptPlaceme
     RECEIPT_NOT_FOUND: 'Receipt not found.',
     PLACEMENT_KEY_REUSED: 'Placement key was already used for a different command.',
     STALE_RECEIPT_REVIEW: 'Receipt review has changed.',
+    PLACEMENT_CONFLICT: 'Placement conflicted with a concurrent change; reload and try again.',
     RECEIPT_ALREADY_PLACED: 'Receipt has already been placed.',
     RECEIPT_NOT_REVIEWED: 'Receipt review is incomplete.',
     EMPTY_RECEIPT_PLACEMENT: 'Receipt has no included lines to place.',

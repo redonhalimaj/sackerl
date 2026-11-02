@@ -395,3 +395,24 @@ test.describe('/items/removal-stats', () => {
     expect(body.stats.current.totalCount).toBe(0);
   });
 });
+
+test.describe('/items malformed JSON (SCKRL-912)', () => {
+  test('POST, batch and PATCH return 400 for a malformed body', async ({ owner, request }) => {
+    await setupHousehold(owner);
+    const existing = await createItem(owner);
+    const headers = {
+      Authorization: `Bearer ${owner.user.accessToken}`,
+      'Content-Type': 'application/json',
+    };
+    // A string would be JSON-encoded by Playwright; send raw bytes so the body is malformed.
+    const data = Buffer.from('{not json');
+
+    for (const response of [
+      await request.post('/items', { data, headers }),
+      await request.post('/items/batch', { data, headers }),
+      await request.patch(`/items/${existing.id}`, { data, headers }),
+    ]) {
+      expect((await expectJson(response, 400)).error).toBe('Invalid JSON body.');
+    }
+  });
+});
