@@ -1,0 +1,4 @@
+.results/
+.report/
+.env.e2e
+!.env.e2e.example
