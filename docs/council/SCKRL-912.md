@@ -34,3 +34,12 @@ Asks to the Chair:
 - **F4 premise:** the items client never produces `outcomeUnknown`; only the placement client does. B1 pinned the current items failure behavior instead (6 tests). Does items need a real outcome-unknown contract, as a new ticket?
 - **L4 reading:** B1 removed the unreachable `household_id` term (311 file around line 123) and kept the line-133 cross-household check, which is reachable and tested.
 - **Runner:** `run_sckrl_311.py` assumes 311 is the last migration. The 912 replay was run manually; the concurrency script was not re-run.
+
+## Round 2 — Council Proposal
+
+QA Q1's only open low finding (concurrency not re-run) is closed: the 311 concurrency suite passes
+on a populated replay that includes 912. The other low finding (four routes still return 500 on
+malformed JSON) is out of scope and proposed as a follow-up ticket.
+
+**Unanimous: Orchestrator AGREE, Backend B1 AGREE, QA Q1 AGREE.** Ready for the Chair's weigh-in.
+The migration is not applied to dev.
