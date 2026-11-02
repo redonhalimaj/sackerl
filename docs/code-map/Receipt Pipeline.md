@@ -45,7 +45,25 @@ The mobile scan screen still renders the camera-style shell. Capture, Gallery, a
 
 The web parse route loads the receipt, resolves `OCR_PROVIDER`, extracts text, parses it, rejects an empty item result, and calls `promoteReceiptParse` with the receipt's expected generation and revision. The default deterministic provider accepts an explicit text override or the synthetic mobile URL. Mindee and Vision provider names currently return `501`; other values are rejected. On failure, `markReceiptParseFailed` conditionally marks only an unpromoted receipt as failed and preserves the original parse error.
 
-SCKRL-310 keeps parser evidence (`inferred*`, raw text, confidence, parser version) separate from review values (`corrected*`, `included`, `reviewState`). Promotion creates a new generation atomically; review saves require the active generation, expected revision, every existing line exactly once, and stable `clientLineId` values for manual lines. Reprocessing after a saved review is rejected until an explicit reset/merge contract exists. Placement into stock and expiry assignment are future work; follow [[Stock and Expiry]].
+SCKRL-310 keeps parser evidence (`inferred*`, raw text, confidence, parser version) separate from review values (`corrected*`, `included`, `reviewState`). Promotion creates a new generation atomically; review saves require the active generation, expected revision, every existing line exactly once, and stable `clientLineId` values for manual lines. Reprocessing after a saved review is rejected until an explicit reset/merge contract exists. SCKRL-312 persists explicit unknown, dated and no-date choices. The SCKRL-311 backend below converts those choices during placement; mobile placement remains gated by SCKRL-305.
+
+## Atomic placement backend
+
+The new [placement route](../../apps/web/app/receipts/[id]/placement/route.ts) authenticates the
+bearer user and resolves the current household before calling `finalizeReceiptPlacement` or
+`getReceiptPlacement` in the [shared receipt client](../../packages/api-client/src/receipts.ts).
+The [placement validators](../../packages/api-client/src/receipt-placement.ts) accept only the
+idempotency key, generation/revision token and exact line-to-zone assignments. The
+[311 migration](../../supabase/migrations/20261015100000_sckrl_311_atomic_receipt_placement.sql)
+locks membership, receipt and zones, then commits stock, expiry facts, acquisition events and one
+immutable result together. Replay returns that original result without recreating stock.
+
+`getReceiptPlacement` supplies canonical recovery state. A lost response or malformed success is
+an unknown outcome: keep the exact command and key, check status, and retry that same command.
+The [pending-placement route](../../apps/web/app/receipts/pending-placement/route.ts) calls
+`listUnplacedReceiptReviews`; the existing Home caller still uses legacy saved-review discovery.
+All new route responses disable caching. Hosted installation, connected validation and SCKRL-305
+activation must precede a mobile caller switching to these methods. Review saves create no stock.
 
 ## Mobile review method relationships
 

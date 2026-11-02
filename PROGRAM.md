@@ -376,37 +376,38 @@ and durable goods have materially different safety and lifecycle rules.
 
 ### Model Assignment And Routing
 
-`TEAM.md` is the canonical source for team composition and model routing. The matrix below records
-the Codex defaults in program context. Its user-authorized Claude provider profile overrides
-GPT-specific routing during Claude continuation; the roles and stage gates below still apply.
+`TEAM.md` is the canonical source for team composition and model routing. Current topology is a
+root Chair, `gpt-6-astra` Deputy/model router, and exactly three `gpt-6-luna` worker seats. The root
+records its actual model and effort when exposed; it does not claim an Astra runtime. Functional
+specialties (Business Process Analysis, Frontend, Backend, Infrastructure, DevOps, and QA) are
+assigned among those three worker seats per issue. There is no fourth junior agent; junior support
+is a bounded non-voting mode for an assigned Luna seat. A Claude continuation follows its recorded
+provider profile while preserving the operating topology and gates.
 
-Routing updated 2026-09-28 for the [Council workflow](docs/agents/council-workflow.md). The specialist
-group is **The Team**; the Deputy coordinates detailed work, and the Chair contributes expert
-review. Unanimous Team/Deputy recommendations receive reciprocal Chair review and require final
-unanimous agreement. This changes the operating model, not product stages or delivery gates.
+Routing and Council policy follows the [current agent operating model](docs/agents/README.md):
+Luna uses `low` for fast mechanical work, `high` for bounded implementation or QA, and `xhigh` for
+complex domain review with the Chair and Astra. Astra uses `high` for brief routing and standard work review, and
+`xhigh` for complex work review. The Chair leads analysis, direct Luna instructions, coordination
+and evidence synthesis under the owner's 2026-10-19 direction; Astra has no ongoing execution role. Do not route current work to Terra, Sol, or GPT-5.5. Four concurrent slots
+include the root: root plus all three Lunas while Astra is absent, or root + Astra + at most two
+Lunas in review waves; waiting or idle status alone
+does not prove a slot is available, so verify actual runtime capacity. Reserve an independent QA Luna
+during implementation, with at most two writers.
 
-| Role                     | Model          | Reasoning | Why this tier                                                                                                              |
-| ------------------------ | -------------- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Chair / Orchestrator     | `gpt-6-astra`  | `xhigh`   | Preferred expert review route; cross-program reasoning, reciprocal Council review and final integration                    |
-| Deputy                   | `gpt-5.5`      | `xhigh`   | Detailed work coordination, evidence synthesis, specialist assignments and unanimous recommendations                       |
-| Business Process Analyst | `gpt-5.6-luna` | `high`    | High-volume discovery synthesis and ticket refinement within Orchestrator-approved product boundaries                      |
-| Frontend                 | `gpt-5.6-luna` | `high`    | Bounded UI implementation and iteration after interaction rules and contracts are stable                                   |
-| Backend                  | `gpt-5.5`      | `xhigh`   | Complex schema evolution, transactional correctness, OCR/jobs, event data, and recommendation logic                        |
-| Infrastructure           | `gpt-5.5`      | `xhigh`   | High-impact architecture, security, privacy, provider, reliability, and data-retention decisions                           |
-| DevOps                   | `gpt-5.6-luna` | `high`    | Repeatable, bounded automation and deployment work derived from approved infrastructure decisions                          |
-| QA                       | `gpt-5.5`      | `high`    | Adversarial validation, cross-layer regression analysis, data-quality evaluation, and health/recommendation safety gates   |
-| Junior support           | `gpt-6-luna`   | `low`     | Cheapest launcher route for self-contained mechanical work; each assigning senior reviews its output and retains ownership |
-
-Routing policy:
-
-- The Orchestrator must use the documented model and effort when spawning a role-specific agent if the runtime supports selection.
-- No model substitution is silent. Record an unavailable model or effort as a delivery constraint and obtain an explicit routing decision.
-- Luna work must start from stable acceptance criteria and contracts. Escalate unresolved architecture, security, privacy, transactional integrity, health safety, or recommendation policy to a GPT-5.5 specialist and the Orchestrator.
-- GPT-5.5 specialists own complex reasoning in their domain but do not broaden product scope. Cross-domain tradeoffs return to the Orchestrator.
-- The Chair performs expert refinement, integration and stage-gate judgment. The Deputy coordinates bounded specialist execution. Record the actual root model; a preferred route does not switch a running session.
-- The Chair, Deputy and all specialists may use Junior support for the easiest tasks with short
-  task-local context. The supervisor checks its diff and validation; the junior has no Council
-  vote or QA authority. Follow [TEAM.md](TEAM.md#junior-support) for boundaries and escalation.
+Fast review for a new decision assigns an owner and an independent reviewer to a bounded,
+reversible, low-risk proposal. Put it in one brief; require both workers to explicitly Support the
+same revision, followed by lightweight Chair integration. Direct factual source retrieval and routine
+execution already covered by an accepted decision need no new decision or vote. Policy, auth/RLS,
+secrets, privacy, safety, transactions, new contracts, and unresolved architecture use standard or
+complex review. Standard work
+coordinates one to three streams through the Chair, with Astra at work review; shared contracts require all affected owners and
+domain reviewers, and integrated acceptance requires Chair, Astra, owners, and independent QA.
+Complex work uses Chair, Astra, the responsible domain Luna, and independent QA for preliminary
+unanimity, reciprocal Chair review, and fresh unanimous final votes. Voters are declared before
+findings; silence, proxies, majority, Chair override, or dissenter removal do not count. Revisions
+or voter changes require fresh votes, with at most two rounds on the same evidence. Keep file
+ownership/contracts/dependencies explicit; no automatic migrations, deployment, merge, external
+writes, or scope expansion. Existing program stages and QA/Scrum gates remain unchanged.
 
 ### Orchestrator
 
@@ -474,15 +475,20 @@ Routing policy:
 
 ## Handoff Order For Every New Capability
 
-1. Orchestrator confirms the program stage, dependencies, primary owner, model, reasoning effort, and file or layer boundary.
-2. Business Process Analyst defines the user outcome, rules, exclusions, and success measure.
-3. QA challenges the acceptance criteria and defines required evidence before implementation.
+The handoff order below names functional specialties, not additional agents. The Chair assigns them
+among the three Luna seats, using brief Astra model routing when needed and preserving dependencies
+and explicit file ownership. Fast execution
+under accepted decisions may omit a new decision round; use the Council path for substantive choices.
+
+1. Root Chair confirms the program stage, obtains brief model routing when needed, and records the issue path, model/effort, dependencies, voters, work owners, independent reviewer and file or layer boundaries.
+2. Business Process Analysis defines the user outcome, rules, exclusions, and success measure.
+3. Independent QA challenges the acceptance criteria and defines required evidence before implementation.
 4. Infrastructure records any new storage, job, provider, privacy, security, or deployment decision.
 5. Backend publishes data contracts, migration plan, deterministic behavior, and fixtures.
 6. Frontend implements the complete correction and recovery experience against stable contracts.
 7. DevOps wires the approved environment, observability, deployment, and rollback path.
-8. QA validates acceptance criteria and the stage-level regression suite independently from implementation.
-9. Orchestrator performs integration review, updates status, and records durable knowledge after acceptance.
+8. Independent QA validates acceptance criteria and the stage-level regression suite without implementing accepted changes.
+9. Root Chair performs integration review with Astra at work review, then records status and durable knowledge after acceptance.
 
 ## Immediate Recommended Queue
 

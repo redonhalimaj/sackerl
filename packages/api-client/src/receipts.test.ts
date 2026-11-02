@@ -933,3 +933,322 @@ describe('receipts API client', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
+
+describe('atomic receipt placement client', () => {
+  const ids = {
+    householdId: 'aaaaaaaa-1111-4111-8111-111111111111',
+    receiptId: 'bbbbbbbb-2222-4222-8222-222222222222',
+    generationId: 'cccccccc-3333-4333-8333-333333333333',
+    idempotencyKey: 'dddddddd-4444-4444-8444-444444444444',
+    lineA: 'eeeeeeee-5555-4555-8555-555555555555',
+    lineB: 'ffffffff-6666-4666-8666-666666666666',
+    zone: '99999999-7777-4777-8777-777777777777',
+  };
+  const placement = {
+    addedOn: '2026-10-18',
+    generationId: ids.generationId,
+    householdId: ids.householdId,
+    idempotencyKey: ids.idempotencyKey,
+    items: [
+      {
+        acquisitionEventId: '88888888-8888-4888-8888-888888888888',
+        categoryId: 'dairy',
+        expiresOn: null,
+        expiryFactId: null,
+        itemId: '77777777-9999-4999-8999-999999999999',
+        name: 'Milk',
+        qtyUnit: 'l',
+        qtyValue: 1,
+        receiptItemId: ids.lineA,
+        zoneId: ids.zone,
+      },
+    ],
+    placedAt: '2026-10-18T10:00:00.000Z',
+    placedBy: '66666666-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    placementId: '55555555-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    purchasedOn: '2026-10-17',
+    receiptId: ids.receiptId,
+    reviewRevision: 3,
+  };
+
+  it('validates, canonicalizes and sends the exact placement RPC command', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse({ outcome: 'placed', placement }));
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+    const result = await client.finalizeReceiptPlacement(context, {
+      assignments: [
+        { receiptItemId: ids.lineB, zoneId: ids.zone.toUpperCase() },
+        { receiptItemId: ids.lineA, zoneId: ids.zone },
+      ],
+      expectedReviewRevision: 3,
+      generationId: ids.generationId.toUpperCase(),
+      householdId: ids.householdId,
+      idempotencyKey: ids.idempotencyKey,
+      receiptId: ids.receiptId,
+    });
+
+    expect(result).toEqual({ outcome: 'placed', placement });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      'https://sackerl.supabase.co/rest/v1/rpc/finalize_receipt_placement',
+    );
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({
+      headers: {
+        apikey: 'public-key',
+        Authorization: 'Bearer access-token',
+      },
+      method: 'POST',
+    });
+    const placementBody = fetchMock.mock.calls[0]?.[1]?.body;
+    expect(typeof placementBody).toBe('string');
+    expect(JSON.parse(placementBody as string)).toEqual({
+      p_assignments: [
+        { receiptItemId: ids.lineA, zoneId: ids.zone },
+        { receiptItemId: ids.lineB, zoneId: ids.zone },
+      ],
+      p_expected_review_revision: 3,
+      p_generation_id: ids.generationId,
+      p_household_id: ids.householdId,
+      p_idempotency_key: ids.idempotencyKey,
+      p_receipt_id: ids.receiptId,
+    });
+  });
+
+  it('rejects malformed or duplicate commands before making a request', async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+    const base = {
+      assignments: [{ receiptItemId: ids.lineA, zoneId: ids.zone }],
+      expectedReviewRevision: 0,
+      generationId: ids.generationId,
+      householdId: ids.householdId,
+      idempotencyKey: ids.idempotencyKey,
+      receiptId: ids.receiptId,
+    };
+
+    await expect(
+      client.finalizeReceiptPlacement(context, { ...base, unexpected: true } as never),
+    ).rejects.toMatchObject({ code: 'INVALID_PLACEMENT_INPUT', status: 400 });
+    await expect(
+      client.finalizeReceiptPlacement(context, {
+        ...base,
+        assignments: [base.assignments[0]!, base.assignments[0]!],
+      }),
+    ).rejects.toMatchObject({ code: 'INVALID_PLACEMENT_INPUT', status: 400 });
+    await expect(
+      client.finalizeReceiptPlacement(context, {
+        ...base,
+        assignments: Array.from({ length: 151 }, (_, i) => ({
+          receiptItemId: `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`,
+          zoneId: ids.zone,
+        })),
+      }),
+    ).rejects.toMatchObject({ code: 'INVALID_PLACEMENT_INPUT', status: 400 });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('marks network, server and malformed success responses as unknown without retrying', async () => {
+    const input = {
+      assignments: [{ receiptItemId: ids.lineA, zoneId: ids.zone }],
+      expectedReviewRevision: 3,
+      generationId: ids.generationId,
+      householdId: ids.householdId,
+      idempotencyKey: ids.idempotencyKey,
+      receiptId: ids.receiptId,
+    };
+    const networkFetch = vi.fn<typeof fetch>().mockRejectedValue(new Error('network down'));
+    const networkClient = createSackerlReceiptsClient(config, { fetch: networkFetch });
+    await expect(networkClient.finalizeReceiptPlacement(context, input)).rejects.toMatchObject({
+      name: 'ReceiptPlacementApiError',
+      outcomeUnknown: true,
+      status: 0,
+    });
+    expect(networkFetch).toHaveBeenCalledTimes(1);
+
+    const serverFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse({ message: 'server failure' }, { status: 503 }));
+    const serverClient = createSackerlReceiptsClient(config, { fetch: serverFetch });
+    await expect(serverClient.finalizeReceiptPlacement(context, input)).rejects.toMatchObject({
+      outcomeUnknown: true,
+      status: 503,
+    });
+    expect(serverFetch).toHaveBeenCalledTimes(1);
+
+    const malformedFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse({ outcome: 'placed' }));
+    const malformedClient = createSackerlReceiptsClient(config, { fetch: malformedFetch });
+    await expect(malformedClient.finalizeReceiptPlacement(context, input)).rejects.toMatchObject({
+      outcomeUnknown: true,
+      status: 502,
+    });
+    expect(malformedFetch).toHaveBeenCalledTimes(1);
+
+    const mismatchedFetch = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        outcome: 'placed',
+        placement: { ...placement, receiptId: ids.householdId },
+      }),
+    );
+    const mismatchedClient = createSackerlReceiptsClient(config, { fetch: mismatchedFetch });
+    await expect(mismatchedClient.finalizeReceiptPlacement(context, input)).rejects.toMatchObject({
+      outcomeUnknown: true,
+      status: 502,
+    });
+
+    const secondPlacementItem = {
+      ...placement.items[0]!,
+      receiptItemId: ids.lineB,
+    };
+    for (const items of [
+      [secondPlacementItem, placement.items[0]!],
+      [placement.items[0]!, placement.items[0]!],
+    ]) {
+      const invalidCanonicalFetch = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(jsonResponse({ outcome: 'placed', placement: { ...placement, items } }));
+      const invalidCanonicalClient = createSackerlReceiptsClient(config, {
+        fetch: invalidCanonicalFetch,
+      });
+      await expect(
+        invalidCanonicalClient.finalizeReceiptPlacement(context, input),
+      ).rejects.toMatchObject({ outcomeUnknown: true, status: 502 });
+    }
+
+    for (const status of [201, 204]) {
+      const unexpectedSuccessFetch = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(new Response(null, { status }));
+      const unexpectedSuccessClient = createSackerlReceiptsClient(config, {
+        fetch: unexpectedSuccessFetch,
+      });
+      await expect(
+        unexpectedSuccessClient.finalizeReceiptPlacement(context, input),
+      ).rejects.toMatchObject({ outcomeUnknown: true, status: 502 });
+    }
+  });
+
+  it('maps stable database error detail without marking a known conflict unknown', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse(
+        {
+          code: 'PT409',
+          details: JSON.stringify({ code: 'STALE_RECEIPT_REVIEW', field: 'generationId' }),
+          message: 'Receipt review changed.',
+        },
+        { status: 409 },
+      ),
+    );
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+    await expect(
+      client.finalizeReceiptPlacement(context, {
+        assignments: [{ receiptItemId: ids.lineA, zoneId: ids.zone }],
+        expectedReviewRevision: 3,
+        generationId: ids.generationId,
+        householdId: ids.householdId,
+        idempotencyKey: ids.idempotencyKey,
+        receiptId: ids.receiptId,
+      }),
+    ).rejects.toMatchObject({
+      code: 'STALE_RECEIPT_REVIEW',
+      field: 'generationId',
+      outcomeUnknown: false,
+      status: 409,
+    });
+  });
+
+  it('uses the opt-in status and pending-placement RPCs with bounded pagination', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        jsonResponse({
+          keyMatches: false,
+          placement,
+          receiptId: ids.receiptId,
+          state: 'placed',
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          pagination: { page: 2, pageSize: 10, total: 21 },
+          receipts: [receiptRow({ id: ids.receiptId, household_id: ids.householdId })],
+        }),
+      );
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+
+    await expect(
+      client.getReceiptPlacement(context, {
+        householdId: ids.householdId,
+        idempotencyKey: '44444444-4444-4444-8444-444444444444',
+        receiptId: ids.receiptId,
+      }),
+    ).resolves.toMatchObject({ state: 'placed', keyMatches: false, placement });
+    await expect(
+      client.listUnplacedReceiptReviews(context, {
+        householdId: ids.householdId,
+        page: 2,
+        pageSize: 10,
+      }),
+    ).resolves.toMatchObject({
+      pagination: { page: 2, pageSize: 10, total: 21 },
+      receipts: [{ id: ids.receiptId, householdId: ids.householdId }],
+    });
+    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+      'https://sackerl.supabase.co/rest/v1/rpc/get_receipt_placement',
+      'https://sackerl.supabase.co/rest/v1/rpc/list_unplaced_receipt_reviews',
+    ]);
+    const statusBody = fetchMock.mock.calls[0]?.[1]?.body;
+    expect(typeof statusBody).toBe('string');
+    expect(JSON.parse(statusBody as string)).toEqual({
+      p_household_id: ids.householdId,
+      p_idempotency_key: '44444444-4444-4444-8444-444444444444',
+      p_receipt_id: ids.receiptId,
+    });
+    const listBody = fetchMock.mock.calls[1]?.[1]?.body;
+    expect(typeof listBody).toBe('string');
+    expect(JSON.parse(listBody as string)).toEqual({
+      p_household_id: ids.householdId,
+      p_page: 2,
+      p_page_size: 10,
+    });
+  });
+
+  it('rejects a status whose keyMatches value contradicts the canonical placement key', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        keyMatches: true,
+        placement,
+        receiptId: ids.receiptId,
+        state: 'placed',
+      }),
+    );
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+    await expect(
+      client.getReceiptPlacement(context, {
+        householdId: ids.householdId,
+        idempotencyKey: '44444444-4444-4444-8444-444444444444',
+        receiptId: ids.receiptId,
+      }),
+    ).rejects.toMatchObject({ status: 502 });
+  });
+
+  it('fails when the authoritative list RPC is unavailable without falling back to legacy Home reads', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        jsonResponse({ code: 'PGRST202', message: 'Function not found.' }, { status: 404 }),
+      );
+    const client = createSackerlReceiptsClient(config, { fetch: fetchMock });
+    await expect(
+      client.listUnplacedReceiptReviews(context, {
+        householdId: ids.householdId,
+      }),
+    ).rejects.toMatchObject({ status: 404 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      'https://sackerl.supabase.co/rest/v1/rpc/list_unplaced_receipt_reviews',
+    );
+  });
+});

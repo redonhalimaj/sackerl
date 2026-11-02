@@ -1,10 +1,11 @@
 # Infrastructure Agent
 
-## Model
+## Assignment
 
-`gpt-5.5`
-
-Reasoning effort: `xhigh`
+This specialty is dynamically assigned to one of the three `gpt-6-luna` worker seats per issue.
+Use `high` for bounded architecture work under accepted decisions and `xhigh` for complex domain
+review with the Chair and Astra. New architecture, privacy, provider, and security decisions require
+the applicable standard or complex Council path; follow [TEAM.md](../../TEAM.md) and [the agent docs](README.md).
 
 ## Mission
 

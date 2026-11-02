@@ -647,6 +647,24 @@ visual/accessibility checks; it does not acquire a circular dependency on comple
 
 **Summary.** Finalize one reviewed receipt into stock through an idempotent server-owned transaction with receipt-line lineage, expiry facts, and acquisition events.
 
+**Current increment (2026-11-01).** The exact backend contract is ratified in
+[COUNCIL-20261015-02 v1](docs/agents/council-decisions/COUNCIL-20261015-02-placement.md).
+See the [atomic placement contract](docs/features/sckrl-311-atomic-receipt-placement.md).
+Local implementation is ready for source-v3 Review, with 372 recorded source tests and the
+95-step disposable replay passing. Nine concurrency scenarios include observed opposing-order
+multi-zone contention and placement-before-zone-deletion; exact-source acceptance is recorded
+separately in the Council ledger, without changing full-ticket Review to Done.
+The unchanged replay was restored on November 1 after the temporary artifacts expired; its
+results/logs are now archived in the ignored workspace evidence directory for the handover.
+See [database evidence and limits](docs/qa/sckrl-311-database-review.md). It adds canonical placement/recovery and an opt-in
+authoritative unplaced-review read; existing Home remains unchanged until SCKRL-305 activation.
+New receipt-source stock must use protected same-household receipt-line lineage. Generic item
+creation or source transitions without that lineage reject with 422; existing unlinked receipt
+rows retain ordinary edits, and parent receipt deletion clears lineage while preserving stock.
+Stock added-on uses the placement household-calendar day; purchased-on remains separate receipt
+metadata. This increment does not apply a hosted migration, enable placement UI, or close the
+existing connected/native and prerequisite acceptance gates.
+
 **Acceptance criteria**
 
 - Command requires an idempotency key and validates authenticated household membership.

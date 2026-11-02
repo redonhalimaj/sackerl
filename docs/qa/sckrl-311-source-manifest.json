@@ -1,0 +1,364 @@
+{
+  "branch": "feature/SCKRL-311-astra-luna",
+  "date": "2026-10-19",
+  "evidence": {
+    "codeMap": {
+      "callables": 715,
+      "modules": 88,
+      "relationships": 1316,
+      "staleFiles": 0
+    },
+    "formatAndDiffChecks": "passed",
+    "remainingGates": [
+      "Concurrent multi-zone placement/deletion lock-order evidence; current executed deletion race is single-zone",
+      "Hosted target preflight and separately authorized schema installation",
+      "Real Supabase Auth/PostgREST and remaining prerequisite acceptance",
+      "Mobile placement UI/recovery under SCKRL-305; Stage 1 remains incomplete"
+    ],
+    "sql": {
+      "clusterStopped": true,
+      "inputHashes": 32,
+      "logs": 95,
+      "observedBlockingCases": 8,
+      "resultsPath": "/private/tmp/sckrl311-validation.6yvy7l5d/results.json",
+      "resultsSha256": "0988aaf97ebadd2810da85e396adf51cf74cf4deba8b0b1504ebf3648964ee08",
+      "stepsPassed": 95
+    },
+    "turbo": {
+      "cachedTasks": 9,
+      "recordedTests": 370,
+      "successfulTasks": 18
+    },
+    "webProductionBuild": "passed"
+  },
+  "excludedBookkeeping": [
+    "docs/agents/council-decisions/COUNCIL-20261019-01-placement-source.md",
+    "docs/qa/sckrl-311-source-manifest.json",
+    "status.md"
+  ],
+  "files": [
+    {
+      "bytes": 13326,
+      "path": "AGENTS.md",
+      "sha256": "c578b40cfb559f00030e42b95c35e770019900854232b2da616ff38d874161f2"
+    },
+    {
+      "bytes": 8776,
+      "path": "CLAUDE.md",
+      "sha256": "9ce716a1b91a13271d83fc62fe8bc7f63cc3387badfb0835018039819a27f03b"
+    },
+    {
+      "bytes": 44485,
+      "path": "PROGRAM.md",
+      "sha256": "253de2e143dac817aafd120e044cba294a9df9d2dcdad29624aeb9e5890837b5"
+    },
+    {
+      "bytes": 14430,
+      "path": "TEAM.md",
+      "sha256": "115a9b553a221c2fa3ecaa3c7b9d838a7a708648c47da76028b322842b7f479d"
+    },
+    {
+      "bytes": 8319,
+      "path": "apps/web/app/receipts/[id]/placement/route.test.ts",
+      "sha256": "ea6e61e1b2862342c1835f5fb9892f91cb71d006bbddaf832b7da43ab3570717"
+    },
+    {
+      "bytes": 2429,
+      "path": "apps/web/app/receipts/[id]/placement/route.ts",
+      "sha256": "fc2cddf278be5339174dbfbfa6d65e1edc73828a97b8a35e50c54bdc8a1f3099"
+    },
+    {
+      "bytes": 3060,
+      "path": "apps/web/app/receipts/pending-placement/route.test.ts",
+      "sha256": "0231bad4fa19f663524ffcccd264c14e56993243312a5a8688801741832f55c6"
+    },
+    {
+      "bytes": 958,
+      "path": "apps/web/app/receipts/pending-placement/route.ts",
+      "sha256": "89c33d2a16d561d0595a3559d0b8be61f08848100efbe3751f78bd5373f23cd4"
+    },
+    {
+      "bytes": 2630,
+      "path": "apps/web/lib/receipt-placement-payload.test.ts",
+      "sha256": "2abbad4306328472e29e81dc692b3e0326b92d7618aea0081b28bf3fb0eb189e"
+    },
+    {
+      "bytes": 2433,
+      "path": "apps/web/lib/receipt-placement-payload.ts",
+      "sha256": "abd933f53a37e44eef9c7872aadcc65a3601969e0cdee331d4e85d6b1d4603b5"
+    },
+    {
+      "bytes": 3337,
+      "path": "apps/web/lib/receipt-placement.ts",
+      "sha256": "8f2f7939a5c27fedcf792e24aa1239916252b6e135f29fa946a3c1a4c04a53d6"
+    },
+    {
+      "bytes": 5323,
+      "path": "docs/agents/README.md",
+      "sha256": "dd5f9c81d68b0ae2dac88d888a6abf91bd0a8aa42066a6b714510c545d317e60"
+    },
+    {
+      "bytes": 2924,
+      "path": "docs/agents/backend.md",
+      "sha256": "840f8f3e680bb5a31114b900a042b806405907c314de85c3af051afe7586ee55"
+    },
+    {
+      "bytes": 2014,
+      "path": "docs/agents/business-process-analyst.md",
+      "sha256": "4ed6134b283a4f6e940b5d38c854594f00bd3dc5dc614411e5819d13e9ad1359"
+    },
+    {
+      "bytes": 10788,
+      "path": "docs/agents/claude-next-work-package.md",
+      "sha256": "74596aeffbd3fd9f6642b7d62461b7489abf2133745cf58976e4fd189c4fca4a"
+    },
+    {
+      "bytes": 10856,
+      "path": "docs/agents/codex-claude-handoff.md",
+      "sha256": "3371ecb2460fd232aaa69432f5fd398276c2d7ba91a5025ce94f97ffce406c6e"
+    },
+    {
+      "bytes": 17597,
+      "path": "docs/agents/codex-next-work-package.md",
+      "sha256": "e4e6687caf1b47e5d258b92025792c5dc1ebde020c0edc93df9480ee6772583a"
+    },
+    {
+      "bytes": 11887,
+      "path": "docs/agents/council-decisions/COUNCIL-20261015-01-astra-three-lunas.md",
+      "sha256": "454dad55385fc59c69ee2c8e3445962e5f89fece9336ccc751eca9f1f3d5d45d"
+    },
+    {
+      "bytes": 33775,
+      "path": "docs/agents/council-decisions/COUNCIL-20261015-02-placement.md",
+      "sha256": "2c5d4c692621ee410030dd3720ac58b018eca7cf0fee5fd2b6e140c57821dec4"
+    },
+    {
+      "bytes": 10011,
+      "path": "docs/agents/council-workflow.md",
+      "sha256": "97c041850f41e9d6f159de208b969e21eae652114a938b7e907b3bcb4d4d3181"
+    },
+    {
+      "bytes": 1859,
+      "path": "docs/agents/deputy.md",
+      "sha256": "4b00d1f087bf31cbd3fdbf3a07bb586d51db901484d49fab2d6c7eb3790791bf"
+    },
+    {
+      "bytes": 1976,
+      "path": "docs/agents/devops.md",
+      "sha256": "72915b5d8a5fee640f825409c3367c46a44da16b6df180c02a094502b664d87e"
+    },
+    {
+      "bytes": 2263,
+      "path": "docs/agents/frontend.md",
+      "sha256": "59b0afae371195b08df021df97214db4b09731b43d8390674e0bff46fac411ea"
+    },
+    {
+      "bytes": 2275,
+      "path": "docs/agents/infrastructure.md",
+      "sha256": "ff66e695fcf418f3a9ed2ef9f26cf00d9f3d35773bd66721aa436df25e2467e2"
+    },
+    {
+      "bytes": 1693,
+      "path": "docs/agents/junior.md",
+      "sha256": "832d05b97ed632fa44b42ae9d776bd2a9cd6f384158700034719304d40a809d5"
+    },
+    {
+      "bytes": 4052,
+      "path": "docs/agents/orchestrator.md",
+      "sha256": "5f7fbc4a71a32e0df01613da6e0572a991462cd9aed3c56c32df302418fdb760"
+    },
+    {
+      "bytes": 2460,
+      "path": "docs/agents/qa.md",
+      "sha256": "f97584b45b4dca71b5fbe6b5a4939bd482df158cb6cfc829fa96c67ddb345226"
+    },
+    {
+      "bytes": 25655,
+      "path": "docs/architecture/adr-0001-reliable-food-loop.md",
+      "sha256": "5c2b5b6270020c89a8d56f9a8f90d6e3fe67d7d33c80b1112b8afd4ca3fb09ae"
+    },
+    {
+      "bytes": 13645,
+      "path": "docs/code-map/API and Database.md",
+      "sha256": "e2ed3440e09b19e355c676698cb1110c528c5cefaffb147c8d1bca73f19cb64b"
+    },
+    {
+      "bytes": 9706,
+      "path": "docs/code-map/Method Index.md",
+      "sha256": "ae79f8b01ba33ed04aebe3d4e3f4e3ad4ba0f0b8aea8364a1cf06a1d2a426ced"
+    },
+    {
+      "bytes": 8938,
+      "path": "docs/code-map/Receipt Pipeline.md",
+      "sha256": "eff65dec7eb46219e37d7e9f4a8a52423057f1e328638464011fa9826dadbf89"
+    },
+    {
+      "bytes": 7317,
+      "path": "docs/code-map/Testing and Delivery.md",
+      "sha256": "9737d6523d5c1461c9a72f0c7e235c127c5d47c9a8f9513e7e163aa6bfbf0afd"
+    },
+    {
+      "bytes": 2751,
+      "path": "docs/code-map/generated/Methods - apps-web-app-receipts-id-placement-route.md",
+      "sha256": "3cba64521d4a419afd3361d8a243a5ea3cc764569fd51f3a8f7d8be363a9baff"
+    },
+    {
+      "bytes": 1172,
+      "path": "docs/code-map/generated/Methods - apps-web-app-receipts-pending-placement-route.md",
+      "sha256": "362540c2a1ff8e119ff61b34b2182442f554277f4e32f501de45414e39acc569"
+    },
+    {
+      "bytes": 5594,
+      "path": "docs/code-map/generated/Methods - apps-web-lib-api-auth.md",
+      "sha256": "3f248d133e4f372bcfce90e26f3468777e0ba6da8d09c0bf4a4708de6d55bbfd"
+    },
+    {
+      "bytes": 3419,
+      "path": "docs/code-map/generated/Methods - apps-web-lib-items.md",
+      "sha256": "5dd3f5205a03ddc72db8dae633c4b8a2907da080d7d05ff90e903cc94d5abe19"
+    },
+    {
+      "bytes": 2498,
+      "path": "docs/code-map/generated/Methods - apps-web-lib-receipt-placement-payload.md",
+      "sha256": "f8a84e49bc76f96752db09203d6aa87137b37976d0e72fbc22fcc66e5e852f35"
+    },
+    {
+      "bytes": 3461,
+      "path": "docs/code-map/generated/Methods - apps-web-lib-receipt-placement.md",
+      "sha256": "b7820058d9892f0fd908c1984bd3a04a2711c1e11e6d7c1d5d9619b3caca92c0"
+    },
+    {
+      "bytes": 1810,
+      "path": "docs/code-map/generated/Methods - apps-web-lib-receipts.md",
+      "sha256": "3254dfbe160989bae993d374326ad03113fd6183a523c4d50f5b1c155c9ae55b"
+    },
+    {
+      "bytes": 28166,
+      "path": "docs/code-map/generated/Methods - packages-api-client-src-profile.md",
+      "sha256": "f9af2e70890dfe4249b9417727fd9c6f282fa6be3d5a14c707f16fb662e5faf5"
+    },
+    {
+      "bytes": 8687,
+      "path": "docs/code-map/generated/Methods - packages-api-client-src-receipt-placement.md",
+      "sha256": "5b555120f6e6ff9c31a560f9b385cb184a50f11f2ca6563dca8edbdc7e31f560"
+    },
+    {
+      "bytes": 43438,
+      "path": "docs/code-map/generated/Methods - packages-api-client-src-receipts.md",
+      "sha256": "0d770edfec7809237a6aa42e74b96210d918dce18de87fc48c00634d5a06c8ba"
+    },
+    {
+      "bytes": 1855,
+      "path": "docs/code-map/generated/Methods - supabase-migrations-20260531203000-sckrl-201-item-data-model.md",
+      "sha256": "2913364a8374f8ce8e52615212079e2826c173758ca9c2fbdfcf2a5c871bd382"
+    },
+    {
+      "bytes": 738,
+      "path": "docs/code-map/generated/Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data.md",
+      "sha256": "cfb6b6aec3ba76b2aa4581e07e9c7a44e65e41aaca740aa5ca047d6b1939719a"
+    },
+    {
+      "deleted": true,
+      "path": "docs/code-map/generated/Methods - supabase-migrations-20260930100000-sckrl-312-receipt-expiry.md",
+      "sha256": null
+    },
+    {
+      "bytes": 5945,
+      "path": "docs/code-map/generated/Methods - supabase-migrations-20261015100000-sckrl-311-atomic-receipt-placement.md",
+      "sha256": "f17142b74d9d7af65307d721f20ded0c8dc37dd523cdc1feccce08ebefc4a6ad"
+    },
+    {
+      "bytes": 4637,
+      "path": "docs/features/sckrl-311-atomic-receipt-placement.md",
+      "sha256": "fd8f6451c14842d5c0614b231790c96dbf33d2055c79c4ef244ef8ac994cf733"
+    },
+    {
+      "bytes": 6144,
+      "path": "docs/qa/sckrl-311-database-review.md",
+      "sha256": "f67765702c25e1f728bfaaaa58190b4fa0e7da1ab045aca7c8859420485d856a"
+    },
+    {
+      "bytes": 5757,
+      "path": "docs/qa/sckrl-311-source-review.md",
+      "sha256": "350a0164e17033ec44fb8858acb9132a5ec9ab97f112b77223f0df560d3f862d"
+    },
+    {
+      "bytes": 63431,
+      "path": "features.md",
+      "sha256": "0a873a8ab480d358d379eddc566287c51e1d1f4070499d16adf897ad200ff440"
+    },
+    {
+      "bytes": 5940,
+      "path": "packages/api-client/src/index.ts",
+      "sha256": "3679d22e716941e1e4756895f4159c3d57814962cfc8123ca0e386a84daa2d6d"
+    },
+    {
+      "bytes": 37611,
+      "path": "packages/api-client/src/items.test.ts",
+      "sha256": "b9551968a7a0a59dfe62a55c88c98bab7fcb4b7759a09d2df4a3eaff5310bce1"
+    },
+    {
+      "bytes": 12418,
+      "path": "packages/api-client/src/receipt-placement.ts",
+      "sha256": "ac02923c8302bd23b13c210b479b43bbec815e01b0f49b4f1987596c598df4a7"
+    },
+    {
+      "bytes": 42982,
+      "path": "packages/api-client/src/receipts.test.ts",
+      "sha256": "eb07ad2ef5dd43e7bc5fb1f45b45d6a89f0042e1dfc27713fb6bc210f7061ddc"
+    },
+    {
+      "bytes": 54309,
+      "path": "packages/api-client/src/receipts.ts",
+      "sha256": "b4950ceac68f7dd17434f8a3a54ac0f694a284fdce619b86160f672251a8a371"
+    },
+    {
+      "bytes": 37374,
+      "path": "supabase/migrations/20261015100000_sckrl_311_atomic_receipt_placement.sql",
+      "sha256": "b130383684fc85549c8d33542108dd5992e3e23c7ed4aea565f73dabfb858459"
+    },
+    {
+      "bytes": 13452,
+      "path": "supabase/tests/README.md",
+      "sha256": "0185c125e19764f3b0f7c487824eb56c4d161950867ed44d1368aa18a8d54b7c"
+    },
+    {
+      "bytes": 7654,
+      "path": "supabase/tests/run_sckrl_311.py",
+      "sha256": "b2c1ee9aa3fe8ceeb9f3445521fee9ce44dc1cf33121eb848aebeb3a3b577b96"
+    },
+    {
+      "bytes": 16585,
+      "path": "supabase/tests/sckrl_311_adversarial.sql",
+      "sha256": "ba9eebc74f026d3b82ba8473364fcd78de41bdd2409a6b7801161e6740fa25f9"
+    },
+    {
+      "bytes": 1961,
+      "path": "supabase/tests/sckrl_311_clean_assert.sql",
+      "sha256": "6b95540b8f60d6cda13a4e1c172802c69b663206c77f8341cbaa0d81bfd5c437"
+    },
+    {
+      "bytes": 25387,
+      "path": "supabase/tests/sckrl_311_concurrency.py",
+      "sha256": "a8356009db076f29b8fcea5003ecbdd9a895ae8d1b5d120677b7d4e37d574749"
+    },
+    {
+      "bytes": 1146,
+      "path": "supabase/tests/sckrl_311_legacy_assert.sql",
+      "sha256": "7e587aaee31f9957252b4a0ff59de40f9987bd3f3b6e5109b09ece27765d805b"
+    },
+    {
+      "bytes": 8594,
+      "path": "supabase/tests/sckrl_311_legacy_seed.sql",
+      "sha256": "44bce87f64f50c1d9abf73f1fdf7227b32ec5407640e42dbf87052edeccd4c63"
+    },
+    {
+      "bytes": 29413,
+      "path": "supabase/tests/sckrl_311_placement_commands.sql",
+      "sha256": "a19550a479941166a9526d7e1471cac70463a269f05728085283b6946e370b18"
+    }
+  ],
+  "head": "7547916",
+  "revision": "SCKRL-311-source-v1",
+  "scope": "Bounded local backend source, disposable SQL evidence, owner-directed Council duties and gated Claude implementation/Codex QA handoff; no hosted activation or full-ticket Done."
+}

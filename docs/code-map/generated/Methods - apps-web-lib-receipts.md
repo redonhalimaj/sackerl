@@ -14,7 +14,7 @@ TypeScript. [apps/web/lib/receipts.ts](<../../../apps/web/lib/receipts.ts>), lin
 
 Calls / references: [[Methods - packages-api-client-src-receipts#^s-8c2d03b805c4|createSackerlReceiptsClient]] (call)
 
-Used by: [[Methods - apps-web-app-receipts-id-items-route#^s-c1f484f1c053|GET]] (call), [[Methods - apps-web-app-receipts-id-items-route#^s-ac5010b53f7a|PUT]] (call), [[Methods - apps-web-app-receipts-route#^s-4b941b39d78a|GET]] (call), [[Methods - apps-web-app-receipts-route#^s-d27589dd996c|POST]] (call), [[Methods - apps-web-lib-receipt-parsing#^s-61ffaa34136c|markReceiptFailed]] (call), [[Methods - apps-web-lib-receipt-parsing#^s-74590945c56c|runReceiptParseJob]] (call)
+Used by: [[Methods - apps-web-app-receipts-id-items-route#^s-c1f484f1c053|GET]] (call), [[Methods - apps-web-app-receipts-id-items-route#^s-ac5010b53f7a|PUT]] (call), [[Methods - apps-web-app-receipts-id-placement-route#^s-6f2a2f157ce9|GET]] (call), [[Methods - apps-web-app-receipts-id-placement-route#^s-7db3d1cc3650|POST]] (call), [[Methods - apps-web-app-receipts-pending-placement-route#^s-63e40950abd8|GET]] (call), [[Methods - apps-web-app-receipts-route#^s-4b941b39d78a|GET]] (call), [[Methods - apps-web-app-receipts-route#^s-d27589dd996c|POST]] (call), [[Methods - apps-web-lib-receipt-parsing#^s-61ffaa34136c|markReceiptFailed]] (call), [[Methods - apps-web-lib-receipt-parsing#^s-74590945c56c|runReceiptParseJob]] (call)
 
 ## receiptApiErrorResponse
 

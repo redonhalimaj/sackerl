@@ -6,7 +6,7 @@ tags: [code-map, generated]
 
 [[Sackerl Code Map]] · [[Maintenance]]
 
-Generated from 79 runtime TypeScript files and 12 SQL migrations: **672 named callables**, **1232 resolved relationships**, **83 module notes**.
+Generated from 84 runtime TypeScript files and 13 SQL migrations: **715 named callables**, **1316 resolved relationships**, **88 module notes**.
 
 Open a module to see each method, its source line, what it calls and what uses it. In Obsidian, open its Local graph to explore connected modules.
 
@@ -68,6 +68,8 @@ Open a module to see each method, its source line, what it calls and what uses i
 | [[Methods - apps-web-app-page\|apps/web/app/page.tsx]] | 1 |
 | [[Methods - apps-web-app-receipts-id-items-route\|apps/web/app/receipts/[id]/items/route.ts]] | 3 |
 | [[Methods - apps-web-app-receipts-id-parse-route\|apps/web/app/receipts/[id]/parse/route.ts]] | 2 |
+| [[Methods - apps-web-app-receipts-id-placement-route\|apps/web/app/receipts/[id]/placement/route.ts]] | 3 |
+| [[Methods - apps-web-app-receipts-pending-placement-route\|apps/web/app/receipts/pending-placement/route.ts]] | 1 |
 | [[Methods - apps-web-app-receipts-route\|apps/web/app/receipts/route.ts]] | 3 |
 | [[Methods - apps-web-app-shopping-list-id-route\|apps/web/app/shopping-list/[id]/route.ts]] | 2 |
 | [[Methods - apps-web-app-shopping-list-batch-route\|apps/web/app/shopping-list/batch/route.ts]] | 1 |
@@ -81,6 +83,8 @@ Open a module to see each method, its source line, what it calls and what uses i
 | [[Methods - apps-web-lib-profile\|apps/web/lib/profile.ts]] | 1 |
 | [[Methods - apps-web-lib-receipt-parsing\|apps/web/lib/receipt-parsing.ts]] | 7 |
 | [[Methods - apps-web-lib-receipt-payload\|apps/web/lib/receipt-payload.ts]] | 6 |
+| [[Methods - apps-web-lib-receipt-placement-payload\|apps/web/lib/receipt-placement-payload.ts]] | 5 |
+| [[Methods - apps-web-lib-receipt-placement\|apps/web/lib/receipt-placement.ts]] | 5 |
 | [[Methods - apps-web-lib-receipt-review-payload\|apps/web/lib/receipt-review-payload.ts]] | 7 |
 | [[Methods - apps-web-lib-receipts\|apps/web/lib/receipts.ts]] | 2 |
 | [[Methods - apps-web-lib-recipes\|apps/web/lib/recipes.ts]] | 2 |
@@ -90,7 +94,8 @@ Open a module to see each method, its source line, what it calls and what uses i
 | [[Methods - packages-api-client-src-items\|packages/api-client/src/items.ts]] | 64 |
 | [[Methods - packages-api-client-src-profile\|packages/api-client/src/profile.ts]] | 24 |
 | [[Methods - packages-api-client-src-receipt-parsing\|packages/api-client/src/receipt-parsing.ts]] | 22 |
-| [[Methods - packages-api-client-src-receipts\|packages/api-client/src/receipts.ts]] | 59 |
+| [[Methods - packages-api-client-src-receipt-placement\|packages/api-client/src/receipt-placement.ts]] | 11 |
+| [[Methods - packages-api-client-src-receipts\|packages/api-client/src/receipts.ts]] | 67 |
 | [[Methods - packages-api-client-src-recipes\|packages/api-client/src/recipes.ts]] | 33 |
 | [[Methods - packages-api-client-src-shopping-list\|packages/api-client/src/shopping-list.ts]] | 34 |
 | [[Methods - packages-tokens-src-index\|packages/tokens/src/index.ts]] | 1 |
@@ -106,6 +111,6 @@ Open a module to see each method, its source line, what it calls and what uses i
 | [[Methods - supabase-migrations-20260612100000-sckrl-511-shopping-list\|supabase/migrations/20260612100000_sckrl_511_shopping_list.sql]] | 1 |
 | [[Methods - supabase-migrations-20260621110000-sckrl-302-receipts\|supabase/migrations/20260621110000_sckrl_302_receipts.sql]] | 1 |
 | [[Methods - supabase-migrations-20260804100000-sckrl-303-receipt-parsing\|supabase/migrations/20260804100000_sckrl_303_receipt_parsing.sql]] | 1 |
-| [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data\|supabase/migrations/20260911110000_sckrl_310_receipt_review_data.sql]] | 3 |
+| [[Methods - supabase-migrations-20260911110000-sckrl-310-receipt-review-data\|supabase/migrations/20260911110000_sckrl_310_receipt_review_data.sql]] | 1 |
 | [[Methods - supabase-migrations-20260916100000-sckrl-406-expiry-provenance\|supabase/migrations/20260916100000_sckrl_406_expiry_provenance.sql]] | 4 |
-| [[Methods - supabase-migrations-20260930100000-sckrl-312-receipt-expiry\|supabase/migrations/20260930100000_sckrl_312_receipt_expiry.sql]] | 1 |
+| [[Methods - supabase-migrations-20261015100000-sckrl-311-atomic-receipt-placement\|supabase/migrations/20261015100000_sckrl_311_atomic_receipt_placement.sql]] | 13 |

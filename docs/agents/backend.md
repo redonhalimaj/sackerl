@@ -1,10 +1,11 @@
 # Backend Agent
 
-## Model
+## Assignment
 
-`gpt-5.5`
-
-Reasoning effort: `xhigh`
+This specialty is dynamically assigned to one of the three `gpt-6-luna` worker seats per issue.
+Use `high` for implementation under stable contracts and `xhigh` for complex domain review with
+the Chair and Astra. Transactions, schemas, and contract changes take the applicable standard or
+complex Council path; follow current routing in [TEAM.md](../../TEAM.md) and [the agent docs](README.md).
 
 ## Mission
 

@@ -5,7 +5,23 @@ both directions on 2026-09-13. [TEAM.md](../../TEAM.md) defines roles and provid
 [status.md](../../status.md) holds the current checkpoint and ticket states. Keep live progress in
 that one file so the assistants do not develop separate versions of the plan.
 
-**Current owner preference (2026-09-29):** resume in a future GPT/Codex session using
+**Current testing handover (2026-11-01):** the owner will perform the remaining testing using
+Claude and explicitly asks Codex to update the handover and push the current changes. Use the
+[Claude testing package](claude-next-work-package.md). This supersedes the previous automatic
+return-to-Codex QA assignment for these remaining tests. Keep independent review for any later
+implementation fixes and all pending hosted/product gates. No Claude process is launched here;
+the owner switches manually. Before takeover, check the current status for verified publication
+and explicit writer release; this workflow does not assert that either action is complete.
+
+**Historical owner preference (2026-10-19; superseded for the testing assignment above):** finish the active SCKRL-311 work first, then prepare a
+bounded [Claude implementation handoff](claude-next-work-package.md) for subsequent program topics. Codex provides independent QA
+of Claude's implementation. A prepared handoff does not launch Claude, start a new feature before
+its prerequisites pass, or waive pending SCKRL-311 acceptance. The outgoing checkpoint must name
+the exact release of file ownership and the first authorized action. Current Council duties are
+Chair-led analysis/orchestration/direct Luna instruction, with Astra only for brief routing and
+work reviews; independent QA and unanimous acceptance remain required.
+
+**Historical owner preference (2026-09-29; superseded above):** resume in a future GPT/Codex session using
 [the active Codex handover](codex-next-work-package.md). No Claude takeover or mandatory alternation
 is requested. Update that same Codex package at future stopping points. The older provider-switch
 instructions below apply only if the owner explicitly requests a switch again; the shared ownership,
@@ -119,6 +135,17 @@ the transferred checkout before continuing and keep credentials in local ignored
 Either provider can implement or independently review. Preserve accepted decisions and earlier
 QA evidence when the reviewed code is unchanged; recheck affected criteria after later edits.
 Do not repeat completed audits simply because the assistant changed.
+
+For the current November 1 testing assignment, the owner using Claude executes the remaining
+tests and reports evidence/findings to the owner. Codex finishes publication; returning test
+execution to Codex is not required. If fixes are implemented, preserve independent review of
+those changes before acceptance. The older implementation/review split below applies to later
+work only when it is actually assigned, not to the current testing handover.
+
+For subsequent assigned implementation work, Claude implements and runs its own verification; Codex owns the
+independent QA pass and reports findings without editing the implementation it accepts. Claude
+fixes findings, then Codex rechecks the affected criteria. The Council reviews substantive decisions
+and final evidence; this split does not waive existing votes or product gates.
 
 The incoming implementer owns verification of its edits. Independent QA must come from a reviewer
 that did not implement those edits, followed by Orchestrator integration review. A new model name

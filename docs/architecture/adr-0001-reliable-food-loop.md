@@ -344,3 +344,41 @@ Separate QA must validate omission compatibility, attribution across two members
 isolation, stale/racing commands, atomic rollback, retries/lost responses and placed immutability.
 Required migration replay and connected/native acceptance remain pending. The current prohibition
 on applying or replaying migrations is unchanged; this addendum authorizes neither operation.
+
+## Addendum 2026-10-18: SCKRL-311 Atomic Placement
+
+Status: design ratified by [COUNCIL-20261015-02 placement v1](../agents/council-decisions/COUNCIL-20261015-02-placement.md).
+This records the accepted data/command boundary; it does not accept the implementation, authorize
+SQL execution or activation, or mark SCKRL-311 Done.
+
+- One authenticated command accepts only a household-scoped idempotency key, active generation and
+  revision, and exact included receipt-line/zone assignments. Current membership is locked before
+  cached replay/status disclosure; receipt and distinct assigned zones are locked in ID order
+  through commit. The authoritative household-zone check follows those locks, so a concurrent zone
+  deletion yields the stable invalid-zone response when it wins, while a deletion that loses waits.
+- A unique receipt placement row stores normalized input and the immutable initial result. The
+  household-wide key is unique across receipts. Identical retries return that result before stale
+  token checks, changed input under a key conflicts, and a second key receives the canonical result
+  without being bound as an alias.
+- Stock rows, applicable expiry facts, one acquisition event per line, and the placement result are
+  one transaction. The placement timestamp and household calendar day drive `occurred_at` and
+  `items.added_on`; parser `purchased_on` is separate metadata. Unknown expiry creates no fact;
+  dated/no-date create unconfirmed declared user facts without estimates.
+- A protected unique `items.source_receipt_item_id` points to one receipt line. New receipt-source
+  stock requires this same-household link; preexisting unlinked receipt-source items are
+  grandfathered and remain editable. Parent deletion clears the link and retains stock. Existing
+  writable item columns remain available, while the new lineage column is excluded for both
+  authenticated and service roles.
+- Locked wrappers freeze review save, parse promotion and parse failure after placement, including
+  the legacy no-op parse-failure path. Receipt header and line/generation mutation guards protect
+  the snapshot; parent deletion/cascades remain available. New placement metadata/events are
+  server-written and authenticated-readable, with no client bypass setting.
+- The new status and unplaced-review read paths are opt-in. Legacy Home discovery and receipt
+  selection remain unchanged until migration installation and the later activation gates. Unknown
+  command outcomes retain the exact key/input and recover through canonical status; they never
+  trigger automatic fresh-key retry.
+
+The local migration and prepared fixtures still require independent source review, disposable clean
+and populated replay, adversarial privilege/lineage checks, concurrency/rollback evidence, and
+separate execution authorization. Hosted Auth/PostgREST, activation, and downstream UI recovery
+remain unaccepted.

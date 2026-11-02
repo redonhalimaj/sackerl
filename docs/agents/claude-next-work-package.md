@@ -1,135 +1,118 @@
-# Superseded work package: Codex to Claude
+# Claude testing handover — SCKRL-311 and open receipt QA
 
-Prepared: 2026-09-28. Superseded: 2026-09-29 at the owner's request.
+Updated: 2026-11-01. The owner explicitly requests: **“Ill do the testing using claude so add that
+to handover and push the changes”.** The owner will perform the remaining testing using Claude.
+Claude is the next testing assistant after Codex's publication closeout. Before taking ownership,
+check the [status checkpoint](../../status.md) for verified push completion and explicit writer
+release. This package alone is not evidence that either action has completed.
+Opening this document does not launch Claude or establish a test pass.
 
-**Inactive historical package.** Continue from [the GPT/Codex handover](codex-next-work-package.md)
-and `status.md`. The owner no longer requests a Claude handover or alternating providers.
-The original assignment, ownership language and prompt below are preserved as history only;
-do not execute them. No Claude implementation resulted from this package.
+## Ownership and checkout
 
-The owner requested alternating bounded work between Codex and Claude. This is the next package;
-`claude-work-package.md` retains the historical SCKRL-406 assignment and must not be mistaken for
-the new active task. Use the latest Current work checkpoint in `status.md` before this file.
+Use `feature/SCKRL-311-astra-luna`. The reviewed development baseline is `7547916`; publication
+commits are identified in status/Git history. The old manifest `head` is the review baseline,
+not a command to check out that old commit. Inspect the actual branch, HEAD, staged/unstaged and
+untracked changes, and confirm outgoing writers have stopped before taking ownership.
 
-## Proposed next issue
+The owner and Claude own **remaining test execution and findings**, rather than automatically
+returning those tests to Codex. Use the selected Claude runtime and record its actual identity
+when exposed, following `TEAM.md`'s Claude profile. Preserve independent QA and Council acceptance.
+If testing leads to implementation fixes, a separate reviewer must validate those fixes before Done;
+the test assignment does not automatically assign a new implementation feature.
 
-**SCKRL-308 — private receipt media storage**, Stage 1, primary role Infrastructure with Backend
-support and independent QA. This Ready ticket can progress independently of receipt placement;
-it supplies the media contract needed by SCKRL-307 acquisition and SCKRL-309 processing.
+Codex's publication follows the owner's explicit push instruction. This testing package does not
+authorize a later merge, deployment, provider change or hosted migration. Keep real credentials in
+ignored local configuration and never copy them into test reports or chat.
 
-The outgoing Council accepts this as the next bounded package after SCKRL-304 source review.
-This is not acceptance of a SCKRL-308 design: convene Infrastructure/Backend/QA and ratify that
-implementation contract first. If the checkpoint identifies a blocking source defect in the current work,
-address that bounded defect first rather than hiding it behind a new ticket.
+## Accepted baseline and current behavior
 
-## Owner QA update — 2026-09-29
+The Council unanimously accepted the bounded local **source-v4** backend/evidence after fresh
+preliminary/final votes and reciprocal Chair review. See the
+[Council record](council-decisions/COUNCIL-20261019-01-placement-source.md),
+[accepted baseline manifest](../qa/sckrl-311-source-v4-manifest.json),
+[source QA](../qa/sckrl-311-source-review.md) and [database QA](../qa/sckrl-311-database-review.md).
+SCKRL-311 remains **Review**; source acceptance is not full product or hosted acceptance.
 
-Read [the latest simulator findings](../product/simulator-findings-2026-09-29.md) alongside the
-original phone-feedback triage. Notification/warning requests remain backlog, not delivered work.
-Password recovery, Home header overlap and zero-dinner shopping copy are recorded for bounded triage;
-the proposed development-only review preview has not been approved or implemented. Do not silently
-expand this SCKRL-308 assignment or treat screenshots of the fallback as full SCKRL-304 acceptance.
+The owner's later testing/publication instruction updates these handover documents. Validate the
+current tree using the [publication manifest](../qa/sckrl-311-handover-publication-manifest.json);
+the accepted v4 handover hashes are historical and intentionally differ from this testing revision.
+Earlier v1/v2/v3 manifests remain unratified history. The implementation and SQL are unchanged.
 
-## Read and recover
+SCKRL-311 provides atomic placement, canonical status/recovery, authoritative unplaced discovery,
+protected receipt-line lineage, expiry conversion and immutable acquisition/results. Endpoints are
+`GET/POST /receipts/:id/placement` and `GET /receipts/pending-placement`; shared methods are
+`finalizeReceiptPlacement`, `getReceiptPlacement` and `listUnplacedReceiptReviews`.
+The contract is [placement v1](council-decisions/COUNCIL-20261015-02-placement.md).
 
-Read `AGENTS.md`, `CLAUDE.md`, `TEAM.md`, `status.md`, the Council workflow, the Codex/Claude handoff
-workflow, `PROGRAM.md` Stage 1, SCKRL-308 in `features.md`, ADR-0001's Receipt Media, Authorization
-and Retention decisions, and the SCKRL-310/SCKRL-406 contracts. Inspect staged, unstaged and
-untracked changes: existing work is uncommitted, and some inherited changes are staged. Preserve
-that index, the owner's Obsidian layouts, simulator work and all accepted receipt/expiry changes.
+Home still uses legacy saved-review discovery. Saving a review creates no stock; Continue to
+placement remains disabled. SCKRL-305 placement UI is Blocked. No hosted installation is claimed.
+The October 23 development probe reported its expected connection and absent placement objects
+at that time. Its raw temporary artifacts have expired; it is not current target/schema evidence.
+Fresh target verification and the full baseline are required before a hosted execution proposal.
 
-Claim only the files needed for SCKRL-308 and record your actual provider/model and specialist
-ownership. Use TEAM.md's Claude profile, not invented GPT delegates. The Council still requires
-independent findings, a versioned unanimous recommendation, Chair review and explicit final votes.
-No reviewer may approve implementation they authored as independent QA.
+## Existing evidence to preserve
 
-## Bounded deliverable
+The November 1 disposable PostgreSQL 14.20 replay passed all 95 subprocess steps and 32 input
+hashes. Nine concurrency scenarios include the bounded opposing-order/placement-before-delete
+proof. The SDK-to-route regression maps malformed HTTP-200 success to 502 with `outcomeUnknown`.
+The unchanged app record is October 22: 18 cached Turbo tasks, 372 recorded tests, fresh 58
+receipt-client/12 route tests and a successful web build. These are dated evidence, not fresh
+connected/native results. Do not repeat completed checks solely because the assistant changed.
 
-1. Publish `docs/features/sckrl-308-private-receipt-media.md` before dependent code, including typed
-   upload/finalize/read/deletion behavior, failure/retry semantics, identity and authorization.
-   Reuse ADR-0001's accepted Supabase Storage choice; document any refinement before implementing it.
-2. Implement the local private-media foundation: private `receipt-media` bucket/policy definition,
-   household/receipt-scoped references, bounded server-authorized upload and read operations,
-   finalization verification, and durable media metadata/state. Write a new forward migration if
-   needed; never rewrite accepted or pending migrations from another ticket.
-3. Validate allowed image/PDF types and size using server-observed content; client MIME/filename
-   alone is insufficient. Preserve bucket/path as the durable reference, not signed URLs. Keep
-   privileged credentials server-side and out of logs, examples and chat.
-4. Provide idempotent cleanup/deletion behavior and a documented invocation contract. Follow the
-   ADR defaults: media expires 30 days after placement, or 30 days after capture for abandoned/
-   failed receipts; requested deletion is earlier. Preserve structured review history as defined
-   by the accepted contracts. Do not invent placement timestamps for unplaced receipts.
-5. Add deterministic client/server tests and authorization/storage-policy fixtures: member vs
-   outsider, mismatched household/receipt/path, malformed or oversized content, expired read/upload
-   access, duplicate finalization, failed upload and retry, missing/deleted objects, and repeat cleanup.
-6. Publish the contract SCKRL-307 and SCKRL-309 will consume. Do not implement those tickets or wire
-   real media into mobile as part of this package. Preserve the existing explicit simulated flow.
+Selected raw evidence is local and Git-ignored:
+`.env.qa-sckrl311-evidence-20261101/run-zu04vnsp`.
+Verify `archive.json`, its 98 file hashes, raw `results.json`, all 95 step logs and current input
+hashes. Original `/private/tmp` paths in raw JSON are execution coordinates; use matching archived
+log basenames after those temporary files expire. No application credentials or PostgreSQL data
+directory is archived. The failed sandbox attempt is separate and is not a SQL pass.
 
-## Limits and acceptance
+**The raw archive is not pushed to Git.** It remains available in this shared workspace. If testing
+from another clone/machine, transfer this synthetic evidence separately or record its absence;
+do not claim the raw logs were inspected from Git alone.
 
-Do not apply migrations, replay them into a database, configure hosted buckets, deploy, commit or
-merge. Do not start SCKRL-305/307/309/311/407/408, notifications, AI/OCR providers or unrelated UI.
-Do not infer the owner's hosted migration state. SCKRL-310 and SCKRL-406 remain unapplied by Codex;
-their actual hosted application by the owner is unverified. No real household media is test data.
+## Remaining testing, in order
 
-Complete all permitted local implementation, focused tests, typecheck/lint, code-map updates and
-independent source review. Broaden checks when shared client/server changes justify it. Record exact
-commands and results. Storage-provider, RLS and migration execution remain unrun under these limits;
-fixtures or mocks alone cannot prove those gates. Leave SCKRL-308 in Review/QA while required
-evidence is missing, and state the exact next validation step. Do not mark it Done just to hand back.
+1. Verify the published checkout, current publication manifest, accepted v4 implementation and
+   retained archive. Record actual commands, source revision and environment before new tests.
+2. Reconcile the [development/connected plan](../qa/sckrl-311-development-migration-plan.md).
+   Prepare the full read-only target/schema baseline comparison, bounded migration executor and
+   connected fixture harness. These are still incomplete. Obtain a reviewed target-bound execution
+   packet and separate owner authorization before any hosted write; do not run all migrations.
+3. Once installation is authorized and verified, exercise real Auth/PostgREST/shared-client owner,
+   member and outsider cases using isolated synthetic fixtures. Verify exact same-key replay,
+   changed-input conflict, alternate-key `already_placed` canonical result, household key reuse,
+   foreign-resource denial, pending exclusion and placed review/parse freeze.
+4. Exercise approved uncertain-outcome cases: lost/malformed responses, timeout, canonical status,
+   same command/key retry and no duplicate stock/events. An unplaced status alone does not prove
+   rollback. Missing schema/RPC is an explicit recoverable error, never a silent legacy fallback.
+5. Continue the still-open SCKRL-304/406/312/908 navigation, account-change, offline/pending-save,
+   device and accessibility matrix from status and linked QA reports. Preserve accepted ordinary
+   simulator evidence and the owner's release deferrals. Placement drag/tap tests wait for actual
+   SCKRL-305 implementation and its prerequisites; a disabled placement CTA is expected today.
+6. Verify exact fixture cleanup and report unresolved failures. Keep Review/QA until applicable
+   acceptance is complete; a push, passing CI or this handover does not mark the full ticket Done.
 
-## Required return to Codex
+No new camera/OCR/media, notification, AI or later-program feature starts from this testing
+assignment. Future implementation follows each ticket's dependencies and `PROGRAM.md` gates.
 
-Before stopping, Claude must:
+## Report back to the owner
 
-- Stop delegated writers and name the files whose ownership is released.
-- Update `status.md`, this package's execution ledger, the contract and relevant Obsidian flow notes.
-  Refresh generated maps with `pnpm code:map` and verify `pnpm code:map:check` after source changes.
-- Record actual diff, accepted decisions/votes, tests, unresolved risks, unapplied migrations,
-  environment state and the first concrete Codex resume action. Preserve prior accepted evidence.
-- Create `docs/agents/codex-next-work-package.md` with a bounded return assignment. Codex first
-  validates Claude's actual implementation and resolves its findings; only then select an eligible
-  next program issue through the Council. Do not automatically claim the next ticket's prerequisites.
-- Include a ready-to-paste Codex prompt and explicitly instruct Codex to prepare the next Claude
-  handover in the same manner. Switching is manual; neither assistant launches the other.
+For each check, record expected/actual behavior, source/installed schema, commands and results,
+cache or mocked/live scope, screenshots/logs where useful, isolated fixture IDs and cleanup outcome.
+Report failures with severity and reproduction steps; distinguish failed, blocked, deferred and
+unrun cases. Update status and the relevant QA record without overwriting accepted historical
+evidence. If fixes are needed, name their scope and reviewer. Release test/fix file ownership when
+handing back. Codex review can be requested separately; it is not the assigned executor for these
+remaining tests.
 
-## Execution ledger
+## Resume prompt for Claude
 
-- Ownership released on 2026-09-28: root has finished application/integration/documentation edits;
-  Deputy completed and released its ledger, QA completed its independent report, and the earlier
-  Frontend writer remains stopped. No delegated writer is active. Claude may now claim the bounded
-  SCKRL-308 file set; it has not started yet. This release covers the SCKRL-304 route/helper/tests,
-  Scan/layout integration, status, feature/code-map notes and outgoing handover/decision docs.
-- SCKRL-304 is Review. Route/helper/Scan integration and tests are source accepted by independent
-  QA and Chair; Council v3 records ownership and acceptance in
-  [COUNCIL-20260928-02](council-decisions/COUNCIL-20260928-02.md).
-- Actual participants: Deputy `gpt-5.5` xhigh, initial Frontend `gpt-5.6-luna` high (stopped at
-  usage limit after partial route/helper), root completion (specific runtime model/effort not exposed),
-  independent QA `gpt-5.5` high. QA did not implement the accepted code.
-- Evidence: 44 mobile tests/7 files; independent QA reran 24 focused tests/3 files and typecheck;
-  mobile lint/typecheck, source formatting and diff checks pass. iOS export passes, 1,286 modules.
-  Map: 645 callables, 1,164 relationships, 81 modules, zero stale files.
-- Outstanding SCKRL-304 gates: connected review reads/saves and conflicts against migrated auth/
-  PostgREST, native visual/accessibility/keyboard/touch review. SCKRL-406 retains its prior runtime
-  gates. No new migration/replay/hosted configuration occurred. See
-  [QA report](../qa/sckrl-304-review.md), not only passing mocks.
-- Source to preserve: `apps/mobile/app/receipt-review/[id].tsx`, `apps/mobile/lib/receipt-review.ts`,
-  review fixtures/tests, Scan entry test, Scan/layout integration, feature boundary and code-map
-  notes. All new files remain untracked; inherited staged work remains staged. Nothing was committed.
-- First Claude action: read checkpoint and inspect the real diff, claim only SCKRL-308 files,
-  then form its Council and publish the media contract before dependent implementation.
-- SCKRL-308 owner/model, claimed files, decisions, checks and return boundary: Claude records on takeover.
-
-## Claude resume prompt
-
-Ownership is released; paste this into Claude:
-
-> Continue Sackerl from status.md and docs/agents/claude-next-work-package.md. Codex has stopped
-> writing. Read AGENTS.md, CLAUDE.md, TEAM.md and the Council/handoff workflows, then inspect the
-> actual staged and unstaged tree. Preserve accepted SCKRL-304/310/406 work and outstanding QA gates.
-> Use the Council with the Claude provider profile to complete the bounded SCKRL-308 local
-> foundation in this package. Do not apply/replay migrations, configure hosted storage, deploy,
-> commit, merge or start excluded tickets. Keep evidence and ownership current. Before stopping,
-> update status.md and the code map, obtain independent review, release all writers, and create
-> docs/agents/codex-next-work-package.md with exact remaining work and a Codex resume prompt.
-> Instruct Codex to repeat the same hand-back process so we continue alternating safely.
+> Take over Sackerl testing from status.md and docs/agents/claude-next-work-package.md. The owner
+> will do the remaining testing using Claude. Confirm Codex's outgoing writers have stopped,
+> inspect the actual published checkout and publication manifest, and verify available local
+> evidence. Preserve accepted source-v4 and its remaining gates. Start with the read-only target
+> and schema prerequisite check; prepare missing execution artifacts before requesting any hosted
+> write. Do not start a new feature, enable blocked placement UI or infer a current hosted state
+> from the historical October probe. Run only authorized tests with isolated fixtures, report
+> results and cleanup to the owner, keep ticket states honest, and preserve independent review
+> for any implementation fixes. Record your actual Claude runtime and release ownership when done.
