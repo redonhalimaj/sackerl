@@ -1,14 +1,22 @@
+import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import path from 'node:path';
+
 import type { E2eEnv } from './env';
 
-/** Every synthetic account uses this domain so teardown can never touch a real user. */
+/** Every synthetic account uses this domain so cleanup can never target a real user. */
 export const E2E_EMAIL_DOMAIN = 'sackerl.test';
-export const E2E_PASSWORD_PREFIX = 'E2e-pw-';
 
 export type SyntheticUser = {
   readonly id: string;
   readonly email: string;
   readonly accessToken: string;
 };
+
+const LEDGER_DIR = path.resolve(__dirname, '..', '.results', 'ledger');
+
+function ledgerFile(runId: string): string {
+  return path.join(LEDGER_DIR, `${runId}.jsonl`);
+}
 
 function adminHeaders(env: E2eEnv): Record<string, string> {
   return {
@@ -22,13 +30,17 @@ export function e2eEmail(runId: string, label: string): string {
   return `e2e+${runId}-${label}@${E2E_EMAIL_DOMAIN}`;
 }
 
+/**
+ * Creates a confirmed synthetic user and records its id in this run's ledger *before* signing in,
+ * so a later failure can still be cleaned up. Never lists existing users.
+ */
 export async function createSyntheticUser(
   env: E2eEnv,
   runId: string,
   label: string,
 ): Promise<SyntheticUser> {
   const email = e2eEmail(runId, label);
-  const password = `${E2E_PASSWORD_PREFIX}${runId}-${label}`;
+  const password = `E2e-${crypto.randomUUID()}`;
   const created = await fetch(`${env.supabaseUrl}/auth/v1/admin/users`, {
     body: JSON.stringify({
       email,
@@ -42,7 +54,9 @@ export async function createSyntheticUser(
   if (!created.ok) {
     throw new Error(`createSyntheticUser(${label}) failed with HTTP ${created.status}.`);
   }
-  const user = (await created.json()) as { id: string };
+  const user = (await created.json()) as { id: string; email?: string };
+  mkdirSync(LEDGER_DIR, { recursive: true });
+  appendFileSync(ledgerFile(runId), `${JSON.stringify({ email, id: user.id })}\n`);
   const token = await fetch(`${env.supabaseUrl}/auth/v1/token?grant_type=password`, {
     body: JSON.stringify({ email, password }),
     headers: { apikey: env.anonKey, 'Content-Type': 'application/json' },
@@ -55,45 +69,48 @@ export async function createSyntheticUser(
   return { accessToken: session.access_token, email, id: user.id };
 }
 
-type AdminUser = { id: string; email?: string; user_metadata?: { e2e_run_id?: string } };
-
 /**
- * Deletes synthetic users. With a runId only that run's users are removed; without one, every
- * leftover `@sackerl.test` user tagged with an e2e run id is removed. Household-owned rows are
- * expected to cascade from the auth user (see docs/qa/e2e-web.md).
+ * Deletes exactly one synthetic user by id. The email is re-checked against the e2e pattern
+ * so a wrong id can never remove a real account. 404 (already gone) counts as success.
  */
-export async function deleteSyntheticUsers(env: E2eEnv, runId?: string): Promise<number> {
+export async function deleteSyntheticUser(
+  env: E2eEnv,
+  user: { readonly id: string; readonly email: string },
+): Promise<boolean> {
+  if (!user.email.startsWith('e2e+') || !user.email.endsWith(`@${E2E_EMAIL_DOMAIN}`)) {
+    throw new Error('Refusing to delete a non-synthetic user.');
+  }
+  const response = await fetch(`${env.supabaseUrl}/auth/v1/admin/users/${user.id}`, {
+    headers: adminHeaders(env),
+    method: 'DELETE',
+  });
+  return response.ok || response.status === 404;
+}
+
+/** Sweeps the ledger of one run (the backup to per-test fixture cleanup). */
+export async function deleteLedgerUsers(
+  env: E2eEnv,
+  runId: string,
+): Promise<{ deleted: number; failed: number }> {
+  const file = ledgerFile(runId);
+  if (!existsSync(file)) {
+    return { deleted: 0, failed: 0 };
+  }
+  const users = readFileSync(file, 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as { id: string; email: string });
   let deleted = 0;
-  for (let page = 1; page < 50; page += 1) {
-    const response = await fetch(
-      `${env.supabaseUrl}/auth/v1/admin/users?page=${page}&per_page=200`,
-      {
-        headers: adminHeaders(env),
-      },
-    );
-    if (!response.ok) {
-      throw new Error(`Listing users failed with HTTP ${response.status}.`);
-    }
-    const { users } = (await response.json()) as { users: AdminUser[] };
-    const targets = users.filter(
-      (user) =>
-        user.email?.endsWith(`@${E2E_EMAIL_DOMAIN}`) &&
-        user.email.startsWith('e2e+') &&
-        typeof user.user_metadata?.e2e_run_id === 'string' &&
-        (runId === undefined || user.user_metadata.e2e_run_id === runId),
-    );
-    for (const user of targets) {
-      const removed = await fetch(`${env.supabaseUrl}/auth/v1/admin/users/${user.id}`, {
-        headers: adminHeaders(env),
-        method: 'DELETE',
-      });
-      if (removed.ok) {
-        deleted += 1;
-      }
-    }
-    if (users.length < 200) {
-      break;
+  let failed = 0;
+  for (const user of users) {
+    if (await deleteSyntheticUser(env, user)) {
+      deleted += 1;
+    } else {
+      failed += 1;
     }
   }
-  return deleted;
+  if (failed === 0) {
+    rmSync(file);
+  }
+  return { deleted, failed };
 }

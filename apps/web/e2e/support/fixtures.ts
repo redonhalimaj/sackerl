@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { test as base, expect, type APIRequestContext, type APIResponse } from '@playwright/test';
 
 import { readE2eEnv, requireE2eEnv } from './env';
-import { createSyntheticUser, type SyntheticUser } from './supabase-admin';
+import { createSyntheticUser, deleteSyntheticUser, type SyntheticUser } from './supabase-admin';
 
 /** Shared per-run id, set by global-setup; falls back for single-file runs. */
 export const RUN_ID = process.env.E2E_RUN_ID ?? `local${Date.now().toString(36)}`;
@@ -46,16 +46,31 @@ export const test = base.extend<Fixtures>({
   makeUser: async ({ request }, use, testInfo) => {
     test.skip(!readE2eEnv(), 'No E2E Supabase target configured (see docs/qa/e2e-web.md).');
     const env = requireE2eEnv();
-    const make = async (label: string) =>
-      bearerClient(
-        request,
-        await createSyntheticUser(
-          env,
-          RUN_ID,
-          `${testInfo.workerIndex}-${label}-${randomUUID().slice(0, 8)}`,
-        ),
+    const created: SyntheticUser[] = [];
+    const make = async (label: string) => {
+      const user = await createSyntheticUser(
+        env,
+        RUN_ID,
+        `${testInfo.workerIndex}-${label}-${randomUUID().slice(0, 8)}`,
       );
-    await use(make);
+      created.push(user);
+      return bearerClient(request, user);
+    };
+    let deleteFailures = 0;
+    try {
+      await use(make);
+    } finally {
+      // Delete exactly the users this test created; the run ledger is the backup sweep.
+      if (process.env.E2E_KEEP_DATA !== '1') {
+        const results = await Promise.all(created.map((user) => deleteSyntheticUser(env, user)));
+        deleteFailures = results.filter((ok) => !ok).length;
+      }
+    }
+    if (deleteFailures > 0) {
+      throw new Error(
+        `[e2e] ${deleteFailures} synthetic user(s) not deleted; teardown sweep retries.`,
+      );
+    }
   },
   outsider: async ({ makeUser }, use) => {
     await use(await makeUser('outsider'));

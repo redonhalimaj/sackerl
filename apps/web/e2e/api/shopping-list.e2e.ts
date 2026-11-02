@@ -1,5 +1,19 @@
 import { readE2eEnv } from '../support/env';
-import { expect, expectJson, test } from '../support/fixtures';
+import { buildReviewedReceipt, placementCommand } from '../support/builders/receipts';
+import { expect, expectJson, test, type ApiClient } from '../support/fixtures';
+import { requirePlacementSchema } from '../support/schema';
+
+async function firstRecipeId(client: ApiClient): Promise<string | undefined> {
+  const env = readE2eEnv();
+  if (!env) {
+    return undefined;
+  }
+  const response = await fetch(`${env.supabaseUrl}/rest/v1/recipes?select=id&limit=1`, {
+    headers: { apikey: env.anonKey, Authorization: `Bearer ${client.user.accessToken}` },
+  });
+  const rows = response.ok ? ((await response.json()) as { id: string }[]) : [];
+  return rows[0]?.id;
+}
 import {
   createItem,
   createListItem,
@@ -85,8 +99,11 @@ test.describe('/shopping-list', () => {
   });
 
   test('a recipe line is only added once', async ({ owner }) => {
+    // recipe_id is a foreign key to the shared recipes catalogue; use a real row.
+    const recipeId = await firstRecipeId(owner);
+    test.skip(!recipeId, 'Target has no recipes seeded; recipe-line dedupe needs one.');
     await setupHousehold(owner);
-    const payload = { name: uniqueName('basil'), recipeId: 'e2e-pesto', source: 'recipe' };
+    const payload = { name: uniqueName('basil'), recipeId, source: 'recipe' };
     const first = await createListItem(owner, payload);
     const second = await createListItem(owner, payload);
     expect(second.id).toBe(first.id);
@@ -201,11 +218,22 @@ test.describe('/shopping-list', () => {
 });
 
 test.describe('/shopping-list/suggestions', () => {
+  /** Receipt-sourced stock can only be created through placement (SCKRL-311 lineage guard). */
+  async function placeSampleReceipt(owner: ApiClient): Promise<void> {
+    const { review, zones } = await buildReviewedReceipt(owner);
+    await expectJson(
+      await owner.post(
+        `/receipts/${review.receipt.id}/placement`,
+        placementCommand(review, zones[0]!.id),
+      ),
+      200,
+    );
+  }
+
   test('suggests deduplicated receipt items only', async ({ owner }) => {
-    await setupHousehold(owner);
-    const receiptName = uniqueName('receipt butter');
-    await createItem(owner, { name: receiptName, source: 'receipt' });
-    await createItem(owner, { name: receiptName, source: 'receipt' });
+    await requirePlacementSchema();
+    await placeSampleReceipt(owner);
+    await placeSampleReceipt(owner);
     const manualName = uniqueName('manual cheese');
     await createItem(owner, { name: manualName });
 
@@ -214,13 +242,14 @@ test.describe('/shopping-list/suggestions', () => {
       200,
     );
     const names = body.suggestions.map((s) => s.name);
-    expect(names.filter((n) => n === receiptName)).toHaveLength(1);
+    expect(names.length).toBeGreaterThan(0);
+    expect(new Set(names.map((n) => n.toLowerCase())).size).toBe(names.length);
     expect(names).not.toContain(manualName);
   });
 
   test('outsider does not see the owner receipt history', async ({ owner, outsider }) => {
-    await setupHousehold(owner);
-    await createItem(owner, { name: uniqueName('receipt'), source: 'receipt' });
+    await requirePlacementSchema();
+    await placeSampleReceipt(owner);
     await setupHousehold(outsider);
     const body = await expectJson<SuggestionsBody>(
       await outsider.get('/shopping-list/suggestions'),

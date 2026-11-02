@@ -5,6 +5,9 @@ import { readE2eEnv } from './e2e/support/env';
 const env = readE2eEnv();
 const baseURL = env?.baseUrl ?? process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3100';
 const port = new URL(baseURL).port || '3100';
+// Hosted Supabase returns Cloudflare 5xx under bursts of admin user creation; run serially there.
+const hostedTarget =
+  !!env && !['127.0.0.1', 'localhost'].includes(new URL(env.supabaseUrl).hostname);
 
 /**
  * Web E2E. Specs live in e2e/** and use the `.e2e.ts` suffix so Vitest (`pnpm test`) never
@@ -18,7 +21,6 @@ export default defineConfig({
   outputDir: './e2e/.results',
   projects: [
     { name: 'api', testMatch: /api\/.*\.e2e\.ts$/ },
-    { name: 'cleanup', testMatch: /maintenance\/.*\.e2e\.ts$/ },
     {
       name: 'smoke-mobile',
       testMatch: /smoke\/.*\.e2e\.ts$/,
@@ -41,5 +43,5 @@ export default defineConfig({
     timeout: 180_000,
     url: `${baseURL}/`,
   },
-  ...(process.env.CI ? { workers: 2 } : {}),
+  ...(hostedTarget ? { workers: 1 } : process.env.CI ? { workers: 2 } : {}),
 });

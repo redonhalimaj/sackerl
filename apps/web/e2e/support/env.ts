@@ -3,10 +3,22 @@ import path from 'node:path';
 import { config as loadDotenv } from 'dotenv';
 
 /**
- * E2E environment. Values come from `apps/web/e2e/.env.e2e` (ignored by Git) or the shell.
- * See `.env.e2e.example` for names only. Never log these values.
+ * E2E environment, never logged. Precedence (dotenv never overrides): shell, then
+ * `apps/web/e2e/.env.e2e`, then `apps/web/.env.local`, then the repo-root `.env` (all ignored).
+ * E2E_* names win; the app's NEXT_PUBLIC_SUPABASE_* and SUPABASE_SERVICE_ROLE_KEY are fallbacks.
+ * In a git worktree without its own env files, set E2E_ENV_DIR to the main checkout root.
  */
-loadDotenv({ path: path.resolve(__dirname, '..', '.env.e2e') });
+const webDir = path.resolve(__dirname, '..', '..');
+const envRoot = process.env.E2E_ENV_DIR
+  ? path.resolve(process.env.E2E_ENV_DIR)
+  : path.resolve(webDir, '..', '..');
+for (const file of [
+  path.join(webDir, 'e2e', '.env.e2e'),
+  path.join(envRoot, 'apps', 'web', '.env.local'),
+  path.join(envRoot, '.env'),
+]) {
+  loadDotenv({ path: file });
+}
 
 export type E2eEnv = {
   readonly baseUrl: string;
@@ -18,10 +30,15 @@ export type E2eEnv = {
 
 const DEFAULT_ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'host.docker.internal'];
 
+/** Backend specs run only with explicit opt-in (E2E_BACKEND=1); otherwise they skip. */
 export function readE2eEnv(): E2eEnv | undefined {
-  const supabaseUrl = process.env.E2E_SUPABASE_URL;
-  const anonKey = process.env.E2E_SUPABASE_ANON_KEY;
-  const serviceRoleKey = process.env.E2E_SUPABASE_SERVICE_ROLE_KEY;
+  if (process.env.E2E_BACKEND !== '1') {
+    return undefined;
+  }
+  const supabaseUrl = process.env.E2E_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.E2E_SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceRoleKey =
+    process.env.E2E_SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !anonKey || !serviceRoleKey) {
     return undefined;
   }
@@ -45,7 +62,12 @@ export function readE2eEnv(): E2eEnv | undefined {
  */
 export function assertSafeTarget(env: E2eEnv): void {
   const host = new URL(env.supabaseUrl).hostname;
-  if (/prod/i.test(host) || /prod/i.test(process.env.E2E_TARGET_LABEL ?? '')) {
+  const labels = [
+    process.env.E2E_TARGET_LABEL,
+    process.env.APP_ENV,
+    process.env.NEXT_PUBLIC_APP_ENV,
+  ];
+  if (/prod/i.test(host) || labels.some((label) => /prod/i.test(label ?? ''))) {
     throw new Error('E2E refuses to run against a production-looking target.');
   }
   if (!env.allowedHosts.includes(host)) {

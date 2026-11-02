@@ -9,11 +9,11 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "e2e": "playwright test --project=api --project=smoke-mobile",
+    "e2e": "playwright test",
     "e2e:api": "playwright test --project=api",
     "e2e:smoke": "playwright test --project=smoke-mobile",
     "e2e:install": "playwright install chromium",
-    "e2e:cleanup": "playwright test --project=cleanup"
+    "e2e:dev": "E2E_BACKEND=1 playwright test"
   },
   "dependencies": {
     "@sackerl/api-client": "workspace:*",

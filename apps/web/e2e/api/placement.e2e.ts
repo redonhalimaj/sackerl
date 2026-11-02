@@ -19,6 +19,7 @@ import {
 } from '../support/builders/receipts';
 import { readE2eEnv } from '../support/env';
 import { expect, expectJson, test } from '../support/fixtures';
+import { requirePlacementSchema } from '../support/schema';
 
 const UNKNOWN_ID = '00000000-0000-4000-8000-000000000000';
 
@@ -68,6 +69,7 @@ test.describe('placement auth and household gates', () => {
     owner,
     outsider,
   }) => {
+    await requirePlacementSchema();
     const { review, zones } = await buildReviewedReceipt(owner);
     await ensureHousehold(outsider, 'Outsider household');
     const receiptId = review.receipt.id;
@@ -85,6 +87,8 @@ test.describe('placement auth and household gates', () => {
 });
 
 test.describe('placement input validation', () => {
+  test.beforeEach(requirePlacementSchema);
+
   test('invalid uuid, empty and malformed bodies, bad queries return 400', async ({
     owner,
     request,
@@ -103,7 +107,8 @@ test.describe('placement input validation', () => {
     expect(empty.code).toBe('INVALID_PLACEMENT_INPUT');
 
     const invalidJson = await request.post(`/receipts/${UNKNOWN_ID}/placement`, {
-      data: '{not json',
+      // A string would be JSON-encoded by Playwright; send raw bytes so the body is malformed.
+      data: Buffer.from('{not json'),
       headers: {
         Authorization: `Bearer ${owner.user.accessToken}`,
         'Content-Type': 'application/json',
@@ -138,6 +143,8 @@ test.describe('placement input validation', () => {
 });
 
 test.describe('placement command lifecycle', () => {
+  test.beforeEach(requirePlacementSchema);
+
   test('place, replay, normalized replay, conflicting key, already placed', async ({ owner }) => {
     const { review, zones } = await buildReviewedReceipt(owner);
     const receiptId = review.receipt.id;
@@ -278,6 +285,8 @@ test.describe('placement command lifecycle', () => {
 });
 
 test.describe('pending placement list', () => {
+  test.beforeEach(requirePlacementSchema);
+
   test('paginates and drops a receipt once placed', async ({ owner }) => {
     const first = await buildReviewedReceipt(owner);
     const second = await buildReviewedReceipt(owner);

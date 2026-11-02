@@ -10,6 +10,7 @@ import {
   saveReview,
 } from '../support/builders/receipts';
 import { expect, expectJson, test } from '../support/fixtures';
+import { requirePlacementSchema } from '../support/schema';
 
 /**
  * Web has no placement UI. Mobile (apps/mobile/app/receipt-review/[id].tsx, "Continue to
@@ -19,6 +20,7 @@ import { expect, expectJson, test } from '../support/fixtures';
  * Skips without a backend, like every fixture-based spec.
  */
 test('placement eligibility matches the save-review-first CTA gate', async ({ owner }) => {
+  await requirePlacementSchema();
   const household = await ensureHousehold(owner);
   const [zone] = await listZones(owner, household.id);
   const receipt = await createReceipt(owner);

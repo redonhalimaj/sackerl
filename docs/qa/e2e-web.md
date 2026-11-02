@@ -23,13 +23,13 @@ placement API it will eventually call.
 apps/web/playwright.config.ts    projects, webServer (next dev on :3100), global setup/teardown
 apps/web/e2e/
   .env.e2e.example                variable names only; copy to .env.e2e (ignored)
-  support/env.ts                  env loading and target guard (local only by default; never prod)
-  support/supabase-admin.ts       synthetic users e2e+<runId>-<label>@sackerl.test, cleanup
+  support/env.ts                  env loading and target guard (never prod)
+  support/supabase-admin.ts       create and delete synthetic users by exact id; per-run ledger
+  support/schema.ts               marks placement specs fixme when SCKRL-311 is missing on the target
   support/fixtures.ts             `test` with owner / outsider / makeUser fixtures, expectJson
-  support/builders/*.ts           domain setup helpers (household, items, receipts)
+  support/builders/*.ts           domain setup helpers (household, items, receipts, placement)
   api/*.e2e.ts                    API contract specs
-  smoke/*.e2e.ts                  viewport smoke
-  maintenance/cleanup.e2e.ts      removes leftover synthetic users from aborted runs
+  smoke/*.e2e.ts                  viewport smoke and the API side of the mobile placement CTA gate
 ```
 
 Specs use the `.e2e.ts` suffix so Vitest (`pnpm test` / `turbo test`) never collects them; e2e
@@ -39,33 +39,48 @@ is not part of `turbo test`.
 
 ```bash
 pnpm --filter @sackerl/web e2e:install     # once: Chromium
-pnpm --filter @sackerl/web e2e             # api + smoke-mobile
-pnpm --filter @sackerl/web e2e:api
-pnpm --filter @sackerl/web e2e:smoke
-pnpm --filter @sackerl/web e2e:cleanup     # remove leftovers from any run
+pnpm --filter @sackerl/web e2e             # backend specs skip; smoke runs
+# Backend against the approved remote dev project (from a worktree, point at the main checkout's env):
+E2E_BACKEND=1 E2E_ENV_DIR=<main checkout> E2E_ALLOWED_SUPABASE_HOSTS=<dev project host> \
+  pnpm --filter @sackerl/web e2e
 ```
 
-Without `apps/web/e2e/.env.e2e` (or the equivalent shell variables), backend specs are
-**skipped** and only the smoke runs.
+Backend specs run only with `E2E_BACKEND=1`. Credentials are read, never printed, from the
+shell, `apps/web/e2e/.env.e2e`, `apps/web/.env.local` and the repo-root `.env` (all ignored).
+`E2E_*` names win; `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and
+`SUPABASE_SERVICE_ROLE_KEY` are fallbacks.
 
 ## Target and safety
 
-- The default target is a **local Supabase** stack with all `supabase/migrations` applied.
-  No `supabase/config.toml` exists in the repo yet. Setting one up (Supabase CLI and Docker) is
-  outside this seat's file ownership and waits on the owner's decision.
-- `assertSafeTarget` allows only `127.0.0.1`/`localhost`/`host.docker.internal`. A hosted
-  dev project must be listed in `E2E_ALLOWED_SUPABASE_HOSTS`, and only after owner approval.
-  Any host or label containing "prod" is refused.
-- A service-role key is required to create and delete synthetic users. Keep it only in the ignored
-  `.env.e2e`, and never print or commit it.
+- The owner-approved target is the **remote dev** Supabase project (2026-11-02). A local Supabase
+  stack also works and is allowed by default (`127.0.0.1`/`localhost`).
+- The real safeguard is the allow-list: a non-local host must be named in
+  `E2E_ALLOWED_SUPABASE_HOSTS`. Any host or `E2E_TARGET_LABEL`/`APP_ENV`/`NEXT_PUBLIC_APP_ENV`
+  containing "prod" is refused.
+- Against a hosted target the run is serial (`workers: 1`). Parallel bursts of Auth admin user
+  creation returned Cloudflare 521/500 from the dev project.
 
 ## Fixtures and cleanup
 
-Each test gets fresh users via the Auth admin API, tagged with `user_metadata.e2e_run_id` and
-emails under `@sackerl.test`. Global teardown deletes the run's users (skipped with
-`E2E_KEEP_DATA=1`). Profiles, households and all household-owned rows cascade from `auth.users`
-deletion per the migrations. If a later migration adds a restricting FK (e.g. append-only
-placement events), teardown failures will surface it, and cleanup must be extended.
+- Each test creates its own users `e2e+<runId>-<worker>-<label>-<rand>@sackerl.test` via the Auth
+  admin API, tagged with `user_metadata.e2e_run_id`. Each id is written to a per-run ledger
+  (`e2e/.results/ledger/<runId>.jsonl`) before sign-in.
+- In a `finally` block, the fixture deletes exactly the users that test created. The global teardown
+  re-sweeps the run's ledger and fails the run if any delete fails. `E2E_KEEP_DATA=1` keeps the data.
+- Users are **never listed**. A delete also re-checks the `e2e+…@sackerl.test` pattern.
+- Profiles, households and all household-owned rows cascade from `auth.users`.
+
+## Placement
+
+The placement specs call `requirePlacementSchema()`. When the target lacks `receipt_placements`, it
+marks them **fixme** (expected-blocked) with the reason, instead of failing or passing silently.
+Receipt-sourced stock can only be created through placement (SCKRL-311 lineage guard), so specs
+that need receipt stock build it with the receipts builder and `POST /receipts/:id/placement`.
+
+## Known product findings
+
+- Malformed JSON on the items and shopping-list routes returns 500, not 400 (`request.json()`
+  SyntaxError is not mapped). Placement and parse already return 400.
 
 ## Extending
 
@@ -73,8 +88,12 @@ placement events), teardown failures will surface it, and cleanup must be extend
    `../support/fixtures`.
 2. Put reusable setup in `e2e/support/builders/<feature>.ts`.
 3. Cover the happy path, 401, outsider isolation and the main 400/409/422 cases.
-4. When web product UI lands, add browser specs under `e2e/ui/` with a new project.
+4. Gate specs on migrations not yet everywhere with a schema probe like `support/schema.ts`.
+5. When web product UI lands, add browser specs under `e2e/ui/` with a new project.
 
-## Status
+## Run record
 
-See the latest run record at the end of this file.
+| Date       | Target                        | Result                                                                                                             |
+| ---------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 2026-11-02 | none (offline)                | 6 smoke passed, 77 backend skipped                                                                                 |
+| 2026-11-02 | remote dev, SCKRL-311 applied | **82 passed / 0 failed / 0 skipped** (3.0 min, serial); teardown sweep: all run users confirmed absent, 0 failures |
