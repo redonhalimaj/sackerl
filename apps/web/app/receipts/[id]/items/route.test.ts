@@ -142,6 +142,17 @@ describe('receipt review routes', () => {
       routeContext,
     );
     expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'Invalid JSON body.' });
+    expect(mocks.saveReview).not.toHaveBeenCalled();
+  });
+
+  it('rejects an empty body with 400 without submitting a review', async () => {
+    const response = await PUT(
+      new Request('http://localhost/receipts/receipt-1/items', { method: 'PUT', body: '' }),
+      routeContext,
+    );
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: 'JSON body is required.' });
     expect(mocks.saveReview).not.toHaveBeenCalled();
   });
 

@@ -22,10 +22,17 @@ defaults to plan-only, and records hashes and incomplete/error states without co
 data directory or loading application env files. The raw results retain original temporary paths;
 review archived logs by matching basenames and the archive registry after temporary paths expire.
 
-The plan-by-default entry point is `python3 supabase/tests/run_sckrl_311.py --pg-bin /path/to/postgresql14/bin`.
-Adding `--execute` creates its own fresh socket-only cluster; it accepts no existing database coordinates.
-It includes clean/populated 311 and isolated 310/406/312 regression databases, retains source hashes
-and logs, and records cluster shutdown. It does not grant permission for another run.
+The plan-by-default entry point is `python3 supabase/tests/run_sql_suite.py --pg-bin /path/to/postgresql14/bin`
+(`run_sckrl_311.py` remains as a compatibility shim). Adding `--execute` creates its own fresh
+socket-only cluster; it accepts no existing database coordinates. Every case replays all migrations in
+order; a populated case loads its ticket's legacy seed immediately before that ticket's migration and
+then continues through every later migration. It includes clean/populated 311 (with the SCKRL-912
+error-code fixture) and isolated 310/406/312 regression databases, runs the SCKRL-311 concurrency suite
+on the populated database (`--skip-concurrency` to omit), retains source hashes and logs, and records
+cluster shutdown. `--ci` prints a concise summary with the failing log tail, exits non-zero on any
+failure and removes cluster data after shutdown; `--artifacts-dir` keeps logs and `results.json`
+there. `.github/workflows/sql.yml` runs it on the self-hosted runner. It does not grant permission
+to run against any non-disposable database.
 
 For the populated upgrade, run the baseline migrations through the 312 migration, then seed the
 unlinked legacy receipt-source item and saved receipt before installing 311:

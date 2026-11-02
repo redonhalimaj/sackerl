@@ -1,0 +1,78 @@
+name: SQL suite
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/sql.yml'
+  push:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/sql.yml'
+  workflow_dispatch:
+    inputs:
+      pg_bin:
+        description: 'PostgreSQL 14 bin directory on the runner (default: pg_config --bindir)'
+        required: false
+        default: ''
+
+# Runs on the owner's self-hosted runner (labels: self-hosted, sackerl). Fork PRs are skipped,
+# matching ci.yml. The suite creates its own disposable socket-only PostgreSQL cluster, uses no
+# secrets and never connects to hosted Supabase or any existing database.
+concurrency:
+  group: sql-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  sql-suite:
+    name: Disposable PostgreSQL migration and fixture suite
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, sackerl]
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      PG_BIN_INPUT: ${{ inputs.pg_bin }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Locate PostgreSQL binaries
+        run: |
+          set -euo pipefail
+          echo "ARTIFACTS_DIR=$RUNNER_TEMP/sql-suite-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+          pg_bin="${PG_BIN_INPUT:-${PG_BIN:-}}"
+          if [ -z "$pg_bin" ] && command -v pg_config >/dev/null 2>&1; then
+            pg_bin="$(pg_config --bindir)"
+          fi
+          if [ -z "$pg_bin" ] && [ -d /opt/homebrew/opt/postgresql@14/bin ]; then
+            pg_bin=/opt/homebrew/opt/postgresql@14/bin
+          fi
+          if [ -z "$pg_bin" ]; then
+            echo "::error::PostgreSQL binaries not found. Install PostgreSQL 14 on the runner or set PG_BIN / the pg_bin input."
+            exit 1
+          fi
+          for tool in initdb pg_ctl psql createdb; do
+            if [ ! -x "$pg_bin/$tool" ]; then
+              echo "::error::Missing $pg_bin/$tool. Point PG_BIN at a PostgreSQL 14 bin directory."
+              exit 1
+            fi
+          done
+          "$pg_bin/psql" --version
+          echo "PG_BIN=$pg_bin" >> "$GITHUB_ENV"
+
+      - name: Run SQL suite
+        run: python3 supabase/tests/run_sql_suite.py --pg-bin "$PG_BIN" --execute --ci --artifacts-dir "$ARTIFACTS_DIR"
+
+      - name: Upload SQL suite logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sql-suite-logs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.ARTIFACTS_DIR }}
+          if-no-files-found: warn
+          retention-days: 14

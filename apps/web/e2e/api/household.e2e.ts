@@ -50,6 +50,18 @@ test.describe('/household', () => {
     await expectJson(await owner.patch('/household', { name: '   ' }), 400);
   });
 
+  test('PATCH returns 400 for a malformed JSON body', async ({ owner, request }) => {
+    await setupHousehold(owner);
+    const headers = {
+      Authorization: `Bearer ${owner.user.accessToken}`,
+      'Content-Type': 'application/json',
+    };
+    // A string would be JSON-encoded by Playwright; send raw bytes so the body is malformed.
+    const data = Buffer.from('{not json');
+    const response = await request.patch('/household', { data, headers });
+    expect((await expectJson(response, 400)).error).toBe('Invalid JSON body.');
+  });
+
   test('households are isolated between users', async ({ owner, outsider }) => {
     const ownerHousehold = await setupHousehold(owner);
     await expectJson(await outsider.get('/me'), 200);

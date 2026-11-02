@@ -2,6 +2,7 @@ import { ApiRequestError } from '@sackerl/api-client';
 
 import { getRequestAuthContext, jsonResponse } from '../../lib/api-auth';
 import { getWebProfileClient } from '../../lib/profile';
+import { readJsonBody } from '../../lib/request-json';
 
 export async function GET(request: Request): Promise<Response> {
   const context = await getRequestAuthContext(request);
@@ -24,7 +25,18 @@ export async function PATCH(request: Request): Promise<Response> {
     return context;
   }
 
-  const body = (await request.json()) as { readonly name?: unknown };
+  let body: { readonly name?: unknown };
+
+  try {
+    const parsed = await readJsonBody(request);
+    body = typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch (error) {
+    if (error instanceof ApiRequestError) {
+      return jsonResponse({ error: error.message }, error.status);
+    }
+
+    throw error;
+  }
 
   if (typeof body.name !== 'string') {
     return jsonResponse({ error: 'Household name is required.' }, 400);

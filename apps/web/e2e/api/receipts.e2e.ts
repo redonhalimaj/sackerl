@@ -54,6 +54,18 @@ test.describe('receipts: create, list, parse', () => {
     await expectJson(await owner.get('/receipts?page=abc'), 400);
   });
 
+  test('create returns 400 for a malformed JSON body', async ({ owner, request }) => {
+    await ensureHousehold(owner);
+    const headers = {
+      Authorization: `Bearer ${owner.user.accessToken}`,
+      'Content-Type': 'application/json',
+    };
+    // A string would be JSON-encoded by Playwright; send raw bytes so the body is malformed.
+    const data = Buffer.from('{not json');
+    const response = await request.post('/receipts', { data, headers });
+    expect((await expectJson(response, 400)).error).toBe('Invalid JSON body.');
+  });
+
   test('parse produces deterministic review lines', async ({ owner }) => {
     await ensureHousehold(owner);
     const receipt = await createReceipt(owner);
