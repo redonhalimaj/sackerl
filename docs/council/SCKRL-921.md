@@ -18,6 +18,7 @@ retailer history). It doesn't displace Stage 1 (SCKRL-305 placement UI, 308/307/
 5. **Placement:** where this slots into the roadmap, and what the smallest shippable first increment is.
 
 **Seats:**
+
 - Backend (Opus): schema, matching, contract fit.
 - Infrastructure (Sonnet 5): data sources, licensing, ingestion and refresh.
 - QA (Sonnet 5): measurement design and acceptance.
@@ -25,9 +26,11 @@ retailer history). It doesn't displace Stage 1 (SCKRL-305 placement UI, 308/307/
 **Out of scope:** scraping implementation, hosted writes, new dependencies.
 
 ## Round 1
+
 These seats were started by the Chair session on 2026-11-03.
 
 ### Backend (Opus): AGREE
+
 - **Today:**
   - Categories come from about 10 keyword regexes, falling back to `pantry`.
   - Placement uses `coalesce(corrected_category_id, category_id)`.
@@ -53,6 +56,7 @@ These seats were started by the Chair session on 2026-11-03.
   - QA: measure seed-only against the regex baseline first.
 
 ### QA (Sonnet 5): AGREE
+
 - **Corpus:**
   - At least 8 receipts each from BILLA, HOFER and LIDL.
   - Redact name, card and loyalty details, cashier and store; keep chain, month and line text.
@@ -81,4 +85,49 @@ These seats were started by the Chair session on 2026-11-03.
   - Promotion threshold: k=3 (QA) or k=5 (Backend)? To reconcile.
   - Owner consent for redacted receipts.
 
-### Infrastructure (Sonnet 5): pending
+### Infrastructure (Sonnet 5): AGREE
+
+Sources are marked V (verified) or I (inferred). Not legal advice.
+
+- **Open Food Facts:**
+  - Has EAN, brand, categories and pack size. No chains, and no usable prices.
+  - ODbL (V): attribution, and share-alike if merged into another database.
+  - Austrian own-brand coverage is likely patchy (I).
+  - Risk: LOW as a separate, attributed lookup table.
+- **heisse-preise:**
+  - The code is MIT. It covers BILLA, SPAR, HOFER, LIDL, DM and MPREIS (V).
+  - It has prices and history, but no visible EAN or category.
+  - The data carries no reuse licence, because it is scraped (I).
+  - Risk: MED-HIGH as a bulk source. LOW as a one-off offline sample to test matching.
+- **Official sources:**
+  - The BWB price API (2023) was not adopted.
+  - The state price app was cancelled.
+  - Statistik Austria launched "Preisradar" on 2026-01-19 (V). Product-level open data is unverified.
+- **The chains' own sites:** no public APIs. The ToS couldn't be read (the BILLA fetch returned 500). Self-built scraping is HIGH risk (EU 96/9/EC sui generis right, UrhG §§76c–d, ToS, UWG).
+- **Recommendation:**
+  - **A (now):** Open Food Facts plus the owner's receipts plus user-confirmed aliases, categorization only.
+  - **B (prices):** a licensed or partner feed, or written permission. Revisit Preisradar.
+  - **C (no):** self-built scraping, or putting heisse-preise data into production, without counsel.
+- **Asks:**
+  - Backend: `source` and `licence` on every catalog row. Open Food Facts rows go in their own table. No `price_observations` until the licence is cleared.
+  - Chair: counsel review before any price work.
+
+Sources: github.com/badlogic/heissepreise; openfoodfacts.github.io/openfoodfacts-server/api/; bmf.gv.at preisradar press release (2026-01).
+
+## Council Proposal (unanimous, round 1)
+
+Proceed with a categorization-only spike on path A:
+
+- Open Food Facts as a separate attributed table.
+- A curated Austrian receipt-token seed.
+- The normalizer plus `pg_trgm` matching.
+- User-confirmed aliases.
+- Prices are deferred to path B, after counsel review. No scraping.
+
+Measurement and go/no-go follow the QA plan. Promotion threshold: the stricter k=5 households with ≥80% agreement (Backend). QA accepts that as stricter than its k=3.
+
+## Chair weigh-in
+
+**Vote: AGREE.** This is consistent with `PROGRAM.md` P2.1 and P2.4, the guardrails (the user confirms, suggestions explain why) and the owner's goals.
+
+**Ratified 2026-11-03.** The spike is handed to the worker session **w3** for execution.
