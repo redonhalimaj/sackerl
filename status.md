@@ -1295,6 +1295,8 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | 2026-05-31 | Keep `households.zones` as the onboarding selection source and sync it into normalized per-household `zones` rows for item foreign keys.                                                                                                                                                     | Backend            |
 | 2026-09-06 | Supersede the original GPT-5.5-only Orchestrator assignment with the `PROGRAM.md` model-routing matrix: `gpt-5.6-sol` xhigh for Orchestrator; `gpt-5.5` xhigh for Backend and Infrastructure; `gpt-5.5` high for QA; `gpt-5.6-luna` high for Business Process Analyst, Frontend, and DevOps. | Agent Orchestrator |
 | 2026-09-06 | Launch Stage 0 before new feature implementation. SCKRL-304 and SCKRL-305 stay behind the product-truth, QA, architecture, and measurement gates represented by SCKRL-020 through SCKRL-024.                                                                                                 | Agent Orchestrator |
+| 2026-11-02 | Owner adopted the board Council in Claude (`docs/council/<ticket>.md`, 6 seats, unanimous rounds, Chair weigh-in). Worker sessions w1 and w2 each work in their own worktree and branch and never push. The orchestrator session owns merges, pushes and status. | Chair |
+| 2026-11-02 | [SCKRL-311 board](docs/council/SCKRL-311.md) ratified unanimously: merge PR #7 into `dev` as committed (merge awaits owner go). Follow-ups F1–F4. L3 is a constraint for 305/308. SCKRL-311 stays in Review until hosted install and real-auth tests. | Chair |
 
 ## Open Decisions
 
