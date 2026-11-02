@@ -6,22 +6,24 @@ on:
       - 'supabase/**'
       - '.github/workflows/sql.yml'
   push:
+    branches: [main, dev, 'feature/**']
     paths:
       - 'supabase/**'
       - '.github/workflows/sql.yml'
   workflow_dispatch:
     inputs:
       pg_bin:
-        description: 'PostgreSQL 14 bin directory on the runner (default: pg_config --bindir)'
+        description: 'PostgreSQL 14 bin directory on the runner (default: postgresql@14, else a PG14 pg_config)'
         required: false
         default: ''
 
 # Runs on the owner's self-hosted runner (labels: self-hosted, sackerl). Fork PRs are skipped,
 # matching ci.yml. The suite creates its own disposable socket-only PostgreSQL cluster, uses no
 # secrets and never connects to hosted Supabase or any existing database.
+# One suite at a time on the runner: the disposable cluster uses a fixed local port (55434).
 concurrency:
-  group: sql-${{ github.ref }}
-  cancel-in-progress: true
+  group: sql-suite
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -46,11 +48,13 @@ jobs:
           set -euo pipefail
           echo "ARTIFACTS_DIR=$RUNNER_TEMP/sql-suite-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
           pg_bin="${PG_BIN_INPUT:-${PG_BIN:-}}"
-          if [ -z "$pg_bin" ] && command -v pg_config >/dev/null 2>&1; then
-            pg_bin="$(pg_config --bindir)"
-          fi
+          # Prefer an explicit PG14 install; only accept pg_config when it reports version 14.
           if [ -z "$pg_bin" ] && [ -d /opt/homebrew/opt/postgresql@14/bin ]; then
             pg_bin=/opt/homebrew/opt/postgresql@14/bin
+          fi
+          if [ -z "$pg_bin" ] && command -v pg_config >/dev/null 2>&1 \
+            && pg_config --version | grep -q 'PostgreSQL 14\.'; then
+            pg_bin="$(pg_config --bindir)"
           fi
           if [ -z "$pg_bin" ]; then
             echo "::error::PostgreSQL binaries not found. Install PostgreSQL 14 on the runner or set PG_BIN / the pg_bin input."

@@ -209,7 +209,7 @@ def execute(pg_bin: Path, port: int, concurrency: bool, ci: bool, artifacts_dir:
         if source_hashes() != result["inputs"]:
             raise RuntimeError("Source changed during replay; evidence does not bind the final source.")
         result["checksPassed"] = True
-    except RuntimeError as error:
+    except (RuntimeError, OSError, subprocess.SubprocessError) as error:
         failure = str(error)
         result["failure"] = failure
     finally:
