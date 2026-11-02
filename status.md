@@ -1297,6 +1297,7 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | 2026-09-06 | Launch Stage 0 before new feature implementation. SCKRL-304 and SCKRL-305 stay behind the product-truth, QA, architecture, and measurement gates represented by SCKRL-020 through SCKRL-024.                                                                                                 | Agent Orchestrator |
 | 2026-11-02 | Owner adopted the board Council in Claude (`docs/council/<ticket>.md`, 6 seats, unanimous rounds, Chair weigh-in). Worker sessions w1 and w2 each work in their own worktree and branch and never push. The orchestrator session owns merges, pushes and status. | Chair |
 | 2026-11-02 | [SCKRL-311 board](docs/council/SCKRL-311.md) ratified unanimously: merge PR #7 into `dev` as committed (merge awaits owner go). Follow-ups F1–F4. L3 is a constraint for 305/308. SCKRL-311 stays in Review until hosted install and real-auth tests. | Chair |
+| 2026-11-02 | PR #7 merged into `dev` (`9114109`). Remaining Stage 1 work continues on `feature/stage1-receipt-loop`. The owner applied the SCKRL-311 migration (sha256 `b1303836…`) to dev project `raqq…` after a read-only preflight and a rolled-back dry run. Verified: both tables, the lineage column and the RPCs exist; `authenticated` can execute and `anon` is denied; PostgREST resolves them. The dev project has no migration-history table, so migrations are applied manually. | Chair |
 
 ## Open Decisions
 
