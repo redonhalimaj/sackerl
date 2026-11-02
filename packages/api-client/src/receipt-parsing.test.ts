@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { aliasSeedSize, matchReceiptAlias, normalizeReceiptToken } from './receipt-aliases';
+import {
+  aliasSeedSize,
+  isNonItemLine,
+  matchReceiptAlias,
+  normalizeReceiptToken,
+} from './receipt-aliases';
 import { confidenceLevelForScore, parseReceiptText } from './receipt-parsing';
 
 describe('receipt parsing', () => {
@@ -120,6 +125,24 @@ describe('SCKRL-921 Austrian receipt alias spike (synthetic fixtures)', () => {
   it.each([['PFAND 0,25'], ['RABATT -0,50'], ['XQZ 4711 9,99']] as const)(
     'misses non-product or unknown line %s',
     (raw) => {
+      expect(matchReceiptAlias(raw).method).toBe('none');
+    },
+  );
+
+  it('folds decomposed (NFD) umlauts the same as composed ones', () => {
+    expect(normalizeReceiptToken('Ka\u0308se 1,99').norm).toBe('kaese');
+  });
+
+  it('expands collision-prone abbreviations only when dotted', () => {
+    expect(normalizeReceiptToken('KAR. 1KG 0,99').norm).toBe('karotten');
+    expect(normalizeReceiptToken('KAR 0,99').norm).toBe('kar');
+    expect(normalizeReceiptToken('SCHLAG. 250ML 1,59').norm).toBe('schlagobers');
+  });
+
+  it.each([['LEERGUT RUECKGABE -1,25'], ['AKTIONSRABATT -0,30'], ['ZWISCHENSUMME 12,40']] as const)(
+    'filters non-item line %s before matching',
+    (raw) => {
+      expect(isNonItemLine(raw)).toBe(true);
       expect(matchReceiptAlias(raw).method).toBe('none');
     },
   );

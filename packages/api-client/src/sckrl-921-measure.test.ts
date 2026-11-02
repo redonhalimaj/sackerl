@@ -110,14 +110,27 @@ describe.skipIf(env.SCKRL_921_MEASURE !== '1')('SCKRL-921 measurement', () => {
       .filter((row) => row.is_product);
     const chains = ['all', ...new Set(rows.map((row) => row.chain))];
     const out: string[] = [`corpus: ${corpusPath} (${rows.length} product lines)`, ''];
-    for (const [name, system] of [
-      ['baseline-regex', baseline],
-      ['seed+normalizer', seed],
-      ['hybrid (seed, else regex)', hybrid],
+    // Leakage disclosure: lines whose full normalized text is itself a seed alias.
+    const methods = new Map<string, number>();
+    for (const row of rows) {
+      const method = matchReceiptAlias(row.raw_text).method;
+      methods.set(method, (methods.get(method) ?? 0) + 1);
+    }
+    out.push(
+      `match methods: ${[...methods].map(([m, n]) => `${m}=${n} (${((n / rows.length) * 100).toFixed(0)}%)`).join(', ')}`,
+      '',
+    );
+    const nonExact = rows.filter((row) => matchReceiptAlias(row.raw_text).method !== 'exact');
+    for (const [name, system, population] of [
+      ['baseline-regex', baseline, rows],
+      ['seed+normalizer', seed, rows],
+      ['seed+normalizer, EXCLUDING exact-match lines', seed, nonExact],
+      ['hybrid (seed, else regex)', hybrid, rows],
     ] as const) {
       out.push(`## ${name}`);
       for (const chain of chains) {
-        const subset = chain === 'all' ? rows : rows.filter((row) => row.chain === chain);
+        const subset =
+          chain === 'all' ? population : population.filter((row) => row.chain === chain);
         const r = score(subset, system);
         out.push(
           `${chain.padEnd(6)} coverage ${r.coverage} | top-1 precision ${r.precision} | auto@0.65 ${r.autoAccept065} | auto@0.85 ${r.autoAccept085}`,

@@ -58,7 +58,6 @@ const abbreviations: Readonly<Record<string, string>> = {
   natjog: 'naturjoghurt',
   'schl.obers': 'schlagobers',
   schlobers: 'schlagobers',
-  schlag: 'schlagobers',
   sauerr: 'sauerrahm',
   topf: 'topfen',
   kaes: 'kaese',
@@ -81,7 +80,6 @@ const abbreviations: Readonly<Record<string, string>> = {
   kart: 'kartoffel',
   paradeis: 'paradeiser',
   zwieb: 'zwiebel',
-  kar: 'karotten',
   champ: 'champignons',
   mineralw: 'mineralwasser',
   minw: 'mineralwasser',
@@ -96,6 +94,21 @@ const abbreviations: Readonly<Record<string, string>> = {
   olivenoe: 'olivenoel',
   sonnenbl: 'sonnenblumenoel',
 };
+
+// Short abbreviations that collide with real words or prefixes; only expanded when the
+// receipt marks them as abbreviations with a trailing dot ("KAR." / "SCHLAG.").
+const dottedOnlyAbbreviations: Readonly<Record<string, string>> = {
+  kar: 'karotten',
+  schlag: 'schlagobers',
+};
+
+// Non-item receipt lines (deposit, discounts, totals, payment); never matched.
+const nonItemPattern =
+  /\b(pfand|leergut|rueckgabe|rabatt|nachlass|aktionsrabatt|gutschein|summe|zwischensumme|gesamt|total|bar|karte|bankomat|rueckgeld|mwst|ust|steuer)\b/;
+
+export function isNonItemLine(raw: string): boolean {
+  return nonItemPattern.test(foldGerman(raw));
+}
 
 // Tokens that are pure noise on receipts.
 const noiseTokens = new Set([
@@ -116,13 +129,14 @@ const noiseTokens = new Set([
 
 export function foldGerman(value: string): string {
   return value
+    .normalize('NFC')
     .toLowerCase()
     .replace(/ä/g, 'ae')
     .replace(/ö/g, 'oe')
     .replace(/ü/g, 'ue')
     .replace(/ß/g, 'ss')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '');
+    .replace(/\p{M}/gu, '');
 }
 
 export function normalizeReceiptToken(raw: string): NormalizedReceiptToken {
@@ -153,8 +167,13 @@ export function normalizeReceiptToken(raw: string): NormalizedReceiptToken {
 
   const tokens = value
     .split(' ')
-    .map((token) => token.replace(/\.+$/, ''))
-    .map((token) => abbreviations[token] ?? token)
+    .map((token) => {
+      const bare = token.replace(/\.+$/, '');
+      if (bare !== token && dottedOnlyAbbreviations[bare]) {
+        return dottedOnlyAbbreviations[bare];
+      }
+      return abbreviations[bare] ?? bare;
+    })
     .filter((token) => token.length > 0 && !noiseTokens.has(token));
 
   return { chainHint, norm: tokens.join(' '), tokens };
@@ -299,7 +318,7 @@ export function matchReceiptAlias(raw: string): AliasMatch {
   const { norm, tokens } = normalizeReceiptToken(raw);
   const none: AliasMatch = { alias: null, categoryId: null, method: 'none', score: 0 };
 
-  if (!norm) {
+  if (!norm || isNonItemLine(raw)) {
     return none;
   }
 

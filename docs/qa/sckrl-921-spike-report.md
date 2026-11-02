@@ -17,9 +17,13 @@ Date: 2026-11-03.
 
 ## Results: SYNTHETIC corpus (115 product lines; 40 BILLA, 40 HOFER, 35 LIDL)
 
-> **Caveat:** w3 wrote the synthetic corpus in the same session as the seed. About a quarter of the
-> lines deliberately use brands or words outside the seed, but the corpus is still biased in the
-> seed's favour. **These numbers cannot support a GO decision**; only the real-receipt run can.
+> **Leakage disclosure (QA merge condition):** w3 wrote the corpus in the same session as the seed.
+> Match methods: exact 46 (40%), token 57 (50%), fuzzy 3 (3%), none 9 (8%). The earlier claim that
+> "about a quarter of lines are outside the seed" was wrong. The 46 exact lines are the **entire**
+> auto@0.85 population, so the 100% there is circular. **Excluding exact matches** (69 lines):
+> coverage 87.0% [77.0–93.0], precision 88.3% [77.8–94.2] (53/60), which is **below the 90% gate**.
+> Per chain (excluding exact): BILLA 92.0% cov / 82.6% [62.9–93.0] prec; HOFER 77.8% / 90.5% [71.1–97.3];
+> LIDL 94.1% / 93.8% [71.7–98.9]. The real-corpus run must report the same excluding-exact view. **These numbers cannot support a GO decision**; only the real-receipt run can.
 > The seed was not tuned against the misses listed here.
 
 Wilson 95% intervals in brackets.
@@ -34,9 +38,9 @@ Per chain, seed + normalizer:
 
 | Chain | Coverage | Precision |
 |---|---|---|
-| BILLA | 95.0% | 89.5% |
-| HOFER | 85.0% | 94.1% |
-| LIDL | 97.1% | 97.1% |
+| BILLA | 95.0% [83.5–98.6] | 89.5% [75.9–95.8] |
+| HOFER | 85.0% [70.9–92.9] | 94.1% [80.9–98.4] |
+| LIDL | 97.1% [85.5–99.5] | 97.1% [85.1–99.5] |
 
 Every chain is above 40% coverage.
 
@@ -115,3 +119,21 @@ cd packages/api-client
 SCKRL_921_MEASURE=1 pnpm exec vitest run src/sckrl-921-measure.test.ts
 SCKRL_921_MEASURE=1 SCKRL_921_CORPUS=../../.local/receipt-corpus/labels.jsonl pnpm exec vitest run src/sckrl-921-measure.test.ts
 ```
+
+## Round 3 fixes (Chair weigh-in conditions)
+
+- **Provenance:** the seed is hand-curated vocabulary. It contains no scraped, catalog or heisse-preise data.
+- **Normalizer:**
+  - It runs `NFC` before the umlaut fold, then strips combining marks with `\p{M}`.
+  - Non-item lines (Pfand, Leergut, Rabatt, totals, payment, tax) are filtered before matching.
+  - `kar` and `schlag` expand only when dotted.
+- **SQL parity:** `match_receipt_aliases` must apply the same NFC fold, non-item filter and per-token
+  contiguous-phrase pass before any trigram step.
+- **Draft schema corrections:**
+  - A unique **expression index** on `(coalesce(chain_id,''), alias_norm)`, since PG14 has no NULLS NOT DISTINCT.
+  - `category_id` gets an FK to the categories table.
+  - The RLS SELECT policy covers `status = 'active'` rows only.
+- **Next increment, not this one:** `alias_correction_signals`, with household-only RLS and k=5 / ≥80% agreement promotion via a service-role job.
+- **Corpus hygiene:**
+  - Keep `.local/receipt-corpus/` out of iCloud, Dropbox and other synced folders.
+  - Delete it when the spike ends.
