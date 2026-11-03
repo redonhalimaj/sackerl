@@ -435,6 +435,14 @@ export default function ReceiptReviewRoute(): JSX.Element {
     saveState === 'idle',
   );
 
+  // SCKRL-305: placement opens only from a clean, saved, fully reviewed draft with included items.
+  const canContinueToPlacement = canDoneForNow && !unresolved && includedCount > 0;
+
+  function handleContinueToPlacement() {
+    if (!canContinueToPlacement || savingRef.current) return;
+    router.push({ pathname: '/receipt-placement/[id]', params: { id: receiptId } });
+  }
+
   if (
     authStatus === 'loading' ||
     loadState === 'loading' ||
@@ -713,18 +721,25 @@ export default function ReceiptReviewRoute(): JSX.Element {
         <View style={styles.placementCard}>
           <Text style={styles.placementTitle}>Placement comes next</Text>
           <Text style={styles.placementBody}>
-            {includedCount > 0
-              ? 'Save your review first. Storage placement is not available yet.'
-              : 'No items to place. You can still save this review.'}
+            {includedCount < 1
+              ? 'No items to place. You can still save this review.'
+              : canContinueToPlacement
+                ? 'Your review is saved. Choose where each item goes.'
+                : 'Save a complete review first, then choose where each item goes.'}
           </Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityState={{ disabled: true }}
-            disabled
-            style={styles.disabledPlacement}
+            accessibilityState={{ disabled: !canContinueToPlacement }}
+            disabled={!canContinueToPlacement}
+            onPress={handleContinueToPlacement}
+            style={canContinueToPlacement ? styles.saveButton : styles.disabledPlacement}
             testID="receipt-review.continue-placement"
           >
-            <Text style={styles.disabledPlacementText}>Continue to placement</Text>
+            <Text
+              style={canContinueToPlacement ? styles.saveButtonText : styles.disabledPlacementText}
+            >
+              Continue to placement
+            </Text>
           </Pressable>
         </View>
       </ScrollView>

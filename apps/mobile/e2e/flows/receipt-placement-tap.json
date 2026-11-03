@@ -1,0 +1,121 @@
+{
+  "description": "SCKRL-305 tap-only placement: saved review -> Continue to placement -> place every item by tapping (no drag) -> Add to stock -> Home with toast. Run without EXPO_PUBLIC_E2E_PLACEMENT_FAULT.",
+  "steps": [
+    {
+      "do": "tap",
+      "id": "tabs.scan"
+    },
+    {
+      "do": "assertVisible",
+      "id": "scan.screen"
+    },
+    {
+      "do": "tap",
+      "id": "scan.load-sample"
+    },
+    {
+      "do": "assertVisible",
+      "id": "receipt-review.lines",
+      "timeout": 30000
+    },
+    {
+      "do": "tapIfPresent",
+      "id": "receipt-review.line.0.mark-reviewed"
+    },
+    {
+      "do": "tapIfPresent",
+      "id": "receipt-review.line.1.mark-reviewed"
+    },
+    {
+      "do": "tapIfPresent",
+      "id": "receipt-review.line.2.mark-reviewed"
+    },
+    {
+      "do": "tap",
+      "id": "receipt-review.save"
+    },
+    {
+      "do": "assertVisible",
+      "id": "receipt-review.status",
+      "timeout": 20000
+    },
+    {
+      "do": "assertEnabled",
+      "id": "receipt-review.continue-placement"
+    },
+    {
+      "do": "tap",
+      "id": "receipt-review.continue-placement"
+    },
+    {
+      "do": "assertVisible",
+      "id": "receipt-placement.dock",
+      "timeout": 30000
+    },
+    {
+      "do": "assertDisabled",
+      "id": "receipt-placement.submit"
+    },
+    {
+      "do": "screenshot",
+      "name": "placement-start"
+    },
+    {
+      "do": "tap",
+      "id": "receipt-placement.chip.0"
+    },
+    {
+      "do": "assertVisible",
+      "id": "receipt-placement.selection"
+    },
+    {
+      "do": "tap",
+      "id": "receipt-placement.zone.fridge"
+    },
+    {
+      "do": "assertVisible",
+      "id": "receipt-placement.placed.0"
+    },
+    {
+      "do": "tapIfPresent",
+      "id": "receipt-placement.chip.1"
+    },
+    {
+      "do": "tapIfPresent",
+      "id": "receipt-placement.accept-suggestion"
+    },
+    {
+      "do": "tapIfPresent",
+      "id": "receipt-placement.chip.2"
+    },
+    {
+      "do": "tapIfPresent",
+      "id": "receipt-placement.zone.pantry"
+    },
+    {
+      "do": "screenshot",
+      "name": "placement-all-placed"
+    },
+    {
+      "do": "assertEnabled",
+      "id": "receipt-placement.submit"
+    },
+    {
+      "do": "tap",
+      "id": "receipt-placement.submit"
+    },
+    {
+      "do": "assertVisible",
+      "id": "home.screen",
+      "timeout": 30000
+    },
+    {
+      "do": "assertVisible",
+      "id": "receipt-placement.toast"
+    },
+    {
+      "do": "screenshot",
+      "name": "placement-home-toast"
+    }
+  ]
+}

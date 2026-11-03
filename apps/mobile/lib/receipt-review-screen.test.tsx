@@ -220,6 +220,28 @@ describe('Receipt review route', () => {
     expect(mocks.replace).toHaveBeenCalledWith('/(tabs)');
   });
 
+  it('enables Continue to placement only for a clean saved fully reviewed review (SCKRL-305)', async () => {
+    const reviewed = receiptReview([reviewItem({ reviewState: 'reviewed' })]);
+    mocks.saveReceiptReview.mockResolvedValue(reviewed);
+    await render();
+    expect(action('Continue to placement').props.disabled).toBe(true);
+    await press('Edit Milk');
+    await press('Mark reviewed');
+    // Reviewed but unsaved: still disabled.
+    expect(action('Continue to placement').props.disabled).toBe(true);
+    await press('Save review');
+    const cta = action('Continue to placement');
+    expect(cta.props.disabled).toBe(false);
+    expect(cta.props.testID).toBe('receipt-review.continue-placement');
+    await press('Continue to placement');
+    expect(mocks.push).toHaveBeenCalledWith({
+      params: { id: 'receipt-1' },
+      pathname: '/receipt-placement/[id]',
+    });
+    // Done for now still works alongside the CTA.
+    expect(action('Done for now')).toBeTruthy();
+  });
+
   it('keeps expiry draft and blocks Done for now after an uncertain save', async () => {
     mocks.saveReceiptReview.mockRejectedValue(new Error('Offline'));
     await render();

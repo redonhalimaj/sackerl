@@ -13,10 +13,11 @@ import { expect, expectJson, test } from '../support/fixtures';
 import { requirePlacementSchema } from '../support/schema';
 
 /**
- * Web has no placement UI. Mobile (apps/mobile/app/receipt-review/[id].tsx, "Continue to
- * placement") keeps the CTA disabled and tells users to save their review first. This checks the
- * API contract that disabled state depends on: an unsaved review (reviewRevision 0) is neither
- * listed as pending placement nor placeable, and a saved review becomes eligible.
+ * Web has no placement UI. Mobile (apps/mobile/app/receipt-review/[id].tsx, testID
+ * `receipt-review.continue-placement`) enables "Continue to placement" only for a clean, saved,
+ * fully reviewed draft (SCKRL-305). This checks the API contract that gate depends on: an unsaved
+ * review (reviewRevision 0) is neither listed as pending placement nor placeable, and a saved
+ * review becomes eligible.
  * Skips without a backend, like every fixture-based spec.
  */
 test('placement eligibility matches the save-review-first CTA gate', async ({ owner }) => {

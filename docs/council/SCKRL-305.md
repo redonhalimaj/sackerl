@@ -116,3 +116,63 @@ row after placement.
 - The gates stand: no merge until 304/312 are accepted, and QA is not w2.
 
 **Consensus:** the Round 1 proposal is final, and the Chair reconfirmed the same revision.
+
+## Implementation milestone (w2, 2026-11-03)
+
+**Files.** Everything listed here is either new or limited to the noted change.
+- `apps/mobile/app/receipt-placement/[id].tsx`: the screen.
+- `apps/mobile/lib/receipt-placement.ts`: the pure state machine.
+- `apps/mobile/lib/receipt-placement.test.ts`: 21 unit tests.
+- `apps/mobile/lib/receipt-placement-screen.test.tsx`: 8 component tests.
+- `apps/mobile/lib/placement-fault-injection.ts`
+- `apps/mobile/lib/placement-toast.ts` and `apps/mobile/components/PlacementToast.tsx`
+- `apps/mobile/app/_layout.tsx`: adds the stack entry and the toast host.
+- `apps/mobile/app/receipt-review/[id].tsx`: the **CTA only**, +26/−7 lines (gate, testID, copy, onPress).
+- `apps/mobile/lib/receipt-review-screen.test.tsx`: one CTA test.
+- `apps/web/e2e/api/placement.e2e.ts`: a same-key/body double-submit test that checks stock is created exactly once.
+- `apps/web/e2e/smoke/placement-cta.e2e.ts`: doc comment only.
+- `apps/mobile/e2e/flows/receipt-placement-{tap,unknown-retry}.json`
+
+**Not changed:** api-client, SQL, migrations, package.json and the lockfile.
+
+**Deviations from the proposal (for QA to check):**
+1. Suggestions are **not prefilled**. Unplaced items show "Suggested: <zone>", and Auto-sort or the selection bar's "<Zone> (suggested)" applies them. This resolves the conflict between "prefill" and "auto-sort fills only unassigned", and keeps an explicit user confirmation step.
+2. Drag uses RN core `Animated` + `PanResponder`, not Reanimated. This keeps dependency use at zero and the screen testable under vitest.
+3. Home has no toast pattern. A root-level `PlacementToastHost` in `_layout.tsx` shows the one-shot toast after `router.replace('/(tabs)')`, so the Home/312 code is untouched.
+4. Non-`ReceiptPlacementApiError` failures from finalize are treated as `outcomeUnknown`, so the screen never claims a failure it can't confirm.
+
+**Fault-injection guard** (`lib/placement-fault-injection.ts`): the hook runs only when all three conditions hold:
+- `__DEV__ === true`, which is false in release bundles.
+- `EXPO_PUBLIC_APP_ENV === 'dev'`, the same guard as the sample receipt in `scan.tsx`.
+- `EXPO_PUBLIC_E2E_PLACEMENT_FAULT === 'drop-first-response'`
+
+When active, the first finalize call per key reaches the server, then its response is dropped and reported as an unknown outcome. Otherwise the real result passes through unchanged. Because the flag is set in the Metro env, the unknown-retry flow must run in its own simdrive invocation.
+
+**New testIDs** (fold into TESTIDS.md at merge). Chips use the line index and zones use the zone key, so flows have no UUIDs.
+
+| testID | Element |
+|---|---|
+| `receipt-review.continue-placement` | Review CTA (now enabled when clean, saved, reviewed and included > 0) |
+| `receipt-placement.back` / `.auto-sort` / `.scroll` / `.dock` / `.progress` | Header, dock and progress |
+| `receipt-placement.chip.<i>` / `.placed.<i>` | Unplaced / placed item chip (i = included-line index) |
+| `receipt-placement.zone.<zoneKey>` | Zone tap target |
+| `receipt-placement.selection` / `.accept-suggestion` / `.unplace` | Selection bar actions |
+| `receipt-placement.submit` | Add to stock |
+| `receipt-placement.error` / `.back-to-review` | Confirmed-failure notice / stale reconcile |
+| `receipt-placement.outcome-unknown` / `.check-status` / `.retry` | Unknown-outcome banner |
+| `receipt-placement.committed` / `.go-home` | Already-placed result |
+| `receipt-placement.state` | Loading/unavailable/not-placeable card |
+| `receipt-placement.toast` | Success toast on Home |
+
+**Evidence:**
+- `pnpm format:check`, `lint`, `typecheck` and `test` all pass, with mobile at 146/146.
+- `pnpm install --frozen-lockfile` is clean.
+- Web E2E on dev: 89/89, with the teardown sweep confirming 88 synthetic users absent.
+- L3: the diff has no receipt-row or direct item writes. The RPC is the only write.
+- The copy has no reminder claims.
+
+**Not yet run:** the simdrive flows. They need 908 merged (or a throwaway local merge) and the owner's Accessibility grant, and they remain a Done gate.
+
+**Merge notes for the Chair/w1:**
+- w1's `50-receipt-review.json` asserts `continue-placement` is **disabled after save**. With 305 that becomes enabled once the lines are reviewed and saved, so that step needs flipping when 305 rebases onto 908.
+- If 908 also added testIDs to `receipt-review/[id].tsx`, expect a small conflict on the CTA `Pressable`.
