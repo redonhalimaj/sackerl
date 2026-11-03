@@ -14,7 +14,7 @@
     "@sackerl/api-client": "workspace:*",
     "@sackerl/tokens": "workspace:*",
     "@sackerl/ui": "workspace:*",
-    "next": "^15.1.6",
+    "next": "^15.5.28",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
