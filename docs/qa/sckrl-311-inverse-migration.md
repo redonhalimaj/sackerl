@@ -44,8 +44,11 @@ All must be true before the owner approves a run:
    RPCs). Any client still calling them gets "function does not exist" errors after rollback.
    Receipt review (`save_receipt_review`, `promote_receipt_parse`, `mark_receipt_parse_failed`)
    keeps the same signatures and keeps working.
-4. **Baseline check.** The target has exactly 311 and 912 installed (both inverse files abort
-   otherwise) and no later migration that depends on 311 objects. If a migration newer than
+4. **Baseline check.** The target has exactly 311 and 912 installed. The 311 inverse aborts
+   unless the 311 objects exist; the 912 inverse only checks that the 311 placement functions
+   exist (it restores their 311 bodies, so it is a harmless no-op on a 311-only target). Confirm
+   912 is recorded in `supabase_migrations.schema_migrations` before running it. There must be no
+   later migration that depends on 311 objects. If a migration newer than
    `20261102225020` exists, this inverse must be re-reviewed first.
 5. **Data snapshot.** Record the counts in [Verification queries](#verification-queries) (before)
    so the retained stock can be reconciled.
