@@ -64,9 +64,10 @@ Placement client and HTTP tests cover strict commands, canonical responses, type
 uncertain outcomes, current-household authorization, no-store responses and authoritative discovery
 without fallback. See [client tests](../../packages/api-client/src/receipts.test.ts) and
 [placement route tests](../../apps/web/app/receipts/[id]/placement/route.test.ts).
-The [disposable runner](../../supabase/tests/run_sckrl_311.py) prints its plan by default; its
-separately reviewed execution path creates a socket-only PostgreSQL 14 cluster with isolated
-clean/populated placement and 310/406/312 regression databases. Logs and source hashes bind executed
+The [disposable runner](../../supabase/tests/run_sql_suite.py) (formerly `run_sckrl_311.py`, now a
+shim) prints its plan by default; its execution path creates a socket-only PostgreSQL 14 cluster with
+isolated clean/populated placement and 310/406/312 regression databases, replaying every migration
+with each legacy seed placed before its ticket's migration. `.github/workflows/sql.yml` runs it in CI. Logs and source hashes bind executed
 evidence. Check status and the current QA report for actual results; prepared fixtures alone prove
 neither database behavior nor connected Auth/PostgREST and device acceptance.
 

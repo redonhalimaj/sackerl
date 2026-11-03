@@ -2,6 +2,7 @@ import { getRequestAuthContext, jsonResponse } from '../../../lib/api-auth';
 import { getRequestHousehold } from '../../../lib/items';
 import { readUpdateShoppingListItemBody } from '../../../lib/shopping-list-payload';
 import { getWebShoppingListClient, shoppingListApiErrorResponse } from '../../../lib/shopping-list';
+import { readJsonBody } from '../../../lib/request-json';
 
 type ShoppingListItemRouteContext = {
   readonly params: Promise<{
@@ -28,7 +29,7 @@ export async function PATCH(
   try {
     const { id } = await context.params;
     const item = await getWebShoppingListClient().updateItem(authContext, {
-      ...readUpdateShoppingListItemBody(await request.json()),
+      ...readUpdateShoppingListItemBody(await readJsonBody(request)),
       householdId: household.id,
       id,
     });

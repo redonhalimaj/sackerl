@@ -3,6 +3,7 @@ import type { ItemRemovalReason } from '@sackerl/api-client';
 import { getRequestAuthContext, jsonResponse } from '../../../lib/api-auth';
 import { readUpdateItemBody } from '../../../lib/item-payload';
 import { getRequestHousehold, getWebItemsClient, itemApiErrorResponse } from '../../../lib/items';
+import { readJsonBody } from '../../../lib/request-json';
 
 type ItemRouteContext = {
   readonly params: Promise<{
@@ -26,7 +27,7 @@ export async function PATCH(request: Request, context: ItemRouteContext): Promis
   try {
     const { id } = await context.params;
     const item = await getWebItemsClient().updateItem(authContext, {
-      ...readUpdateItemBody(await request.json()),
+      ...readUpdateItemBody(await readJsonBody(request)),
       householdId: household.id,
       id,
     });

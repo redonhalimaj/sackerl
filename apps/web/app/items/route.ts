@@ -3,6 +3,7 @@ import { ApiRequestError, type ItemCategoryId } from '@sackerl/api-client';
 import { getRequestAuthContext, jsonResponse } from '../../lib/api-auth';
 import { readCreateItemBody } from '../../lib/item-payload';
 import { getRequestHousehold, getWebItemsClient, itemApiErrorResponse } from '../../lib/items';
+import { readJsonBody } from '../../lib/request-json';
 
 export async function GET(request: Request): Promise<Response> {
   const context = await getRequestAuthContext(request);
@@ -55,7 +56,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    const body = readCreateItemBody(await request.json());
+    const body = readCreateItemBody(await readJsonBody(request));
     const item = await getWebItemsClient().createItem(context, {
       ...body,
       householdId: household.id,

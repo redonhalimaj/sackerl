@@ -4,6 +4,7 @@ import { getRequestAuthContext, jsonResponse } from '../../lib/api-auth';
 import { getRequestHousehold } from '../../lib/items';
 import { readCreateShoppingListItemBody } from '../../lib/shopping-list-payload';
 import { getWebShoppingListClient, shoppingListApiErrorResponse } from '../../lib/shopping-list';
+import { readJsonBody } from '../../lib/request-json';
 
 export async function GET(request: Request): Promise<Response> {
   const context = await getRequestAuthContext(request);
@@ -49,7 +50,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    const body = readCreateShoppingListItemBody(await request.json());
+    const body = readCreateShoppingListItemBody(await readJsonBody(request));
     const item = await getWebShoppingListClient().createItem(context, {
       ...body,
       householdId: household.id,
