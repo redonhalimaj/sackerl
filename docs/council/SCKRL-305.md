@@ -209,3 +209,21 @@ When active, the first finalize call per key reaches the server, then its respon
 - Swapping the 246fd8e screen and reducer back in fails 5 of these 6 tests. The refresh-during-unknown case passes on old code, because there persistence restores the attempt.
 - Unit tests were added for classification and `zonesReloaded`.
 - Repo-wide format, lint, typecheck and test pass, with mobile at 154/154. The frozen-lockfile install is clean, and there are still no dependency, api-client, SQL or migration changes.
+
+## QA re-verification (independent Sonnet QA seat, on 940f180)
+
+- **Vote:** AGREE. All six findings are resolved and no new defects were found.
+- **Regression evidence:**
+  - 7 of the new tests fail on 246fd8e.
+  - The token-refresh-during-unknown test passes on the old code, because persistence restores the attempt there. So it guards behaviour, not the stale-state regression itself.
+- **Key re-mint:** QA judges re-minting the key after an uncoded 401/403 safe, because the server's guard returns `RECEIPT_ALREADY_PLACED` for any second placement.
+
+## Chair note
+
+SCKRL-305 → **Review** (status.md 015a095).
+
+**Done gates still open:**
+1. A simdrive run of `receipt-placement-tap` and `receipt-placement-unknown-retry` confirms Home with no "Still confirming" alert.
+2. SCKRL-304/312 are accepted.
+
+**Order:** merge 908 → rebase 305 onto it → flip the `continue-placement` assert in w1's `50-receipt-review.json`. The branch stays local.
