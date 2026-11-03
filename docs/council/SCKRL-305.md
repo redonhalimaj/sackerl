@@ -176,3 +176,36 @@ When active, the first finalize call per key reaches the server, then its respon
 **Merge notes for the Chair/w1:**
 - w1's `50-receipt-review.json` asserts `continue-placement` is **disabled after save**. With 305 that becomes enabled once the lines are reviewed and saved, so that step needs flipping when 305 rebases onto 908.
 - If 908 also added testIDs to `receipt-review/[id].tsx`, expect a small conflict on the CTA `Pressable`.
+
+## QA standup (independent Sonnet QA seat, run by the Chair, on 246fd8e)
+
+- **Vote:** AGREE (conditional on fixing findings 1-3; findings 4-6 are optional but recommended).
+- **Verified OK:** idempotency, persistence, the error table, the tap path, the fault guard, scope and L3.
+- **Findings:**
+  1. **HIGH:** on confirmed success, `router.replace` ran while `usePreventRemove` was still armed from the submitting/checking/unknown render. The user could see "Still confirming" and stay put. The same applied to Check status → placed.
+  2. **MEDIUM:** `load()` depended on the token and email, so `TOKEN_REFRESHED` reloaded and reset state. That lost assignments, or left the screen stuck in `unknown` with a null attempt.
+  3. **MEDIUM:** if the screen was in `committed` but the placement read had failed, it fell through to the editing UI with no notice.
+  4. **LOW:** a deterministic non-API throw could loop in `unknown`.
+  5. **LOW:** `RECEIPT_NOT_FOUND` and uncoded 401/429 got only generic copy, and `INVALID_PLACEMENT_ZONE` should reload zones.
+  6. **LOW:** with zero zones, submit was disabled with no explanation.
+
+## QA fixes (w2)
+
+1. Navigation and the toast now run from a `useEffect` on `phase === 'success'`. It is declared after `usePreventRemove`, so the guard has already been disarmed by the time it runs. `finish()` was removed.
+2. The load runs once per `user:receipt` (ref guard). Only the explicit Try again forces a reload. The auth context is read from a ref at call time, so after a refresh, retries and status checks use the new token.
+3. A `committed` phase with no placement shows a "couldn't load where its items went" card with Try again (which re-reads status) and Go to Home. Pending storage is cleared on `committed`.
+4. Uncoded `ApiRequestError` 401/403 maps to auth, 429 to "Too many tries", and other 4xx (not 408) to a definite failure. 5xx, 408 and non-API errors stay unknown, because the client already raises local validation as coded `INVALID_PLACEMENT_INPUT`. `RECEIPT_NOT_FOUND` gets its own copy.
+5. `INVALID_PLACEMENT_ZONE` reloads zones through a new `zonesReloaded` reducer action. It only applies while editing, and it drops assignments to zones that were removed.
+6. With zero zones, the hint reads "Add a storage place in Settings before placing items."
+
+**Regression evidence:**
+- New screen tests use a `usePreventRemove` mock that records navigation while the guard is armed. They cover:
+  - deferred success
+  - Check status → placed
+  - a token refresh while editing
+  - a token refresh during unknown, then retry with the same key and new token
+  - committed with an unreadable result
+  - a zone reload
+- Swapping the 246fd8e screen and reducer back in fails 5 of these 6 tests. The refresh-during-unknown case passes on old code, because there persistence restores the attempt.
+- Unit tests were added for classification and `zonesReloaded`.
+- Repo-wide format, lint, typecheck and test pass, with mobile at 154/154. The frozen-lockfile install is clean, and there are still no dependency, api-client, SQL or migration changes.

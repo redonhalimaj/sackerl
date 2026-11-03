@@ -19,12 +19,13 @@ const mocks = vi.hoisted(() => ({
   alert: vi.fn(),
   toast: vi.fn(),
   storage: new Map<string, string>(),
+  // Mirrors usePreventRemove: navigation while the guard is armed is blocked (QA #1).
+  blocked: false,
+  blockedNavigations: [] as unknown[],
+  session: { access_token: 'token', user: { email: 'o@test.invalid', id: 'owner' } },
 }));
 vi.mock('./auth-session', () => ({
-  useAuthSession: () => ({
-    session: { access_token: 'token', user: { email: 'o@test.invalid', id: 'owner' } },
-    status: 'ready',
-  }),
+  useAuthSession: () => ({ session: mocks.session, status: 'ready' }),
 }));
 vi.mock('./profile', () => ({ getMobileProfileClient: () => mocks }));
 vi.mock('./receipts', () => ({ getMobileReceiptsClient: () => mocks }));
@@ -41,7 +42,11 @@ vi.mock('expo-router', () => ({
   useLocalSearchParams: () => ({ id: 'receipt-1' }),
   useRouter: () => mocks,
 }));
-vi.mock('expo-router/react-navigation', () => ({ usePreventRemove: () => undefined }));
+vi.mock('expo-router/react-navigation', () => ({
+  usePreventRemove: (prevent: boolean) => {
+    mocks.blocked = prevent;
+  },
+}));
 vi.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ bottom: 0, left: 0, right: 0, top: 0 }),
 }));
@@ -67,6 +72,14 @@ vi.mock('react-native', () => {
   };
 });
 import ReceiptPlacementRoute from '../app/receipt-placement/[id]';
+
+async function refreshToken(next: string) {
+  mocks.session = { ...mocks.session, access_token: next };
+  await act(async () => {
+    screen?.update(<ReceiptPlacementRoute />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+}
 
 let screen: ReactTestRenderer | undefined;
 const text = () => JSON.stringify(screen?.toJSON());
@@ -146,7 +159,12 @@ beforeEach(() => {
   mocks.listZones.mockReset().mockResolvedValue(zones);
   mocks.getReceiptPlacement.mockReset().mockResolvedValue(unplaced);
   mocks.finalizeReceiptPlacement.mockReset();
-  mocks.replace.mockReset();
+  mocks.blocked = false;
+  mocks.blockedNavigations = [];
+  mocks.session = { access_token: 'token', user: { email: 'o@test.invalid', id: 'owner' } };
+  mocks.replace.mockReset().mockImplementation((to: unknown) => {
+    if (mocks.blocked) mocks.blockedNavigations.push(to);
+  });
   mocks.back.mockReset();
   mocks.toast.mockReset();
 });
@@ -313,5 +331,121 @@ describe('Receipt placement route', () => {
     await render();
     expect(text()).toContain('Finish the review first');
     expect(mocks.finalizeReceiptPlacement).not.toHaveBeenCalled();
+  });
+
+  it('navigates after success only once the leave guard is disarmed (QA #1)', async () => {
+    let respond!: () => void;
+    mocks.finalizeReceiptPlacement.mockImplementation(
+      (_context: unknown, input: FinalizeReceiptPlacementInput) =>
+        new Promise((resolve) => {
+          respond = () =>
+            resolve({ outcome: 'placed', placement: placement(input.idempotencyKey) });
+        }),
+    );
+    await render();
+    await tap('receipt-placement.auto-sort');
+    await tap('receipt-placement.submit');
+    expect(mocks.blocked).toBe(true);
+    await act(async () => {
+      respond();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(mocks.replace).toHaveBeenCalledWith('/(tabs)');
+    expect(mocks.blockedNavigations).toEqual([]);
+  });
+
+  it('navigates after Check status -> placed without hitting the guard (QA #1)', async () => {
+    mocks.finalizeReceiptPlacement.mockRejectedValue(
+      new ReceiptPlacementApiError('?', 0, { outcomeUnknown: true }),
+    );
+    await render();
+    await tap('receipt-placement.auto-sort');
+    await tap('receipt-placement.submit');
+    mocks.getReceiptPlacement.mockResolvedValue({
+      keyMatches: true,
+      placement: placement(lastFinalize(0).idempotencyKey),
+      receiptId: 'receipt-1',
+      state: 'placed',
+    });
+    await tap('receipt-placement.check-status');
+    expect(mocks.replace).toHaveBeenCalledWith('/(tabs)');
+    expect(mocks.blockedNavigations).toEqual([]);
+  });
+
+  it('a token refresh keeps assignments and does not reload (QA #2)', async () => {
+    await render();
+    await tap('receipt-placement.chip.0');
+    await tap('receipt-placement.zone.fridge');
+    await refreshToken('token-2');
+    expect(mocks.getReceiptReview).toHaveBeenCalledTimes(1);
+    expect(byId('receipt-placement.placed.0')).toBeTruthy();
+  });
+
+  it('a token refresh during an unknown outcome keeps the attempt; retry uses the new token (QA #2)', async () => {
+    mocks.finalizeReceiptPlacement
+      .mockRejectedValueOnce(new ReceiptPlacementApiError('?', 0, { outcomeUnknown: true }))
+      .mockImplementation((_context: unknown, input: FinalizeReceiptPlacementInput) =>
+        Promise.resolve({ outcome: 'replayed', placement: placement(input.idempotencyKey) }),
+      );
+    await render();
+    await tap('receipt-placement.auto-sort');
+    await tap('receipt-placement.submit');
+    await refreshToken('token-2');
+    expect(byId('receipt-placement.outcome-unknown')).toBeTruthy();
+    await tap('receipt-placement.retry');
+    expect(lastFinalize(1).idempotencyKey).toBe(lastFinalize(0).idempotencyKey);
+    expect(
+      (mocks.finalizeReceiptPlacement.mock.calls[1]?.[0] as { accessToken: string }).accessToken,
+    ).toBe('token-2');
+    expect(mocks.replace).toHaveBeenCalledWith('/(tabs)');
+  });
+
+  it('already placed with an unreadable result offers a retry card (QA #3)', async () => {
+    mocks.finalizeReceiptPlacement.mockRejectedValue(
+      new ReceiptPlacementApiError('placed', 409, { code: 'RECEIPT_ALREADY_PLACED' }),
+    );
+    await render();
+    await tap('receipt-placement.auto-sort');
+    // The status read after the error fails, so the committed placement is unknown.
+    mocks.getReceiptPlacement.mockRejectedValueOnce(new Error('offline'));
+    await tap('receipt-placement.submit');
+    expect(byId('receipt-placement.committed-unavailable')).toBeTruthy();
+    expect(text()).not.toContain('Add to stock');
+    expect(mocks.storage.size).toBe(0);
+    mocks.getReceiptPlacement.mockResolvedValue({
+      keyMatches: null,
+      placement: placement('55555555-5555-4555-8555-555555555555'),
+      receiptId: 'receipt-1',
+      state: 'placed',
+    });
+    await act(async () => {
+      (
+        screen!.root
+          .findByProps({ testID: 'receipt-placement.committed-unavailable' })
+          .findAll(
+            (node) => (node.props as { accessibilityRole?: string }).accessibilityRole === 'button',
+          )[0]!.props as { onPress: () => void }
+      ).onPress();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(byId('receipt-placement.committed')).toBeTruthy();
+  });
+
+  it('INVALID_PLACEMENT_ZONE reloads zones (QA #5)', async () => {
+    mocks.finalizeReceiptPlacement.mockRejectedValue(
+      new ReceiptPlacementApiError('bad', 422, {
+        code: 'INVALID_PLACEMENT_ZONE',
+        receiptItemId: 'l-bread',
+      }),
+    );
+    await render();
+    await tap('receipt-placement.auto-sort');
+    mocks.listZones.mockResolvedValue([zones[0]]);
+    await tap('receipt-placement.submit');
+    expect(mocks.listZones).toHaveBeenCalledTimes(2);
+    expect(byId('receipt-placement.chip.1')).toBeTruthy();
+    expect(
+      screen!.root.findAll((n) => n.props.testID === 'receipt-placement.zone.pantry'),
+    ).toHaveLength(0);
   });
 });

@@ -1,4 +1,5 @@
 import {
+  ApiRequestError,
   ReceiptPlacementApiError,
   type FinalizeReceiptPlacementResult,
   type ItemCategoryId,
@@ -205,7 +206,8 @@ export type PlacementAction =
   | { readonly type: 'statusChecked'; readonly status: ReceiptPlacementStatus }
   | { readonly type: 'statusFailed' }
   | { readonly type: 'restoreAttempt'; readonly attempt: PlacementAttempt }
-  | { readonly type: 'showCommitted'; readonly placement: ReceiptPlacement };
+  | { readonly type: 'showCommitted'; readonly placement: ReceiptPlacement }
+  | { readonly type: 'zonesReloaded'; readonly zones: readonly PlacementZone[] };
 
 /** Leaving a confirmed-failure notice behind starts a fresh attempt (new key on next submit). */
 function edited(state: PlacementState, patch: Partial<PlacementState>): PlacementState {
@@ -232,10 +234,29 @@ export function buildPlacementCommand(
 }
 
 export function classifyPlacementError(error: unknown): PlacementNotice | 'unknown' | 'placed' {
-  if (!(error instanceof ReceiptPlacementApiError)) return 'unknown';
-  if (error.outcomeUnknown) return 'unknown';
-  const base = { field: error.field, receiptItemId: error.receiptItemId };
-  switch (error.code) {
+  if (!(error instanceof ApiRequestError)) return 'unknown';
+  const placementError = error instanceof ReceiptPlacementApiError ? error : null;
+  if (placementError?.outcomeUnknown) return 'unknown';
+  const code = placementError?.code;
+  const base = { field: placementError?.field, receiptItemId: placementError?.receiptItemId };
+  if (!code) {
+    // Uncoded responses: only definite 4xx statuses are failures; anything else stays unknown.
+    if (error.status === 401 || error.status === 403) {
+      return { ...base, kind: 'auth', message: 'Please sign in again to add these items.' };
+    }
+    if (error.status === 429) {
+      return {
+        ...base,
+        kind: 'other',
+        message: 'Too many tries. Nothing was added. Wait a moment, then try again.',
+      };
+    }
+    if (error.status >= 400 && error.status < 500 && error.status !== 408) {
+      return { ...base, kind: 'other', message: 'Nothing was added. Please try again.' };
+    }
+    return 'unknown';
+  }
+  switch (code) {
     case 'INVALID_PLACEMENT_LINE':
     case 'INVALID_PLACEMENT_INPUT':
       return {
@@ -275,6 +296,12 @@ export function classifyPlacementError(error: unknown): PlacementNotice | 'unkno
       };
     case 'EMPTY_RECEIPT_PLACEMENT':
       return { ...base, kind: 'empty', message: 'This receipt has no items to place.' };
+    case 'RECEIPT_NOT_FOUND':
+      return {
+        ...base,
+        kind: 'other',
+        message: 'This receipt could not be found. It may have been removed. Nothing was added.',
+      };
     case 'AUTH_REQUIRED':
     case 'HOUSEHOLD_ACCESS_REQUIRED':
       return { ...base, kind: 'auth', message: 'Please sign in again to add these items.' };
@@ -391,6 +418,14 @@ export function placementReducer(state: PlacementState, action: PlacementAction)
       };
     case 'showCommitted':
       return { ...state, notice: null, phase: 'committed', placement: action.placement };
+    case 'zonesReloaded': {
+      if (state.phase !== 'editing') return state;
+      const known = new Set(action.zones.map((zone) => zone.id));
+      const assignments = Object.fromEntries(
+        Object.entries(state.assignments).filter(([, zoneId]) => known.has(zoneId)),
+      );
+      return { ...state, assignments, zones: action.zones };
+    }
   }
 }
 

@@ -1,5 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { AuthenticatedUserContext, ReceiptPlacement } from '@sackerl/api-client';
+import {
+  ReceiptPlacementApiError,
+  type AuthenticatedUserContext,
+  type ReceiptPlacement,
+} from '@sackerl/api-client';
 import { colors, nativeFont } from '@sackerl/tokens';
 import { categoryMeta } from '@sackerl/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -52,7 +56,6 @@ const fontFamily = Platform.OS === 'ios' ? nativeFont.ios.sans : nativeFont.andr
 type LoadState = 'loading' | 'ready' | 'error' | 'unavailable' | 'notPlaceable';
 
 type Loaded = {
-  readonly context: AuthenticatedUserContext;
   readonly householdId: string;
   readonly review: PlacementReviewRef;
   readonly storageKey: string;
@@ -94,14 +97,23 @@ export default function ReceiptPlacementRoute(): JSX.Element {
   const receiptId = useMemo(() => paramValue(params.id), [params.id]);
   const { session, status: authStatus } = useAuthSession();
   const userId = session?.user?.id ?? '';
-  const token = session?.access_token ?? '';
+  // Read the freshest session at call time so a token refresh never re-runs the load (QA #2).
+  const contextRef = useRef<AuthenticatedUserContext | null>(null);
+  contextRef.current = session?.user
+    ? {
+        accessToken: session.access_token,
+        user: { email: session.user.email, id: session.user.id },
+      }
+    : null;
 
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [loadMessage, setLoadMessage] = useState<string | undefined>();
   const [state, setState] = useState<PlacementState>(() => initialPlacementState([], []));
   const stateRef = useRef(state);
   const loadedRef = useRef<Loaded | null>(null);
+  const loadedKeyRef = useRef<string | null>(null);
   const busyRef = useRef(false);
+  const navigatedRef = useRef(false);
 
   const dispatch = useCallback((action: PlacementAction): PlacementState => {
     const next = placementReducer(stateRef.current, action);
@@ -110,85 +122,79 @@ export default function ReceiptPlacementRoute(): JSX.Element {
     return next;
   }, []);
 
-  const load = useCallback(async () => {
-    if (!userId || !receiptId) {
-      setLoadState('unavailable');
-      return;
-    }
-    const context: AuthenticatedUserContext = {
-      accessToken: token,
-      user: { email: session?.user?.email, id: userId },
-    };
-    setLoadState('loading');
-    setLoadMessage(undefined);
-    try {
-      const household = await getMobileProfileClient().getHousehold(context);
-      if (!household) throw new Error('Household not found.');
-      const receipts = getMobileReceiptsClient();
-      const storageKey = pendingAttemptStorageKey(userId, receiptId);
-      const [review, zones, status] = await Promise.all([
-        receipts.getReceiptReview(context, { householdId: household.id, receiptId }),
-        getMobileItemsClient().listZones(context, household.id),
-        receipts.getReceiptPlacement(context, { householdId: household.id, receiptId }),
-      ]);
-      const initial = initialPlacementState(
-        placementLinesFromReview(review),
-        placementZonesFromStorage(zones),
-      );
-      stateRef.current = initial;
-      setState(initial);
-      if (status.state === 'placed' && status.placement) {
-        await clearPending(storageKey);
-        dispatch({ placement: status.placement, type: 'showCommitted' });
-        setLoadState('ready');
+  /** Loads once per user + receipt. `force` is only used by the explicit Try again button. */
+  const load = useCallback(
+    async (force = false) => {
+      const context = contextRef.current;
+      if (!userId || !receiptId || !context) {
+        setLoadState('unavailable');
         return;
       }
-      const reviewRef = placementReviewRef(review);
-      if (!reviewRef || initial.lines.length === 0) {
-        setLoadState('notPlaceable');
-        return;
-      }
-      loadedRef.current = { context, householdId: household.id, review: reviewRef, storageKey };
-      let persisted = null;
+      const scopeKey = `${userId}:${receiptId}`;
+      if (!force && loadedKeyRef.current === scopeKey) return;
+      loadedKeyRef.current = scopeKey;
+      setLoadState('loading');
+      setLoadMessage(undefined);
       try {
-        persisted = parsePersistedAttempt(await AsyncStorage.getItem(storageKey));
-      } catch {
-        persisted = null;
+        const household = await getMobileProfileClient().getHousehold(context);
+        if (!household) throw new Error('Household not found.');
+        const receipts = getMobileReceiptsClient();
+        const storageKey = pendingAttemptStorageKey(userId, receiptId);
+        const [review, zones, status] = await Promise.all([
+          receipts.getReceiptReview(context, { householdId: household.id, receiptId }),
+          getMobileItemsClient().listZones(context, household.id),
+          receipts.getReceiptPlacement(context, { householdId: household.id, receiptId }),
+        ]);
+        const initial = initialPlacementState(
+          placementLinesFromReview(review),
+          placementZonesFromStorage(zones),
+        );
+        stateRef.current = initial;
+        setState(initial);
+        if (status.state === 'placed' && status.placement) {
+          await clearPending(storageKey);
+          dispatch({ placement: status.placement, type: 'showCommitted' });
+          setLoadState('ready');
+          return;
+        }
+        const reviewRef = placementReviewRef(review);
+        if (!reviewRef || initial.lines.length === 0) {
+          setLoadState('notPlaceable');
+          return;
+        }
+        loadedRef.current = { householdId: household.id, review: reviewRef, storageKey };
+        let persisted = null;
+        try {
+          persisted = parsePersistedAttempt(await AsyncStorage.getItem(storageKey));
+        } catch {
+          persisted = null;
+        }
+        if (persisted && attemptMatchesReview(persisted, reviewRef)) {
+          dispatch({ attempt: persisted, type: 'restoreAttempt' });
+        } else if (persisted) {
+          await clearPending(storageKey);
+        }
+        setLoadState('ready');
+      } catch (error) {
+        loadedKeyRef.current = null;
+        setLoadState('error');
+        setLoadMessage(error instanceof Error ? error.message : 'Unable to load this receipt.');
       }
-      if (persisted && attemptMatchesReview(persisted, reviewRef)) {
-        dispatch({ attempt: persisted, type: 'restoreAttempt' });
-      } else if (persisted) {
-        await clearPending(storageKey);
-      }
-      setLoadState('ready');
-    } catch (error) {
-      setLoadState('error');
-      setLoadMessage(error instanceof Error ? error.message : 'Unable to load this receipt.');
-    }
-  }, [dispatch, receiptId, session?.user?.email, token, userId]);
+    },
+    [dispatch, receiptId, userId],
+  );
 
   useEffect(() => {
     if (authStatus === 'loading') return;
     void load();
   }, [authStatus, load]);
 
-  const finish = useCallback(
-    (next: PlacementState) => {
-      const loaded = loadedRef.current;
-      if (next.phase === 'success' && next.placement) {
-        if (loaded) void clearPending(loaded.storageKey);
-        showPlacementToast(placedCountCopy(next.placement.items.length));
-        router.replace('/(tabs)');
-      }
-    },
-    [router],
-  );
-
   const loadCommitted = useCallback(async () => {
     const loaded = loadedRef.current;
-    if (!loaded) return;
+    const context = contextRef.current;
+    if (!loaded || !context) return;
     try {
-      const status = await getMobileReceiptsClient().getReceiptPlacement(loaded.context, {
+      const status = await getMobileReceiptsClient().getReceiptPlacement(context, {
         householdId: loaded.householdId,
         receiptId,
       });
@@ -197,13 +203,26 @@ export default function ReceiptPlacementRoute(): JSX.Element {
         dispatch({ placement: status.placement, type: 'showCommitted' });
       }
     } catch {
-      // Keep the current notice; the user can retry or go back.
+      // The committed card without details offers an explicit retry (QA #3).
     }
   }, [dispatch, receiptId]);
 
+  const reloadZones = useCallback(async () => {
+    const loaded = loadedRef.current;
+    const context = contextRef.current;
+    if (!loaded || !context) return;
+    try {
+      const zones = await getMobileItemsClient().listZones(context, loaded.householdId);
+      dispatch({ type: 'zonesReloaded', zones: placementZonesFromStorage(zones) });
+    } catch {
+      // Keep the current zones; the notice already asks the user to pick another place.
+    }
+  }, [dispatch]);
+
   const submit = useCallback(async () => {
     const loaded = loadedRef.current;
-    if (!loaded || busyRef.current) return;
+    const context = contextRef.current;
+    if (!loaded || !context || busyRef.current) return;
     const next = dispatch({ newKey: newIdempotencyKey(), review: loaded.review, type: 'submit' });
     if (next.phase !== 'submitting' || !next.attempt) return;
     const attempt = next.attempt;
@@ -216,46 +235,51 @@ export default function ReceiptPlacementRoute(): JSX.Element {
       }
       const receipts = getMobileReceiptsClient();
       const result = await finalizeWithFaultInjection(
-        (input) => receipts.finalizeReceiptPlacement(loaded.context, input),
+        (input) => receipts.finalizeReceiptPlacement(context, input),
         { ...attempt.command, householdId: loaded.householdId, receiptId },
       );
-      finish(dispatch({ result, type: 'submitSucceeded' }));
-      if (stateRef.current.phase === 'committed') await clearPending(loaded.storageKey);
+      const after = dispatch({ result, type: 'submitSucceeded' });
+      if (after.phase === 'committed') await clearPending(loaded.storageKey);
     } catch (error) {
       const after = dispatch({ error, type: 'submitFailed' });
-      if (after.phase === 'editing') await clearPending(loaded.storageKey);
+      if (after.phase === 'editing' || after.phase === 'committed') {
+        await clearPending(loaded.storageKey);
+      }
       if (
         after.phase === 'committed' ||
         (after.phase === 'editing' && after.notice?.kind === 'keyReused')
       ) {
         await loadCommitted();
       }
+      if (error instanceof ReceiptPlacementApiError && error.code === 'INVALID_PLACEMENT_ZONE') {
+        await reloadZones();
+      }
     } finally {
       busyRef.current = false;
     }
-  }, [dispatch, finish, loadCommitted, receiptId]);
+  }, [dispatch, loadCommitted, receiptId, reloadZones]);
 
   const checkStatus = useCallback(async () => {
     const loaded = loadedRef.current;
+    const context = contextRef.current;
     const attempt = stateRef.current.attempt;
-    if (!loaded || !attempt || busyRef.current) return;
+    if (!loaded || !context || !attempt || busyRef.current) return;
     if (dispatch({ type: 'checkStarted' }).phase !== 'checking') return;
     busyRef.current = true;
     try {
-      const status = await getMobileReceiptsClient().getReceiptPlacement(loaded.context, {
+      const status = await getMobileReceiptsClient().getReceiptPlacement(context, {
         householdId: loaded.householdId,
         idempotencyKey: attempt.command.idempotencyKey,
         receiptId,
       });
       const next = dispatch({ status, type: 'statusChecked' });
       if (next.phase === 'committed') await clearPending(loaded.storageKey);
-      finish(next);
     } catch {
       dispatch({ type: 'statusFailed' });
     } finally {
       busyRef.current = false;
     }
-  }, [dispatch, finish, receiptId]);
+  }, [dispatch, receiptId]);
 
   const blockLeave =
     state.phase === 'submitting' || state.phase === 'checking' || state.phase === 'unknown';
@@ -265,6 +289,17 @@ export default function ReceiptPlacementRoute(): JSX.Element {
       'We have not confirmed whether these items were added. Check the status before leaving.',
     );
   });
+
+  // Navigate only after the render where phase === 'success' has disarmed the leave guard above
+  // (effects run in declaration order, so usePreventRemove has already seen `false`). QA #1.
+  useEffect(() => {
+    if (state.phase !== 'success' || !state.placement || navigatedRef.current) return;
+    navigatedRef.current = true;
+    const loaded = loadedRef.current;
+    if (loaded) void clearPending(loaded.storageKey);
+    showPlacementToast(placedCountCopy(state.placement.items.length));
+    router.replace('/(tabs)');
+  }, [router, state.phase, state.placement]);
 
   // ---- drag support (enhancement; the tap path below is complete on its own) ----
   const zoneRefs = useRef(new Map<string, View | null>());
@@ -315,7 +350,7 @@ export default function ReceiptPlacementRoute(): JSX.Element {
         title="Placement unavailable"
         body={loadMessage ?? 'Sign in and open a saved receipt review to place items.'}
         actionLabel="Try again"
-        onAction={() => void load()}
+        onAction={() => void load(true)}
         secondaryLabel="Back"
         onSecondary={() => router.back()}
       />
@@ -330,6 +365,19 @@ export default function ReceiptPlacementRoute(): JSX.Element {
         onAction={() =>
           router.replace({ pathname: '/receipt-review/[id]', params: { id: receiptId } })
         }
+      />
+    );
+  }
+  if (state.phase === 'committed' && !state.placement) {
+    return (
+      <StateCard
+        title="Already in your stock"
+        body="This receipt was already placed, but we couldn't load where its items went."
+        actionLabel="Try again"
+        onAction={() => void loadCommitted()}
+        secondaryLabel="Go to Home"
+        onSecondary={() => router.replace('/(tabs)')}
+        testID="receipt-placement.committed-unavailable"
       />
     );
   }
@@ -591,9 +639,11 @@ export default function ReceiptPlacementRoute(): JSX.Element {
               )}
             </Pressable>
             <Text style={styles.footerHint}>
-              {remaining.length > 0
-                ? `${remaining.length} ${remaining.length === 1 ? 'item still needs' : 'items still need'} a place`
-                : 'Ready to add these items to your stock.'}
+              {state.zones.length === 0
+                ? 'Add a storage place in Settings before placing items.'
+                : remaining.length > 0
+                  ? `${remaining.length} ${remaining.length === 1 ? 'item still needs' : 'items still need'} a place`
+                  : 'Ready to add these items to your stock.'}
             </Text>
           </>
         ) : null}
@@ -761,10 +811,14 @@ function StateCard(props: {
   readonly onAction?: () => void;
   readonly onSecondary?: () => void;
   readonly secondaryLabel?: string;
+  readonly testID?: string;
   readonly title: string;
 }): JSX.Element {
   return (
-    <View style={[styles.screen, styles.stateCard]} testID="receipt-placement.state">
+    <View
+      style={[styles.screen, styles.stateCard]}
+      testID={props.testID ?? 'receipt-placement.state'}
+    >
       {props.busy ? <ActivityIndicator color={colors.ink} /> : null}
       <Text accessibilityRole="header" style={styles.title}>
         {props.title}

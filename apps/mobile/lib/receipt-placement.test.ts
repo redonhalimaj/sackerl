@@ -1,4 +1,5 @@
 import {
+  ApiRequestError,
   ReceiptPlacementApiError,
   type FinalizeReceiptPlacementResult,
   type ReceiptPlacement,
@@ -355,5 +356,38 @@ describe('persisted attempt', () => {
         '{"command":{"idempotencyKey":"k","generationId":"g","expectedReviewRevision":1,"assignments":[{"receiptItemId":1}]}}',
       ),
     ).toBeNull();
+  });
+});
+
+describe('QA round fixes', () => {
+  it('classifies uncoded definite 4xx as failures and keeps 5xx/408/non-API unknown (QA #4/#5)', () => {
+    expect(classifyPlacementError(new ReceiptPlacementApiError('x', 401))).toMatchObject({
+      kind: 'auth',
+    });
+    expect(classifyPlacementError(new ApiRequestError('x', 429))).toMatchObject({
+      kind: 'other',
+      message: expect.stringContaining('Too many tries') as unknown,
+    });
+    expect(classifyPlacementError(new ReceiptPlacementApiError('x', 400))).toMatchObject({
+      kind: 'other',
+    });
+    expect(
+      classifyPlacementError(new ReceiptPlacementApiError('x', 404, { code: 'RECEIPT_NOT_FOUND' })),
+    ).toMatchObject({ message: expect.stringContaining('could not be found') as unknown });
+    expect(classifyPlacementError(new ReceiptPlacementApiError('x', 500))).toBe('unknown');
+    expect(classifyPlacementError(new ReceiptPlacementApiError('x', 408))).toBe('unknown');
+    expect(classifyPlacementError(new Error('boom'))).toBe('unknown');
+  });
+
+  it('zonesReloaded drops assignments to removed zones, only while editing (QA #5)', () => {
+    const reloaded = run(sorted(), {
+      type: 'zonesReloaded',
+      zones: zones.filter((zone) => zone.key !== 'pantry'),
+    });
+    expect(reloaded.assignments['l-bread']).toBeUndefined();
+    expect(reloaded.assignments['l-milk']).toBe('z-fridge');
+    expect(canSubmit(reloaded)).toBe(false);
+    const submitting = run(sorted(), { newKey: KEY_1, review, type: 'submit' });
+    expect(run(submitting, { type: 'zonesReloaded', zones: [] })).toBe(submitting);
   });
 });
