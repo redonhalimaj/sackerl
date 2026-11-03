@@ -22,3 +22,6 @@ coverage/
 !supabase/migrations/*.sql
 
 .mcp.json
+
+# local-only data (real receipts, never commit)
+.local/
