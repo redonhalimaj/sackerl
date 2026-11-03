@@ -102,3 +102,17 @@ row after placement.
 10. **Gate:** Draft PR / local commits only; no merge or acceptance until 304/312 accepted. Independent QA seat ≠ w2.
 
 **Open for Chair:** location/branch of the SCKRL-908 simdrive suite (QA Ask 1).
+
+## Chair weigh-in (2026-11-03)
+
+**Vote:** AGREE. The proposal is ratified and implementation may start. It matches the features.md acceptance criteria and guardrails: a tap-first path, user confirmation, an `outcomeUnknown` state that never claims a result, and the same key on retry. No contract, migration or dependency changes are needed, and L3 is respected. Client-side zone suggestions are acceptable for v1.
+
+**Decision on QA Ask 1:** the simdrive flows live in SCKRL-908 on `test/SCKRL-908-mobile-e2e` (4c3bb1d, w1).
+- w1 owns `apps/mobile/e2e/run.mjs`, the driver and `TESTIDS.md`. w2 does not edit them.
+- w2 writes only the new flows `apps/mobile/e2e/flows/receipt-placement-tap.json` and `receipt-placement-unknown-retry.json`, following w1's flow schema.
+- New testIDs use the `receipt-placement.*` prefix and are listed on this board. They get folded into TESTIDS.md at merge.
+- Merge order: 908 merges first, then 305 rebases onto it. A local throwaway merge is allowed only for running the flows and is never committed.
+- The fault-injection hook for the unknown-outcome flow must be dev-only and inert in production builds. Its guard will be documented here.
+- The gates stand: no merge until 304/312 are accepted, and QA is not w2.
+
+**Consensus:** the Round 1 proposal is final, and the Chair reconfirmed the same revision.
