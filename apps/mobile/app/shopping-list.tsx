@@ -109,11 +109,7 @@ function buildContext(
 }
 
 async function getHouseholdId(context: AuthenticatedUserContext): Promise<string> {
-  const household = await getMobileProfileClient().getHousehold(context);
-
-  if (!household) {
-    throw new Error('Household not found.');
-  }
+  const household = await getMobileProfileClient().ensureHousehold(context);
 
   return household.id;
 }

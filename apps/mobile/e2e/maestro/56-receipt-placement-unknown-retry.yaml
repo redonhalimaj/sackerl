@@ -4,8 +4,8 @@ name: 56-receipt-placement-unknown-retry
 # EXPO_PUBLIC_APP_ENV=dev and EXPO_PUBLIC_E2E_PLACEMENT_FAULT=drop-first-response, so the first
 # finalize commits server-side but its response is dropped. The screen must claim neither success
 # nor failure; Check status / Try again re-uses the same idempotency key and lands on Home once, and
-# Stock shows each receipt item exactly once (no duplicates). Runs after 10 and 30 in
-# placement-fault.config.yaml: 30-stock-add creates the household for the fresh user.
+# Stock shows each receipt item exactly once (no duplicates). Runs after 10 and 15 in
+# placement-fault.config.yaml (15 proves Scan creates the household for a fresh user).
 tags:
   - placement-fault
 env:

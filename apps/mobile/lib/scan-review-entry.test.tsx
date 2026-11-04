@@ -4,7 +4,7 @@ import type { EffectCallback } from 'react';
 import type { CreateReceiptInput, PromoteReceiptParseInput } from '@sackerl/api-client';
 
 const mocks = vi.hoisted(() => ({
-  getHousehold: vi.fn(),
+  ensureHousehold: vi.fn(),
   createReceipt: vi.fn(),
   listReceipts: vi.fn(),
   getReceiptReview: vi.fn(),
@@ -54,7 +54,7 @@ beforeEach(() => {
     access_token: 'test-token',
     user: { id: 'owner', email: 'owner@example.test' },
   };
-  mocks.getHousehold.mockReset().mockResolvedValue({ id: 'home' });
+  mocks.ensureHousehold.mockReset().mockResolvedValue({ id: 'home' });
   mocks.createReceipt.mockReset().mockResolvedValue({ id: receiptId, status: 'uploaded' });
   mocks.push.mockReset();
   mocks.replace.mockReset();
@@ -138,12 +138,41 @@ describe('Scan entry into receipt review', () => {
     });
   });
 
+  it('creates the household exactly once for a fresh user loading the sample (SCKRL-924)', async () => {
+    let household: { id: string } | null = null;
+    let created = 0;
+    mocks.ensureHousehold.mockReset().mockImplementation(() => {
+      if (!household) {
+        created += 1;
+        household = { id: 'fresh-home' };
+      }
+      return Promise.resolve(household);
+    });
+    await renderScan();
+    const samplePress = action('Load sample receipt').onPress;
+    await act(async () => {
+      samplePress();
+      samplePress();
+      await vi.runAllTimersAsync();
+    });
+    expect(created).toBe(1);
+    expect(mocks.ensureHousehold).toHaveBeenCalledTimes(1);
+    expect(mocks.createReceipt).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ householdId: 'fresh-home' }),
+    );
+    expect(mocks.push).toHaveBeenCalledWith({
+      pathname: '/receipt-review/[id]',
+      params: { id: receiptId },
+    });
+  });
+
   it('checks the environment again when an existing button handler is invoked', async () => {
     await renderScan();
     const press = action('Load sample receipt').onPress;
     vi.stubEnv('EXPO_PUBLIC_APP_ENV', 'prod');
     await act(() => press());
-    expect(mocks.getHousehold).not.toHaveBeenCalled();
+    expect(mocks.ensureHousehold).not.toHaveBeenCalled();
   });
 
   it('recovers a lost create response across pages without inserting another receipt', async () => {

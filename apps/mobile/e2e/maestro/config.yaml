@@ -9,6 +9,7 @@ executionOrder:
   continueOnFailure: true
   flowsOrder:
     - 10-auth-onboarding
+    - 15-fresh-user-scan
     - 20-storage-zones
     - 30-stock-add
     - 35-recipe-suggestions

@@ -348,19 +348,31 @@ export class SackerlProfileClient {
 
     await this.ensureMe(context);
 
-    const householdRows = await this.requestRows<DatabaseHousehold>(
-      'households',
-      context,
-      { select: householdSelect },
-      {
-        body: {
-          name: input.name?.trim() || 'My household',
-          owner_id: context.user.id,
+    let householdRows: readonly DatabaseHousehold[];
+
+    try {
+      householdRows = await this.requestRows<DatabaseHousehold>(
+        'households',
+        context,
+        { select: householdSelect },
+        {
+          body: {
+            name: input.name?.trim() || 'My household',
+            owner_id: context.user.id,
+          },
+          method: 'POST',
+          prefer: 'return=representation',
         },
-        method: 'POST',
-        prefer: 'return=representation',
-      },
-    );
+      );
+    } catch (error) {
+      // SCKRL-924: households.owner_id is unique, so a concurrent ensureHousehold that won the
+      // insert surfaces here as 409. Re-read and return the winner instead of failing.
+      if (error instanceof ApiRequestError && error.status === 409) {
+        const concurrentHousehold = await this.getHousehold(context);
+        if (concurrentHousehold) return concurrentHousehold;
+      }
+      throw error;
+    }
 
     const householdRow = firstRow(householdRows);
 

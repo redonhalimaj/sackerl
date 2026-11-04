@@ -39,7 +39,7 @@ Run artifacts go to `.env.e2e-mobile/<runId>/` (git-ignored, mode 0700): `report
 
 ```bash
 pnpm --filter @sackerl/mobile e2e                 # all flows (provision -> maestro -> cleanup)
-node apps/mobile/e2e/run.mjs --placement-fault    # SCKRL-305 fault mode: own Metro + 10, 30 and 56 only
+node apps/mobile/e2e/run.mjs --placement-fault    # SCKRL-305 fault mode: own Metro + 10, 15 and 56 only
 node apps/mobile/e2e/run.mjs --cleanup <runId>    # reap a leaked user recorded in .env.e2e-mobile/<runId>/fixture.json
 ```
 

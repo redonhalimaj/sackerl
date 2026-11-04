@@ -2,7 +2,7 @@
 /* global console, setTimeout, Buffer */
 // Sackerl mobile E2E runner (Maestro). Usage: node e2e/run.mjs [flow-name ...] [--no-fixture] [--keep-metro]
 //   SCKRL-305 fault mode: node e2e/run.mjs --placement-fault (own Metro with the placement fault env;
-//   runs e2e/placement-fault.config.yaml = 10, 30 and 56-receipt-placement-unknown-retry).
+//   runs e2e/placement-fault.config.yaml = 10, 15 and 56-receipt-placement-unknown-retry).
 //   Reap a leaked fixture user: node apps/mobile/e2e/run.mjs --cleanup <runId>
 // Flows live in e2e/maestro/*.yaml; order is set in e2e/maestro/config.yaml. See docs/qa/e2e-mobile.md.
 import { spawn } from 'node:child_process';

@@ -274,6 +274,44 @@ describe('profile API client', () => {
     );
   });
 
+  it('returns the concurrent winner when the household insert conflicts (SCKRL-924)', async () => {
+    const winner = {
+      calendar_time_zone: 'Europe/Vienna',
+      created_at: '2026-05-24T20:01:00Z',
+      id: 'household-winner',
+      name: 'My household',
+      owner_id: 'user-123',
+      zones: ['fridge'],
+    };
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(
+        jsonResponse([
+          {
+            created_at: '2026-05-24T20:00:00Z',
+            email: 'test@sackerl.com',
+            id: 'user-123',
+            locale: 'de',
+          },
+        ]),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({ code: '23505', message: 'duplicate key' }, { status: 409 }),
+      )
+      .mockResolvedValueOnce(jsonResponse([winner]));
+    const client = createSackerlProfileClient(config, { fetch: fetchMock });
+
+    await expect(client.ensureHousehold(context)).resolves.toMatchObject({
+      id: 'household-winner',
+      role: 'owner',
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(6);
+    expect(fetchMock.mock.calls.filter((call) => call[1]?.method === 'POST')).toHaveLength(2);
+  });
+
   it('reuses a member household instead of creating another household', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

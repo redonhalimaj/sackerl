@@ -1,0 +1,26 @@
+appId: host.exp.Exponent
+name: 15-fresh-user-scan
+# SCKRL-924: a fresh user straight from 10-auth-onboarding (no household row yet; no 20/30 first)
+# goes Home -> Scan -> Load sample -> receipt review opens. Scan must create the household itself.
+env:
+  METRO_URL: exp://127.0.0.1:8081
+---
+- stopApp
+- openLink: ${METRO_URL}
+- extendedWaitUntil:
+    visible:
+      id: 'tabs\.home'
+    timeout: 60000
+- tapOn:
+    id: 'tabs\.scan'
+- assertVisible:
+    id: 'scan\.screen'
+- tapOn:
+    id: 'scan\.load-sample'
+- extendedWaitUntil:
+    visible:
+      id: 'receipt-review\.lines'
+    timeout: 30000
+- assertNotVisible:
+    text: 'Household not found.'
+- takeScreenshot: 15-fresh-user-scan

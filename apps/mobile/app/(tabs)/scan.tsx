@@ -183,12 +183,9 @@ export default function ScanRoute(): JSX.Element {
       if (request !== captureRequest.current) return;
 
       const context = buildContext(session);
-      const household = await getMobileProfileClient().getHousehold(context);
+      // SCKRL-924: a fresh user may reach Scan before any screen created the household.
+      const household = await getMobileProfileClient().ensureHousehold(context);
       if (request !== captureRequest.current) return;
-
-      if (!household) {
-        throw new Error('Household not found.');
-      }
 
       const receipt = await getMobileReceiptsClient().createReceipt(context, {
         capturedAt: new Date().toISOString(),
@@ -229,9 +226,8 @@ export default function ScanRoute(): JSX.Element {
     setStatusText('Preparing sample receipt...');
     try {
       const context = buildContext(session);
-      const household = await getMobileProfileClient().getHousehold(context);
+      const household = await getMobileProfileClient().ensureHousehold(context);
       if (!isCurrent()) return;
-      if (!household) throw new Error('Household not found.');
       if (
         sampleAttempt.current?.userId !== context.user.id ||
         sampleAttempt.current?.householdId !== household.id
