@@ -51,15 +51,17 @@ row after placement.
 ## Round 1: Seat standups (2026-11-03)
 
 ### Backend (Opus)
+
 - **Done:** Read 305 spec, `packages/api-client/src/receipt-placement.ts`, `receipts.ts:1107-1255`, 311/912 migrations. Contract is sufficient; no api-client or SQL change needed.
 - **Next:** w2 builds a pure placement state machine over existing `finalizeReceiptPlacement` / `getReceiptPlacement`.
 - **Blockers:** None for implementation; merge/acceptance gated on 304/312.
 - **Asks:** Frontend: zone suggestions are a client-side default map (RPC takes only `{receiptItemId, zoneId}`). QA: simdrive outcomeUnknown retry must assert a byte-identical command, not just the same key.
-- **Answers:** L3: UI makes no receipt-row write and no direct stock insert; the RPC is the only write. Guards raise RECEIPT_ALREADY_PLACED (`20261015100000_…sql:159-189`).
+- **Answers:** L3: UI makes no receipt-row write and no direct stock insert; the RPC is the only write. Guards raise RECEIPT*ALREADY_PLACED (`20261015100000*…sql:159-189`).
 - **Position:** Send exactly `{householdId, receiptId, generationId, expectedReviewRevision, idempotencyKey, assignments[]}` (extra keys rejected, `receipts.ts:1114-1126`); assignments = exactly the active included lines (else PLACEMENT_LINE_SET_MISMATCH). Mint key on first Add-to-stock and freeze it with the body; new key only after a confirmed failure; edits blocked while unknown (server raises PLACEMENT_KEY_REUSED on mismatch). Persist pending attempt per receipt so a retry after app kill reuses the key. outcomeUnknown → `getReceiptPlacement` with key: placed+keyMatches → success; placed, no match → committed result; not placed → retry same key/body. PLACEMENT_CONFLICT (PT409) is a definite rollback, never unknown. Validation errors highlight `receiptItemId`/`field`; STALE/NOT_REVIEWED/LINE_SET_MISMATCH → back to review; KEY_REUSED → log, new key after status check; EMPTY → CTA hidden up front.
 - **Vote:** AGREE
 
 ### Frontend (Sonnet 5)
+
 - **Done:** Located disabled CTA card at `apps/mobile/app/receipt-review/[id].tsx` ~L692-709; `ScreenPlacement` at `Design/Phase 2/sackerl phase 2/screens-1.jsx:504`. Mobile has reanimated 4.5.1 + worklets 0.10.1; no gesture-handler, no haptics.
 - **Next:** Implement after proposal ratification.
 - **Blockers:** None.
@@ -69,6 +71,7 @@ row after placement.
 - **Vote:** AGREE
 
 ### QA (Sonnet 5)
+
 - **Done:** Read criteria, api-client placement, `apps/web/e2e/api/placement.e2e.ts`, `smoke/placement-cta.e2e.ts`. No simdrive harness on this branch (908 is on w1's branch).
 - **Next:** Verify AC1-8 post-implementation: reducer unit tests, viewport 390×844 / 360×640, labels/testIDs, ≥44pt targets, no reminder copy, CTA gating E2E, Done-for-now/Home-resume regression.
 - **Blockers:** simdrive flow can be written but not run until 908 harness + owner Accessibility grant.
@@ -78,6 +81,7 @@ row after placement.
 - **Vote:** AGREE (conditional on gate + simdrive-before-Done)
 
 ### DevOps (Sonnet 5)
+
 - **Done:** Reviewed ci.yml, sql.yml, turbo.json, mobile package.json, lockfile, migrations.
 - **Next:** Re-check diff for package.json / lockfile / supabase; CI green on Draft PR.
 - **Blockers:** None for work.
@@ -108,6 +112,7 @@ row after placement.
 **Vote:** AGREE. The proposal is ratified and implementation may start. It matches the features.md acceptance criteria and guardrails: a tap-first path, user confirmation, an `outcomeUnknown` state that never claims a result, and the same key on retry. No contract, migration or dependency changes are needed, and L3 is respected. Client-side zone suggestions are acceptable for v1.
 
 **Decision on QA Ask 1:** the simdrive flows live in SCKRL-908 on `test/SCKRL-908-mobile-e2e` (4c3bb1d, w1).
+
 - w1 owns `apps/mobile/e2e/run.mjs`, the driver and `TESTIDS.md`. w2 does not edit them.
 - w2 writes only the new flows `apps/mobile/e2e/flows/receipt-placement-tap.json` and `receipt-placement-unknown-retry.json`, following w1's flow schema.
 - New testIDs use the `receipt-placement.*` prefix and are listed on this board. They get folded into TESTIDS.md at merge.
@@ -120,6 +125,7 @@ row after placement.
 ## Implementation milestone (w2, 2026-11-03)
 
 **Files.** Everything listed here is either new or limited to the noted change.
+
 - `apps/mobile/app/receipt-placement/[id].tsx`: the screen.
 - `apps/mobile/lib/receipt-placement.ts`: the pure state machine.
 - `apps/mobile/lib/receipt-placement.test.ts`: 21 unit tests.
@@ -136,12 +142,14 @@ row after placement.
 **Not changed:** api-client, SQL, migrations, package.json and the lockfile.
 
 **Deviations from the proposal (for QA to check):**
+
 1. Suggestions are **not prefilled**. Unplaced items show "Suggested: <zone>", and Auto-sort or the selection bar's "<Zone> (suggested)" applies them. This resolves the conflict between "prefill" and "auto-sort fills only unassigned", and keeps an explicit user confirmation step.
 2. Drag uses RN core `Animated` + `PanResponder`, not Reanimated. This keeps dependency use at zero and the screen testable under vitest.
 3. Home has no toast pattern. A root-level `PlacementToastHost` in `_layout.tsx` shows the one-shot toast after `router.replace('/(tabs)')`, so the Home/312 code is untouched.
 4. Non-`ReceiptPlacementApiError` failures from finalize are treated as `outcomeUnknown`, so the screen never claims a failure it can't confirm.
 
 **Fault-injection guard** (`lib/placement-fault-injection.ts`): the hook runs only when all three conditions hold:
+
 - `__DEV__ === true`, which is false in release bundles.
 - `EXPO_PUBLIC_APP_ENV === 'dev'`, the same guard as the sample receipt in `scan.tsx`.
 - `EXPO_PUBLIC_E2E_PLACEMENT_FAULT === 'drop-first-response'`
@@ -150,21 +158,22 @@ When active, the first finalize call per key reaches the server, then its respon
 
 **New testIDs** (fold into TESTIDS.md at merge). Chips use the line index and zones use the zone key, so flows have no UUIDs.
 
-| testID | Element |
-|---|---|
-| `receipt-review.continue-placement` | Review CTA (now enabled when clean, saved, reviewed and included > 0) |
-| `receipt-placement.back` / `.auto-sort` / `.scroll` / `.dock` / `.progress` | Header, dock and progress |
-| `receipt-placement.chip.<i>` / `.placed.<i>` | Unplaced / placed item chip (i = included-line index) |
-| `receipt-placement.zone.<zoneKey>` | Zone tap target |
-| `receipt-placement.selection` / `.accept-suggestion` / `.unplace` | Selection bar actions |
-| `receipt-placement.submit` | Add to stock |
-| `receipt-placement.error` / `.back-to-review` | Confirmed-failure notice / stale reconcile |
-| `receipt-placement.outcome-unknown` / `.check-status` / `.retry` | Unknown-outcome banner |
-| `receipt-placement.committed` / `.go-home` | Already-placed result |
-| `receipt-placement.state` | Loading/unavailable/not-placeable card |
-| `receipt-placement.toast` | Success toast on Home |
+| testID                                                                      | Element                                                               |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `receipt-review.continue-placement`                                         | Review CTA (now enabled when clean, saved, reviewed and included > 0) |
+| `receipt-placement.back` / `.auto-sort` / `.scroll` / `.dock` / `.progress` | Header, dock and progress                                             |
+| `receipt-placement.chip.<i>` / `.placed.<i>`                                | Unplaced / placed item chip (i = included-line index)                 |
+| `receipt-placement.zone.<zoneKey>`                                          | Zone tap target                                                       |
+| `receipt-placement.selection` / `.accept-suggestion` / `.unplace`           | Selection bar actions                                                 |
+| `receipt-placement.submit`                                                  | Add to stock                                                          |
+| `receipt-placement.error` / `.back-to-review`                               | Confirmed-failure notice / stale reconcile                            |
+| `receipt-placement.outcome-unknown` / `.check-status` / `.retry`            | Unknown-outcome banner                                                |
+| `receipt-placement.committed` / `.go-home`                                  | Already-placed result                                                 |
+| `receipt-placement.state`                                                   | Loading/unavailable/not-placeable card                                |
+| `receipt-placement.toast`                                                   | Success toast on Home                                                 |
 
 **Evidence:**
+
 - `pnpm format:check`, `lint`, `typecheck` and `test` all pass, with mobile at 146/146.
 - `pnpm install --frozen-lockfile` is clean.
 - Web E2E on dev: 89/89, with the teardown sweep confirming 88 synthetic users absent.
@@ -174,6 +183,7 @@ When active, the first finalize call per key reaches the server, then its respon
 **Not yet run:** the simdrive flows. They need 908 merged (or a throwaway local merge) and the owner's Accessibility grant, and they remain a Done gate.
 
 **Merge notes for the Chair/w1:**
+
 - w1's `50-receipt-review.json` asserts `continue-placement` is **disabled after save**. With 305 that becomes enabled once the lines are reviewed and saved, so that step needs flipping when 305 rebases onto 908.
 - If 908 also added testIDs to `receipt-review/[id].tsx`, expect a small conflict on the CTA `Pressable`.
 
@@ -199,6 +209,7 @@ When active, the first finalize call per key reaches the server, then its respon
 6. With zero zones, the hint reads "Add a storage place in Settings before placing items."
 
 **Regression evidence:**
+
 - New screen tests use a `usePreventRemove` mock that records navigation while the guard is armed. They cover:
   - deferred success
   - Check status → placed
@@ -223,7 +234,58 @@ When active, the first finalize call per key reaches the server, then its respon
 SCKRL-305 → **Review** (status.md 015a095).
 
 **Done gates still open:**
+
 1. A simdrive run of `receipt-placement-tap` and `receipt-placement-unknown-retry` confirms Home with no "Still confirming" alert.
 2. SCKRL-304/312 are accepted.
 
 **Order:** merge 908 → rebase 305 onto it → flip the `continue-placement` assert in w1's `50-receipt-review.json`. The branch stays local.
+
+## Round: rebase onto SCKRL-908 + Maestro E2E (w2, Claude Opus 5.5, 2026-11-04)
+
+**Rebase.** Rebased onto `origin/feature/stage1-receipt-loop` (534abe3, 908 Maestro merged). One
+conflict in `apps/mobile/app/receipt-review/[id].tsx` at the "Continue to placement" CTA: kept 305's
+gating (`disabled={!canContinueToPlacement}`, `onPress`, enabled style) and 908's
+`receipt-review.continue-placement` testID. No other conflicts.
+
+**Flows (simdrive JSON removed, converted to Maestro).**
+
+- `55-receipt-placement-tap.yaml` (default suite, after 50): saved review → Continue (asserted
+  enabled) → tap chip 0 + Fridge (asserts selection bar and `placed.0`), then tap-only placement of the
+  rest via `lib/place-all-tap.yaml` → Add to stock → `home.screen` + `tabs.home`, `receipt-placement.toast`
+  visible, `assertNotVisible: 'Still confirming'`, placement dock gone. No drag.
+- `56-receipt-placement-unknown-retry.yaml` (tag `placement-fault`, excluded from `config.yaml`): run
+  with `node apps/mobile/e2e/run.mjs --placement-fault`, which starts its own Metro (`--clear`, refuses
+  to reuse one) with `EXPO_PUBLIC_APP_ENV=dev` and `EXPO_PUBLIC_E2E_PLACEMENT_FAULT=drop-first-response`
+  and uses `e2e/placement-fault.config.yaml` (10 → 30 → 56, fresh fixture user). Asserts the neutral
+  outcome-unknown notice (no toast, no error, not Home), Check status → (Try again if still open) →
+  toast → Home, no "Still confirming", then Stock › Pantry shows Milk, Bananas, Bread exactly once each
+  and exactly three rows.
+- Shared helpers `lib/review-and-save.yaml` and `lib/place-all-tap.yaml`.
+- `50-receipt-review.yaml` post-save assertion flipped to `enabled: true`. `TESTIDS.md` gains the
+  `receipt-placement.*` section; `docs/qa/e2e-mobile.md` documents 55/56 and fault mode.
+
+**Runs.**
+| Run id | Mode | Result |
+| --- | --- | --- |
+| 20261104110713-kozz | default | 8/9; 55 FAIL: CTA tapped while under the sticky footer (flow issue, fixed by scrolling to the end) |
+| 20261104111402-ezog | default | **9/9 PASS** (10, 20, 30, 35, 40, 50, 55, 70, 90); cleanup ok |
+| 20261104112111-elsd, -112338-m88j | fault (10+56) | 56 FAIL: Scan "Household not found" (see finding) |
+| 20261104112849-naoj, -113422-blsu, -114005-7ce2 | fault (10+30+56) | 56 FAIL: flow timing vs the 4 s toast / branch race (flow-only fixes); -113948-etuf was a YAML format error (0 flows) |
+| 20261104114533-0eh0 | fault (10+30+56) | **3/3 PASS**; cleanup ok |
+
+**"No Still confirming" evidence.** `assertNotVisible: 'Still confirming'` COMPLETED on Home in
+ezog (55) and 0eh0 (56); screenshots `55-placement-home-toast`, `56-placement-retry-home`.
+
+**Idempotency / no duplicates.** In 0eh0 the first finalize committed with its response dropped; the
+screen showed the neutral notice; **Check status** with the same key confirmed the commit (the Try
+again branch was skipped, so this run exercised Check status, not the replay path). Stock › Pantry:
+3 items, Milk/Bananas/Bread × 1 (`56-stock-no-duplicates`). The retry-replay path stays covered by unit
+tests only.
+
+**Findings.** No SCKRL-305 app defect found. Pre-existing, outside 305: a fresh user who signs in and
+lands straight on Home has no household row (only add-item / storage-zones / stock mutations call
+`ensureHousehold`), so Scan's sample path (`apps/mobile/app/(tabs)/scan.tsx:232-234`, and capture at
+:186-190) shows "Household not found." Fault config runs 30-stock-add first to work around it. Worth a
+ticket.
+
+**Checks.** format:check, lint, typecheck, mobile tests 154/154 pass. Metro stopped by the runner.

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /* global console, setTimeout, Buffer */
 // Sackerl mobile E2E runner (Maestro). Usage: node e2e/run.mjs [flow-name ...] [--no-fixture] [--keep-metro]
+//   SCKRL-305 fault mode: node e2e/run.mjs --placement-fault (own Metro with the placement fault env;
+//   runs e2e/placement-fault.config.yaml = 10, 30 and 56-receipt-placement-unknown-retry).
 //   Reap a leaked fixture user: node apps/mobile/e2e/run.mjs --cleanup <runId>
 // Flows live in e2e/maestro/*.yaml; order is set in e2e/maestro/config.yaml. See docs/qa/e2e-mobile.md.
 import { spawn } from 'node:child_process';
@@ -26,6 +28,10 @@ const envRoot = process.env.E2E_ENV_ROOT ? resolve(process.env.E2E_ENV_ROOT) : r
 const argv = process.argv.slice(2);
 const only = argv.filter((a) => !a.startsWith('--'));
 const useFixture = !argv.includes('--no-fixture');
+const placementFault = argv.includes('--placement-fault');
+const faultEnv = placementFault
+  ? { EXPO_PUBLIC_APP_ENV: 'dev', EXPO_PUBLIC_E2E_PLACEMENT_FAULT: 'drop-first-response' }
+  : {};
 const PORT = Number(process.env.E2E_METRO_PORT || 8081);
 const DEVICE = process.env.E2E_DEVICE; // optional simulator UDID; Maestro picks the booted one otherwise
 const MAESTRO = process.env.MAESTRO_BIN || 'maestro';
@@ -79,6 +85,9 @@ const portBusy = () =>
 let metro = null;
 async function startMetro() {
   if (await portBusy()) {
+    // A reused Metro has its own bundle env; the fault flow needs the fault env inlined.
+    if (placementFault)
+      throw new Error(`--placement-fault needs its own Metro; stop the one on ${PORT} first`);
     log(`reusing Metro already listening on ${PORT}`);
     return;
   }
@@ -91,12 +100,13 @@ async function startMetro() {
       '--localhost',
       '--port',
       String(PORT),
+      ...(placementFault ? ['--clear'] : []),
     ],
     {
       cwd: mobileDir,
       detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env, CI: '1', EXPO_NO_TELEMETRY: '1' },
+      env: { ...process.env, CI: '1', EXPO_NO_TELEMETRY: '1', ...faultEnv },
     },
   );
   const out = [];
@@ -132,6 +142,7 @@ function runMaestro(secrets) {
   const flowArgs = only.length
     ? only.map((n) => join(here, 'maestro', `${n}.yaml`))
     : [join(here, 'maestro')];
+  const configArgs = placementFault ? ['--config', join(here, 'placement-fault.config.yaml')] : [];
   const args = [
     ...(DEVICE ? ['--device', DEVICE] : []),
     'test',
@@ -143,6 +154,7 @@ function runMaestro(secrets) {
     join(runDir, 'maestro-debug'),
     '--test-output-dir',
     join(runDir, 'shots'),
+    ...configArgs,
     '-e',
     `METRO_URL=exp://127.0.0.1:${PORT}`,
     ...flowArgs,

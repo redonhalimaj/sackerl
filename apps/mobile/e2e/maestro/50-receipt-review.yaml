@@ -1,6 +1,6 @@
 appId: host.exp.Exponent
 name: 50-receipt-review
-# Simulated capture -> receipt review -> mark lines reviewed -> save -> Continue to placement stays disabled.
+# Simulated capture -> receipt review -> mark lines reviewed -> save -> Continue to placement disabled before save, enabled after.
 env:
   METRO_URL: exp://127.0.0.1:8081
 ---
@@ -109,11 +109,10 @@ env:
     env:
       TARGET: 'receipt-review\.continue-placement'
       DIRECTION: DOWN
-# Still disabled after save because SCKRL-311 placement is not applied on remote dev.
-# SCKRL-305 flips this CTA to enabled once placement ships; update this assertion then.
+# Enabled after a complete save (SCKRL-305 placement shipped).
 - assertVisible:
     id: 'receipt-review\.continue-placement'
-    enabled: false
+    enabled: true
 - runFlow:
     file: lib/scroll-to.yaml
     env:

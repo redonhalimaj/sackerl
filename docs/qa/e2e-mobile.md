@@ -39,6 +39,7 @@ Run artifacts go to `.env.e2e-mobile/<runId>/` (git-ignored, mode 0700): `report
 
 ```bash
 pnpm --filter @sackerl/mobile e2e                 # all flows (provision -> maestro -> cleanup)
+node apps/mobile/e2e/run.mjs --placement-fault    # SCKRL-305 fault mode: own Metro + 10, 30 and 56 only
 node apps/mobile/e2e/run.mjs --cleanup <runId>    # reap a leaked user recorded in .env.e2e-mobile/<runId>/fixture.json
 ```
 
@@ -54,16 +55,18 @@ Exit codes: 0 all passed · 1 a flow failed · 2 aborted · 4 cleanup incomplete
 
 ## Flows
 
-| Flow                    | Covers                                                                                                                                                                                                   |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `10-auth-onboarding`    | Signed-out onboarding, default zones, sign-in, dismiss iOS "Save Password?" (Not Now), household created, Home.                                                                                          |
-| `20-storage-zones`      | Home shows fridge and pantry zones.                                                                                                                                                                      |
-| `30-stock-add`          | Empty stock, manual add with a user-entered expiry of tomorrow, row in Stock.                                                                                                                            |
-| `35-recipe-suggestions` | Suggestions list (from the exact "E2E Milk" stock item) and opening a recipe (`recipe.title`).                                                                                                           |
-| `40-use-soon`           | Item shows in Expiring; mark used; row disappears.                                                                                                                                                       |
-| `50-receipt-review`     | Simulated capture, review, mark every line reviewed (asserts `0 needs review`), save; "Continue to placement" stays disabled before and after save (SCKRL-305 will flip the post-save state to enabled). |
-| `70-shopping-list`      | Add an item to the shopping list.                                                                                                                                                                        |
-| `90-sign-out`           | Settings, sign out, signed-out screen (`onboarding.get-started` or `auth.email`) visible.                                                                                                                |
+| Flow                                 | Covers                                                                                                                                                                                                                                                                |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `10-auth-onboarding`                 | Signed-out onboarding, default zones, sign-in, dismiss iOS "Save Password?" (Not Now), household created, Home.                                                                                                                                                       |
+| `20-storage-zones`                   | Home shows fridge and pantry zones.                                                                                                                                                                                                                                   |
+| `30-stock-add`                       | Empty stock, manual add with a user-entered expiry of tomorrow, row in Stock.                                                                                                                                                                                         |
+| `35-recipe-suggestions`              | Suggestions list (from the exact "E2E Milk" stock item) and opening a recipe (`recipe.title`).                                                                                                                                                                        |
+| `40-use-soon`                        | Item shows in Expiring; mark used; row disappears.                                                                                                                                                                                                                    |
+| `50-receipt-review`                  | Simulated capture, review, mark every line reviewed (asserts `0 needs review`), save; "Continue to placement" disabled before save, enabled after (SCKRL-305).                                                                                                        |
+| `55-receipt-placement-tap`           | SCKRL-305 tap-only placement (no drag): continue from a saved review, place every line by tapping item then zone, Add to stock, Home with toast and no "Still confirming" alert.                                                                                      |
+| `56-receipt-placement-unknown-retry` | Fault mode only (tag `placement-fault`, excluded from the default suite). First finalize commits but its response is dropped; neutral outcome-unknown notice, Check status / Try again with the same key, Home with toast, Stock fridge shows each item exactly once. |
+| `70-shopping-list`                   | Add an item to the shopping list.                                                                                                                                                                                                                                     |
+| `90-sign-out`                        | Settings, sign out, signed-out screen (`onboarding.get-started` or `auth.email`) visible.                                                                                                                                                                             |
 
 Every flow after `10` restarts Expo Go on the Metro URL and waits for `tabs.home`, so an earlier failure
 or pushed screen does not cascade.
@@ -77,6 +80,9 @@ or pushed screen does not cascade.
 
 - Flows run sequentially against one shared user.
 - Gestures like drag aren't driven; the product requires non-drag alternatives, which the flows use.
-- The SCKRL-311 placement isn't applied on remote dev, so only the disabled "Continue to placement" CTA is asserted.
+- `--placement-fault` starts its own Metro (`--clear`) with `EXPO_PUBLIC_APP_ENV=dev` and
+  `EXPO_PUBLIC_E2E_PLACEMENT_FAULT=drop-first-response` and refuses to reuse a running Metro, because a
+  reused bundle would not have the fault env inlined. It uses `e2e/placement-fault.config.yaml` and a fresh
+  fixture user. Stop any other Metro on 8081 first; afterwards, restart Metro normally before the default suite.
 - Expo Go's floating tools button can open the dev menu under centre swipes; scrolling uses left-side swipes and closes the menu if it appears.
 - Maestro's iOS typing occasionally adds a stray key and QuickType can autocomplete; text fields are typed with a trailing space, closed with Return and verified exactly.

@@ -1,0 +1,107 @@
+appId: host.exp.Exponent
+name: 56-receipt-placement-unknown-retry
+# SCKRL-305 outcome-unknown retry. Fault mode only (`run.mjs --placement-fault`): Metro runs with
+# EXPO_PUBLIC_APP_ENV=dev and EXPO_PUBLIC_E2E_PLACEMENT_FAULT=drop-first-response, so the first
+# finalize commits server-side but its response is dropped. The screen must claim neither success
+# nor failure; Check status / Try again re-uses the same idempotency key and lands on Home once, and
+# Stock shows each receipt item exactly once (no duplicates). Runs after 10 and 30 in
+# placement-fault.config.yaml: 30-stock-add creates the household for the fresh user.
+tags:
+  - placement-fault
+env:
+  METRO_URL: exp://127.0.0.1:8081
+---
+- stopApp
+- openLink: ${METRO_URL}
+- extendedWaitUntil:
+    visible:
+      id: 'tabs\.home'
+    timeout: 60000
+- runFlow: lib/review-and-save.yaml
+- tapOn:
+    id: 'receipt-review\.continue-placement'
+- extendedWaitUntil:
+    visible:
+      id: 'receipt-placement\.dock'
+    timeout: 30000
+- runFlow:
+    file: lib/place-all-tap.yaml
+    env:
+      ZONE: pantry
+- tapOn:
+    id: 'receipt-placement\.submit'
+- extendedWaitUntil:
+    visible:
+      id: 'receipt-placement\.outcome-unknown'
+    timeout: 30000
+# Neutral: no success toast, no error notice, still on the placement screen.
+- assertNotVisible:
+    id: 'receipt-placement\.toast'
+- assertNotVisible:
+    id: 'receipt-placement\.error'
+- assertNotVisible:
+    id: 'home\.screen'
+- assertVisible: "We couldn't confirm whether these items were added.*"
+- takeScreenshot: 56-placement-outcome-unknown
+# Check status first (same key). It either confirms the commit or reports the outcome is still open.
+# The success toast lasts 4 s, so taps here don't wait for the screen to settle (Maestro's default
+# settle wait can outlast it); the flow waits for the toast itself instead.
+- tapOn:
+    id: 'receipt-placement\.check-status'
+    waitToSettleTimeoutMs: 300
+# Check status either confirms the commit (Home + toast) or leaves the outcome open; then Try again.
+- extendedWaitUntil:
+    visible:
+      id: 'receipt-placement\.toast'
+    timeout: 15000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: 'receipt-placement\.retry'
+        enabled: true
+    commands:
+      - takeScreenshot: 56-placement-after-check-status
+      - tapOn:
+          id: 'receipt-placement\.retry'
+          waitToSettleTimeoutMs: 300
+      - extendedWaitUntil:
+          visible:
+            id: 'receipt-placement\.toast'
+          timeout: 30000
+# The toast was waited for above (it expires after 4 s, before Maestro finishes evaluating the
+# branch); here assert the landing: Home, no open outcome, no leave alert.
+- extendedWaitUntil:
+    visible:
+      id: 'home\.screen'
+    timeout: 30000
+- assertNotVisible:
+    id: 'receipt-placement\.outcome-unknown'
+- assertNotVisible: 'Still confirming'
+- takeScreenshot: 56-placement-retry-home
+# No duplicates: the pantry holds each sample item exactly once (30-stock-add's item is in the fridge).
+- tapOn:
+    id: 'tabs\.stock'
+- tapOn:
+    id: 'stock\.zone-chip\.pantry'
+- extendedWaitUntil:
+    visible: 'Milk'
+    timeout: 20000
+- assertVisible: 'Bananas'
+- assertVisible: 'Bread'
+- assertNotVisible:
+    text: 'Milk'
+    index: 1
+- assertNotVisible:
+    text: 'Bananas'
+    index: 1
+- assertNotVisible:
+    text: 'Bread'
+    index: 1
+- assertVisible:
+    id: 'stock\.row\..*'
+    index: 2
+- assertNotVisible:
+    id: 'stock\.row\..*'
+    index: 3
+- takeScreenshot: 56-stock-no-duplicates

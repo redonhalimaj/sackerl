@@ -1,0 +1,64 @@
+appId: host.exp.Exponent
+name: 55-receipt-placement-tap
+# SCKRL-305 tap-only placement (no drag): saved review -> Continue to placement -> tap each item, then
+# its storage place -> Add to stock -> Home with the toast and no "Still confirming" leave alert.
+# Runs in the default suite (no placement fault env).
+env:
+  METRO_URL: exp://127.0.0.1:8081
+---
+- stopApp
+- openLink: ${METRO_URL}
+- extendedWaitUntil:
+    visible:
+      id: 'tabs\.home'
+    timeout: 60000
+- runFlow: lib/review-and-save.yaml
+- assertVisible:
+    id: 'receipt-review\.continue-placement'
+    enabled: true
+- tapOn:
+    id: 'receipt-review\.continue-placement'
+- extendedWaitUntil:
+    visible:
+      id: 'receipt-placement\.dock'
+    timeout: 30000
+- assertVisible:
+    id: 'receipt-placement\.submit'
+    enabled: false
+- takeScreenshot: 55-placement-start
+# First item explicitly: select, selection bar shows, place in the fridge, chip becomes placed.
+- tapOn:
+    id: 'receipt-placement\.chip\.0'
+- assertVisible:
+    id: 'receipt-placement\.selection'
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'receipt-placement\.zone\.fridge'
+      DIRECTION: DOWN
+- tapOn:
+    id: 'receipt-placement\.zone\.fridge'
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'receipt-placement\.placed\.0'
+      DIRECTION: UP
+- runFlow:
+    file: lib/place-all-tap.yaml
+    env:
+      ZONE: pantry
+- takeScreenshot: 55-placement-all-placed
+- tapOn:
+    id: 'receipt-placement\.submit'
+- extendedWaitUntil:
+    visible:
+      id: 'home\.screen'
+    timeout: 30000
+- assertVisible:
+    id: 'tabs\.home'
+- assertVisible:
+    id: 'receipt-placement\.toast'
+- assertNotVisible: 'Still confirming'
+- assertNotVisible:
+    id: 'receipt-placement\.dock'
+- takeScreenshot: 55-placement-home-toast
