@@ -314,3 +314,16 @@ activates the authoritative method" `listUnplacedReceiptReviews` (`receipts.ts:1
 `list_unplaced_receipt_reviews`). 305 never switched Home over (see also status.md:727). Not fixed
 here: Home is outside the 305 placement file set. The fix needs a Chair decision on ownership.
 Flow 55 stays red until it lands.
+
+## Round: Home switched to the authoritative unplaced list (w2, Claude Opus 5.5, 2026-11-04)
+
+**Chair decision:** this switch is in SCKRL-305 scope.
+
+**Change.** `apps/mobile/app/(tabs)/index.tsx:392` and `:629` now call `listUnplacedReceiptReviews`
+(RPC `list_unplaced_receipt_reviews`) with the same household and pagination (`pageSize: 3`,
+`page + 1`). The legacy `listPendingReceiptReviews` stays in api-client, marked `@deprecated` in its
+comment. `apps/mobile/lib/home-pending-receipts.test.tsx` mocks the new method. A new test asserts
+that the legacy method is not called and that a placed receipt is not rendered.
+
+**Runs.** Default 20261104123157-avgw: **10/10 PASS**, including 51 and 55. The 55 pending-review
+count is unchanged after placement, and the toast assert is hard. Fault 20261104124209-1z8h: **3/3 PASS**. format, lint, typecheck pass, and mobile tests pass 155/155.

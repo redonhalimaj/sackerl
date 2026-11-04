@@ -1069,7 +1069,8 @@ export class SackerlReceiptsClient {
   }
 
   /**
-   * Legacy Home discovery remains unchanged until SCKRL-305 activates the authoritative method.
+   * @deprecated Legacy Home discovery with no placed-state exclusion. SCKRL-305 switched Home to
+   * the authoritative `listUnplacedReceiptReviews`; do not use this for pending-review discovery.
    */
   async listPendingReceiptReviews(
     context: AuthenticatedUserContext,

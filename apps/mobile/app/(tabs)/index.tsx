@@ -389,7 +389,7 @@ export default function HomeRoute(): JSX.Element {
         }
         const binding = { authScope: scope, householdId: household.id };
         pendingHouseholdRef.current = binding;
-        const result = await getMobileReceiptsClient().listPendingReceiptReviews(context, {
+        const result = await getMobileReceiptsClient().listUnplacedReceiptReviews(context, {
           householdId: household.id,
           pageSize: 3,
         });
@@ -626,7 +626,7 @@ export default function HomeRoute(): JSX.Element {
         setPendingReviewLoadingMore(false);
         return;
       }
-      const result = await getMobileReceiptsClient().listPendingReceiptReviews(context, {
+      const result = await getMobileReceiptsClient().listUnplacedReceiptReviews(context, {
         householdId: binding.householdId,
         page: pendingReviewPage + 1,
         pageSize: 3,
