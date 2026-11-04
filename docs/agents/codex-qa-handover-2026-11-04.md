@@ -12,17 +12,17 @@ keeps the implementer separate from QA.
 **Integration branch:** `feature/stage1-receipt-loop`, pushed. HEAD `3884563` at the time of writing.
 `origin/dev` already has PR #8 (merged at `6c07803`). Everything after that is on stage1 only.
 
-| Ticket                                                                | State                                                                             | Evidence                                                                                |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| SCKRL-311 atomic placement backend                                    | Merged and installed on dev                                                       | [board](../council/SCKRL-311.md); web E2E against dev                                   |
-| SCKRL-912 / 913 / 914 placement codes, SQL suite in CI, rollback doc  | Merged                                                                            | status.md Decision Log                                                                  |
-| SCKRL-907 web API E2E (Playwright)                                    | Merged                                                                            | `docs/qa/e2e-web.md`; 89/89 against dev                                                 |
-| SCKRL-908 mobile E2E (**Maestro**)                                    | Merged (5d12366)                                                                  | [board](../council/SCKRL-908.md); `docs/qa/e2e-mobile.md`                               |
-| SCKRL-305 placement screen                                            | Done, merged (68699b2)                                                            | [board](../council/SCKRL-305.md); Maestro 10/10 and fault 3/3                           |
-| SCKRL-304 / 312 review, expiry and Home resume                        | Done, owner decision A                                                            | Remaining items are covered by the [manual checklist](../qa/stage1-manual-checklist.md) |
-| SCKRL-921 retailer alias spike                                        | Conditional GO                                                                    | Needs 20–30 real receipts from the owner                                                |
-| SCKRL-924 Scan "Household not found" for a new user                   | **In progress** (Claude w2, `fix/SCKRL-924-household-on-scan` in `../sackerl-w2`) | Not merged yet; QA it once Claude reports it                                            |
-| SCKRL-922 / 923 auth email overflow; shopping-list Add needs two taps | Open, not started                                                                 | Found by Maestro                                                                        |
+| Ticket                                                                | State                                                                                          | Evidence                                                                                                                                                                                  |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SCKRL-311 atomic placement backend                                    | Merged and installed on dev                                                                    | [board](../council/SCKRL-311.md); web E2E against dev                                                                                                                                     |
+| SCKRL-912 / 913 / 914 placement codes, SQL suite in CI, rollback doc  | Merged                                                                                         | status.md Decision Log                                                                                                                                                                    |
+| SCKRL-907 web API E2E (Playwright)                                    | Merged                                                                                         | `docs/qa/e2e-web.md`; 89/89 against dev                                                                                                                                                   |
+| SCKRL-908 mobile E2E (**Maestro**)                                    | Merged (5d12366)                                                                               | [board](../council/SCKRL-908.md); `docs/qa/e2e-mobile.md`                                                                                                                                 |
+| SCKRL-305 placement screen                                            | Done, merged (68699b2)                                                                         | [board](../council/SCKRL-305.md); Maestro 10/10 and fault 3/3                                                                                                                             |
+| SCKRL-304 / 312 review, expiry and Home resume                        | Done, owner decision A                                                                         | Remaining items are covered by the [manual checklist](../qa/stage1-manual-checklist.md)                                                                                                   |
+| SCKRL-921 retailer alias spike                                        | Conditional GO                                                                                 | Needs 20–30 real receipts from the owner                                                                                                                                                  |
+| SCKRL-924 Scan "Household not found" for a new user                   | **Ready for QA**: pushed branch `origin/fix/SCKRL-924-household-on-scan` (6c0a1a4); not merged | Maestro 11/11 (`20261104211210-m2iz`), fault 3/3 (`20261104212328-cehm`); [board](https://github.com/redonhalimaj/sackerl/blob/fix/SCKRL-924-household-on-scan/docs/council/SCKRL-924.md) |
+| SCKRL-922 / 923 auth email overflow; shopping-list Add needs two taps | Open, not started                                                                              | Found by Maestro                                                                                                                                                                          |
 
 ## 2. Codex QA tasks, in order
 
@@ -68,7 +68,7 @@ Run [docs/qa/stage1-manual-checklist.md](../qa/stage1-manual-checklist.md) with 
 1. **Flow 56 "Try again":** the replay path has never run live, because Check status always resolved first. Unit and web tests cover it. Try to force the replay path manually.
 2. **Flow 90 sign-out:** the sign-out tap is now `optional` because of a timing race. Confirm this doesn't hide a real failure.
 3. **Flow 55 pending check:** it counts rows, so it only holds while fewer than 3 reviews are pending.
-4. **SCKRL-924**, once Claude reports it: a new user goes straight to Scan and the household is created exactly once. Audit the other `getHousehold` callers too.
+4. **SCKRL-924** (`origin/fix/SCKRL-924-household-on-scan`, diff against stage1): Scan and the shopping list call `ensureHousehold`, and a race on insert (409) now re-reads the existing row (`packages/api-client/src/profile.ts`). Verify a new user can go straight to Scan, that only one household is created, and check the `getHousehold` caller audit on its board. Known edge: if the household insert succeeds but the `household_members` insert fails, the membership row is never created. Fixing that needs an atomic RPC (SQL); flag it, don't fix it.
 
 ## 3. How to report back (what Claude reads next)
 
@@ -102,7 +102,7 @@ don't merge into `dev` or `main`. The owner and the Claude Chair do that.
 > You are the Claude Chair for Sackerl (board Council, see memory `board-council-workflow`). Read `status.md` (latest
 > Decision Log rows), `docs/qa/codex-stage1-qa-2026-11.md` and this handover. Steps:
 >
-> 1. Check the state of SCKRL-924 on `fix/SCKRL-924-household-on-scan` (`../sackerl-w2`), and finish its QA and merge.
+> 1. Merge SCKRL-924 (`fix/SCKRL-924-household-on-scan`, 6c0a1a4) into stage1 if Codex's QA AGREEs, otherwise fix its findings first.
 > 2. Fix each Codex finding, using worker sessions or agents, with an independent QA seat for each.
 > 3. When Codex and the Chair both AGREE, propose merging stage1 into `dev`; the owner approves.
 > 4. Then take SCKRL-922/923 and the next roadmap step from `PROGRAM.md` (308 receipt media, 307 real capture).
