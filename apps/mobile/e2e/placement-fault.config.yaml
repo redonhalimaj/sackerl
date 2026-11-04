@@ -1,0 +1,13 @@
+# Fault-mode workspace config (`node apps/mobile/e2e/run.mjs --placement-fault`): Metro runs with
+# EXPO_PUBLIC_APP_ENV=dev and EXPO_PUBLIC_E2E_PLACEMENT_FAULT=drop-first-response. Fresh user per run; 30-stock-add runs first because it creates the household
+# (a user who lands straight on Home has none yet, and Scan's sample path only reads it).
+flows:
+  - '10-auth-onboarding.yaml'
+  - '30-stock-add.yaml'
+  - '56-receipt-placement-unknown-retry.yaml'
+executionOrder:
+  continueOnFailure: false
+  flowsOrder:
+    - 10-auth-onboarding
+    - 30-stock-add
+    - 56-receipt-placement-unknown-retry

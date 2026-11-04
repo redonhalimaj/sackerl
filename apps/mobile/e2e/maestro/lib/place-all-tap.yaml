@@ -1,0 +1,38 @@
+appId: host.exp.Exponent
+# Tap-only placement (no drag): select the first unplaced chip, then tap ${ZONE}; repeat until none is
+# left. Ends with "Add to stock" in view and enabled.
+---
+- repeat:
+    times: 10
+    while:
+      visible:
+        id: 'receipt-placement\.chip\.\d+'
+    commands:
+      - runFlow: dismiss-expo-menu.yaml
+      - tapOn:
+          id: 'receipt-placement\.chip\.\d+'
+          index: 0
+      - assertVisible:
+          id: 'receipt-placement\.selection'
+      - runFlow:
+          file: scroll-to.yaml
+          env:
+            TARGET: 'receipt-placement\.zone\.${ZONE}'
+            DIRECTION: DOWN
+      - tapOn:
+          id: 'receipt-placement\.zone\.${ZONE}'
+      - runFlow:
+          when:
+            notVisible:
+              id: 'receipt-placement\.chip\.\d+'
+          commands:
+            - runFlow:
+                file: scroll-to.yaml
+                env:
+                  TARGET: 'receipt-placement\.dock'
+                  DIRECTION: UP
+- assertNotVisible:
+    id: 'receipt-placement\.chip\.\d+'
+- assertVisible:
+    id: 'receipt-placement\.submit'
+    enabled: true

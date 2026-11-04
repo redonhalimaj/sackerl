@@ -22,7 +22,11 @@ env:
     when:
       visible: 'Sign out'
     commands:
-      - tapOn: 'Sign out'
+      # Optional: the confirm can resolve between the visibility check and this tap (signed-out
+      # screen already showing); the waits below still prove sign-out.
+      - tapOn:
+          text: 'Sign out'
+          optional: true
 - extendedWaitUntil:
     notVisible:
       id: 'tabs\.home'

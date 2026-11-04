@@ -1,0 +1,52 @@
+appId: host.exp.Exponent
+# On Home: sets output.pending to the number of "Continue a saved review" rows (0-6). Sample receipts
+# all share one store name, so flows compare counts before and after rather than matching row text.
+---
+- evalScript: ${output.pending = 0}
+- repeat:
+    times: 3
+    while:
+      notVisible:
+        id: 'home\.pending-reviews\.row\.0'
+    commands:
+      - runFlow: dismiss-expo-menu.yaml
+      - swipe:
+          start: 20%, 70%
+          end: 20%, 45%
+          duration: 600
+- runFlow:
+    when:
+      visible:
+        id: 'home\.pending-reviews\.row\.0'
+    commands:
+      - evalScript: ${output.pending = 1}
+- runFlow:
+    when:
+      visible:
+        id: 'home\.pending-reviews\.row\.1'
+    commands:
+      - evalScript: ${output.pending = 2}
+- runFlow:
+    when:
+      visible:
+        id: 'home\.pending-reviews\.row\.2'
+    commands:
+      - evalScript: ${output.pending = 3}
+- runFlow:
+    when:
+      visible:
+        id: 'home\.pending-reviews\.row\.3'
+    commands:
+      - evalScript: ${output.pending = 4}
+- runFlow:
+    when:
+      visible:
+        id: 'home\.pending-reviews\.row\.4'
+    commands:
+      - evalScript: ${output.pending = 5}
+- runFlow:
+    when:
+      visible:
+        id: 'home\.pending-reviews\.row\.5'
+    commands:
+      - evalScript: ${output.pending = 6}

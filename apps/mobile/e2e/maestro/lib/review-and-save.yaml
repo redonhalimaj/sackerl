@@ -1,0 +1,97 @@
+appId: host.exp.Exponent
+# Simulated capture -> mark every included line reviewed -> save. Ends on the review screen with
+# "Continue to placement" in view. Shared by 55/56 (same steps as 50-receipt-review).
+---
+- tapOn:
+    id: 'tabs\.scan'
+- assertVisible:
+    id: 'scan\.screen'
+- tapOn:
+    id: 'scan\.load-sample'
+- extendedWaitUntil:
+    visible:
+      id: 'receipt-review\.lines'
+    timeout: 30000
+# Mark every unreviewed line. The button toggles, so select only lines whose label still reads
+# "Mark <name> reviewed" (reviewed lines read "Mark <name> needs review"); swipe on when none is in view.
+- repeat:
+    times: 12
+    while:
+      notVisible:
+        text: '0 needs review'
+    commands:
+      - runFlow: dismiss-expo-menu.yaml
+      - runFlow:
+          when:
+            visible:
+              id: 'receipt-review\.line\.\d+\.mark-reviewed'
+              text: 'Mark .+ reviewed'
+          commands:
+            - tapOn:
+                id: 'receipt-review\.line\.\d+\.mark-reviewed'
+                text: 'Mark .+ reviewed'
+                index: 0
+      - runFlow:
+          when:
+            notVisible:
+              id: 'receipt-review\.line\.\d+\.mark-reviewed'
+              text: 'Mark .+ reviewed'
+          commands:
+            - runFlow:
+                when:
+                  visible:
+                    id: 'receipt-review\.save'
+                commands:
+                  - runFlow:
+                      file: scroll-to.yaml
+                      env:
+                        TARGET: 'receipt-review\.needs-review-count'
+                        DIRECTION: UP
+            - runFlow:
+                when:
+                  notVisible:
+                    id: 'receipt-review\.needs-review-count'
+                commands:
+                  - swipe:
+                      start: 20%, 70%
+                      end: 20%, 45%
+                      duration: 600
+# Fails the flow if any included line is left unreviewed.
+- runFlow:
+    file: scroll-to.yaml
+    env:
+      TARGET: 'receipt-review\.needs-review-count'
+      DIRECTION: UP
+# The count text is a sibling node of the chip's testID in the iOS tree, so match the text itself.
+- assertVisible:
+    id: 'receipt-review\.needs-review-count'
+- assertVisible: '0 needs review'
+- assertNotVisible:
+    id: 'receipt-review\.line\.\d+\.mark-reviewed'
+    text: 'Mark .+ reviewed'
+- runFlow:
+    file: scroll-to.yaml
+    env:
+      TARGET: 'receipt-review\.save'
+      DIRECTION: DOWN
+- tapOn:
+    id: 'receipt-review\.save'
+- extendedWaitUntil:
+    visible:
+      id: 'receipt-review\.status'
+    timeout: 20000
+- runFlow:
+    file: scroll-to.yaml
+    env:
+      TARGET: 'receipt-review\.continue-placement'
+      DIRECTION: DOWN
+# The CTA can report visible while still under the sticky Save / Done footer; scroll to the end so
+# the tap reaches it.
+- repeat:
+    times: 2
+    commands:
+      - swipe:
+          start: 20%, 70%
+          end: 20%, 35%
+          duration: 600
+      - runFlow: dismiss-expo-menu.yaml

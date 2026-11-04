@@ -1,6 +1,10 @@
 # Maestro workspace config: flows run sequentially in this order against one shared synthetic user.
 flows:
   - '*.yaml'
+# 56 needs a Metro started with the placement fault env; run it with `run.mjs --placement-fault`
+# (e2e/placement-fault.config.yaml). It is excluded here.
+excludeTags:
+  - placement-fault
 executionOrder:
   continueOnFailure: true
   flowsOrder:
@@ -10,5 +14,7 @@ executionOrder:
     - 35-recipe-suggestions
     - 40-use-soon
     - 50-receipt-review
+    - 51-resume-after-restart
+    - 55-receipt-placement-tap
     - 70-shopping-list
     - 90-sign-out

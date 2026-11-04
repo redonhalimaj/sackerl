@@ -149,6 +149,30 @@ Generated from `apps/mobile/app/**`. Dynamic IDs are shown as template expressio
 - `onboarding.get-started` (app/onboarding.tsx:101)
 - `onboarding.have-account` (app/onboarding.tsx:113)
 
+## app/receipt-placement/[id].tsx
+
+- `receipt-placement.committed-unavailable` (app/receipt-placement/[id].tsx:380)
+- `receipt-placement.back` (app/receipt-placement/[id].tsx:436)
+- `receipt-placement.auto-sort` (app/receipt-placement/[id].tsx:448)
+- `receipt-placement.scroll` (app/receipt-placement/[id].tsx:458)
+- `receipt-placement.dock` (app/receipt-placement/[id].tsx:467)
+- `receipt-placement.progress` (app/receipt-placement/[id].tsx:470)
+- `receipt-placement.selection` (app/receipt-placement/[id].tsx:482)
+- `receipt-placement.accept-suggestion` (app/receipt-placement/[id].tsx:496)
+- `receipt-placement.unplace` (app/receipt-placement/[id].tsx:508)
+- `receipt-placement.zone.${zone.key}` (app/receipt-placement/[id].tsx:549)
+- `receipt-placement.error` (app/receipt-placement/[id].tsx:571)
+- `receipt-placement.back-to-review` (app/receipt-placement/[id].tsx:581)
+- `receipt-placement.outcome-unknown` (app/receipt-placement/[id].tsx:593)
+- `receipt-placement.check-status` (app/receipt-placement/[id].tsx:607)
+- `receipt-placement.retry` (app/receipt-placement/[id].tsx:617)
+- `receipt-placement.submit` (app/receipt-placement/[id].tsx:633)
+- `receipt-placement.${placed ? 'placed' : 'chip'}.${props.index}` (app/receipt-placement/[id].tsx:747)
+- `receipt-placement.committed` (app/receipt-placement/[id].tsx:778)
+- `receipt-placement.go-home` (app/receipt-placement/[id].tsx:798)
+- `receipt-placement.state` (app/receipt-placement/[id].tsx:820, default for loading/error states)
+- `receipt-placement.toast` (components/PlacementToast.tsx:29, shown on Home after a confirmed placement)
+
 ## app/receipt-review/[id].tsx
 
 - `receipt-review.screen` (app/receipt-review/[id].tsx:511)
@@ -171,7 +195,7 @@ Generated from `apps/mobile/app/**`. Dynamic IDs are shown as template expressio
 - `receipt-review.line.${index}.toggle-include` (app/receipt-review/[id].tsx:657)
 - `receipt-review.line.${index}.mark-reviewed` (app/receipt-review/[id].tsx:685)
 - `receipt-review.add-line` (app/receipt-review/[id].tsx:705)
-- `receipt-review.continue-placement` (app/receipt-review/[id].tsx:725)
+- `receipt-review.continue-placement` (app/receipt-review/[id].tsx:736)
 - `receipt-review.save` (app/receipt-review/[id].tsx:739)
 - `receipt-review.done-for-now` (app/receipt-review/[id].tsx:760)
 - `receipt-review.edit` (app/receipt-review/[id].tsx:776)
@@ -252,7 +276,7 @@ Generated from `apps/mobile/app/**`. Dynamic IDs are shown as template expressio
 
 ## Not IDed / notes
 
-- Native `Alert.alert` confirmations (stock Mark as used / Delete, receipt-review leave prompts) are OS dialogs and cannot carry testIDs.
+- Native `Alert.alert` confirmations (stock Mark as used / Delete, receipt-review leave prompts, the placement "Still confirming" leave guard) are OS dialogs and cannot carry testIDs.
 - No receipt-review header name input exists; the store name is read-only (`receipt-review.store`). Name and expiry editing is in the line edit modal (`receipt-review.edit.name`, `receipt-review.edit.expiry`, shown only when expiry state is `dated`).
 - Storage zones screen is the onboarding picker only: no rename or delete controls exist. Add is the custom-place sheet.
 - Suggestions has no dismiss control; the heart `suggestions.card.<id>.save` is permanently disabled.

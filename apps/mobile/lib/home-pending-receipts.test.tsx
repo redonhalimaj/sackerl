@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   listZones: vi.fn(),
   listSuggestions: vi.fn(),
   listPendingReceiptReviews: vi.fn(),
+  listUnplacedReceiptReviews: vi.fn(),
   getReceiptReview: vi.fn(),
   push: vi.fn(),
   focused: true,
@@ -140,10 +141,11 @@ beforeEach(() => {
   mocks.listItems.mockReset().mockResolvedValue({ items: [], pagination: { total: 0 } });
   mocks.listZones.mockReset().mockResolvedValue([]);
   mocks.listSuggestions.mockReset().mockResolvedValue({ suggestions: [] });
-  mocks.listPendingReceiptReviews.mockReset().mockResolvedValue({
+  mocks.listUnplacedReceiptReviews.mockReset().mockResolvedValue({
     receipts: [pendingReceipt],
     pagination: { page: 1, pageSize: 3, total: 1 },
   });
+  mocks.listPendingReceiptReviews.mockReset();
   mocks.getReceiptReview.mockReset().mockResolvedValue(receiptReview());
   mocks.push.mockReset();
 });
@@ -164,7 +166,7 @@ async function renderHome() {
 describe('Home pending receipt review resume', () => {
   it('loads a bounded authenticated pending result and revalidates its same receipt before opening', async () => {
     await renderHome();
-    expect(mocks.listPendingReceiptReviews).toHaveBeenCalledWith(
+    expect(mocks.listUnplacedReceiptReviews).toHaveBeenCalledWith(
       expect.objectContaining({ user: { id: 'owner', email: 'owner@test.invalid' } }),
       { householdId: 'home', pageSize: 3 },
     );
@@ -181,6 +183,19 @@ describe('Home pending receipt review resume', () => {
       pathname: '/receipt-review/[id]',
       params: { id: 'receipt-1' },
     });
+  });
+
+  it('lists only unplaced reviews via the authoritative method, excluding a placed receipt (SCKRL-305)', async () => {
+    // The legacy query has no placed-state exclusion; Home must not use it.
+    mocks.listPendingReceiptReviews.mockResolvedValue(
+      pendingPage([pendingReceipt, namedReceipt('receipt-placed', 'Placed Shop')]),
+    );
+    mocks.listUnplacedReceiptReviews.mockResolvedValue(pendingPage([pendingReceipt]));
+    await renderHome();
+    expect(mocks.listPendingReceiptReviews).not.toHaveBeenCalled();
+    expect(mocks.listUnplacedReceiptReviews).toHaveBeenCalledTimes(1);
+    expect(hasText('Market')).toBe(true);
+    expect(hasText('Placed Shop')).toBe(false);
   });
 
   it('does not reopen a receipt whose canonical review is no longer pending', async () => {
@@ -218,14 +233,14 @@ describe('Home pending receipt review resume', () => {
     expect(hasText('temporarily unavailable')).toBe(true);
     expect(button('Resume Market review').disabled).toBe(false);
     await press('Retry saved reviews');
-    expect(mocks.listPendingReceiptReviews).toHaveBeenCalledTimes(2);
+    expect(mocks.listUnplacedReceiptReviews).toHaveBeenCalledTimes(2);
     expect(hasText('temporarily unavailable')).toBe(false);
     expect(button('Resume Market review').disabled).toBe(false);
   });
 
   it('keeps existing entries when a same-account refocus refresh fails', async () => {
     await renderHome();
-    mocks.listPendingReceiptReviews.mockRejectedValueOnce(new Error('temporary'));
+    mocks.listUnplacedReceiptReviews.mockRejectedValueOnce(new Error('temporary'));
     await focusHome(false);
     await focusHome(true);
     expect(hasText('Market')).toBe(true);
@@ -235,18 +250,18 @@ describe('Home pending receipt review resume', () => {
   });
 
   it('recovers an initial query failure through Retry saved reviews', async () => {
-    mocks.listPendingReceiptReviews.mockRejectedValueOnce(new Error('temporary'));
+    mocks.listUnplacedReceiptReviews.mockRejectedValueOnce(new Error('temporary'));
     await renderHome();
     expect(hasText('temporarily unavailable')).toBe(true);
     await press('Retry saved reviews');
     expect(hasText('Market')).toBe(true);
-    expect(mocks.listPendingReceiptReviews).toHaveBeenCalledTimes(2);
+    expect(mocks.listUnplacedReceiptReviews).toHaveBeenCalledTimes(2);
   });
 
   it('offers saved-review retry when the initial household lookup fails', async () => {
     mocks.getHousehold.mockRejectedValueOnce(new Error('temporary'));
     await renderHome();
-    expect(mocks.listPendingReceiptReviews).not.toHaveBeenCalled();
+    expect(mocks.listUnplacedReceiptReviews).not.toHaveBeenCalled();
     await press('Retry saved reviews');
     expect(button('Resume Market review').disabled).toBe(false);
   });
@@ -267,7 +282,7 @@ describe('Home pending receipt review resume', () => {
   });
 
   it('pages from the displayed household and deduplicates rows within and across pages', async () => {
-    mocks.listPendingReceiptReviews
+    mocks.listUnplacedReceiptReviews
       .mockResolvedValueOnce(pendingPage([pendingReceipt], 1, 4))
       .mockResolvedValueOnce(
         pendingPage(
@@ -286,8 +301,8 @@ describe('Home pending receipt review resume', () => {
       onPress();
       onPress();
     });
-    expect(mocks.listPendingReceiptReviews).toHaveBeenCalledTimes(2);
-    expect(mocks.listPendingReceiptReviews).toHaveBeenLastCalledWith(expect.anything(), {
+    expect(mocks.listUnplacedReceiptReviews).toHaveBeenCalledTimes(2);
+    expect(mocks.listUnplacedReceiptReviews).toHaveBeenLastCalledWith(expect.anything(), {
       householdId: 'home',
       page: 2,
       pageSize: 3,
@@ -298,7 +313,7 @@ describe('Home pending receipt review resume', () => {
   });
 
   it('keeps existing entries after paging failure and retries page one explicitly', async () => {
-    mocks.listPendingReceiptReviews
+    mocks.listUnplacedReceiptReviews
       .mockResolvedValueOnce(pendingPage([pendingReceipt], 1, 4))
       .mockRejectedValueOnce(new Error('temporary'));
     await renderHome();
@@ -306,18 +321,18 @@ describe('Home pending receipt review resume', () => {
     expect(hasText('temporarily unavailable')).toBe(true);
     expect(button('Resume Market review').disabled).toBe(false);
     await press('Retry saved reviews');
-    expect(mocks.listPendingReceiptReviews).toHaveBeenLastCalledWith(expect.anything(), {
+    expect(mocks.listUnplacedReceiptReviews).toHaveBeenLastCalledWith(expect.anything(), {
       householdId: 'home',
       pageSize: 3,
     });
   });
 
   it('does not append another household to an existing saved-review page', async () => {
-    mocks.listPendingReceiptReviews.mockResolvedValueOnce(pendingPage([pendingReceipt], 1, 4));
+    mocks.listUnplacedReceiptReviews.mockResolvedValueOnce(pendingPage([pendingReceipt], 1, 4));
     await renderHome();
     mocks.getHousehold.mockResolvedValueOnce({ id: 'other-household', zones: [] });
     await press('Show more saved reviews');
-    expect(mocks.listPendingReceiptReviews).toHaveBeenCalledTimes(1);
+    expect(mocks.listUnplacedReceiptReviews).toHaveBeenCalledTimes(1);
     expect(hasText('Market')).toBe(false);
     expect(hasText('temporarily unavailable')).toBe(true);
   });
@@ -352,7 +367,7 @@ describe('Home pending receipt review resume', () => {
     async (settlement) => {
       const oldPage = deferred<ReturnType<typeof pendingPage>>();
       const newPage = deferred<ReturnType<typeof pendingPage>>();
-      mocks.listPendingReceiptReviews
+      mocks.listUnplacedReceiptReviews
         .mockResolvedValueOnce(pendingPage([pendingReceipt], 1, 9))
         .mockReturnValueOnce(oldPage.promise)
         .mockResolvedValueOnce(pendingPage([pendingReceipt], 1, 9))
@@ -379,7 +394,7 @@ describe('Home pending receipt review resume', () => {
   it('ignores an old query failure while a new focus refresh is still loading', async () => {
     const oldQuery = deferred<ReturnType<typeof pendingPage>>();
     const newQuery = deferred<ReturnType<typeof pendingPage>>();
-    mocks.listPendingReceiptReviews
+    mocks.listUnplacedReceiptReviews
       .mockReturnValueOnce(oldQuery.promise)
       .mockReturnValueOnce(newQuery.promise);
     await renderHome();
@@ -403,7 +418,7 @@ describe('Home pending receipt review resume', () => {
         access_token: 'new-token',
         user: { id: change === 'account' ? 'new-owner' : 'owner', email: 'owner@test.invalid' },
       };
-      mocks.listPendingReceiptReviews.mockResolvedValue(
+      mocks.listUnplacedReceiptReviews.mockResolvedValue(
         pendingPage([namedReceipt('receipt-2', 'Current account')]),
       );
       await perform(() => screen?.update(<HomeRoute />));

@@ -221,6 +221,33 @@ test.describe('placement command lifecycle', () => {
     expect(otherKey.keyMatches).toBe(false);
   });
 
+  // SCKRL-305 outcome-unknown retry: the mobile client re-sends the byte-identical command with the
+  // same key after a lost response. Stock must be created exactly once.
+  test('same key and body sent twice creates stock exactly once', async ({ owner }) => {
+    const { review, zones } = await buildReviewedReceipt(owner);
+    const receiptId = review.receipt.id;
+    type ItemsBody = { readonly pagination: { readonly total: number | null } };
+    const countItems = async () =>
+      (await expectJson<ItemsBody>(await owner.get('/items?page_size=1'), 200)).pagination.total;
+    const before = await countItems();
+
+    const command = placementCommand(review, zones[0]!.id);
+    const first = await placementJson<FinalizeReceiptPlacementResult>(
+      await owner.post(`/receipts/${receiptId}/placement`, command),
+      200,
+    );
+    const retry = await placementJson<FinalizeReceiptPlacementResult>(
+      await owner.post(`/receipts/${receiptId}/placement`, command),
+      200,
+    );
+    expect(first.outcome).toBe('placed');
+    expect(retry.outcome).toBe('replayed');
+    expect(retry.placement.items.map((item) => item.itemId)).toEqual(
+      first.placement.items.map((item) => item.itemId),
+    );
+    expect(await countItems()).toBe((before ?? 0) + command.assignments.length);
+  });
+
   test('stale review revision returns 409 STALE_RECEIPT_REVIEW', async ({ owner }) => {
     const { review, zones } = await buildReviewedReceipt(owner);
     const command = {
