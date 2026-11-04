@@ -327,3 +327,22 @@ that the legacy method is not called and that a placed receipt is not rendered.
 
 **Runs.** Default 20261104123157-avgw: **10/10 PASS**, including 51 and 55. The 55 pending-review
 count is unchanged after placement, and the toast assert is hard. Fault 20261104124209-1z8h: **3/3 PASS**. format, lint, typecheck pass, and mobile tests pass 155/155.
+
+## Round: flow 51 proves the same receipt reopens (w2, Claude Opus 5.5, 2026-11-04)
+
+**Flow 51.** After save, the flow renames line 0 to `Milk <HHMMSS from run id>`, a unique digits
+suffix so QuickType can't alter it, marks it reviewed and saves again. The status copy still reads
+"Review saved. Items are not in stock yet." The flow then taps Done for now, stops and relaunches the
+app and resumes `home.pending-reviews.row.0`. It asserts `receipt-review.lines`, that
+`continue-placement` is enabled, and that the unique name is visible on line 0 (screenshot
+`51-resumed-same-receipt`).
+
+**Run 20261104130114-gt0y.** 51 PASS; every unique-name assertion completed.
+
+**Flow 90 (908 flow, test-only).** It failed twice: in 20261104130114-gt0y, and in
+20261104131234-pjno (where 51 also passed). The cause: the confirmation dialog closed between the
+`when visible 'Sign out'` check and the tap, and the screenshot shows the signed-out screen. The tap
+is now `optional: true`; the following waits still prove sign-out.
+
+**Default run 20261104132316-moao:** **10/10 PASS**, cleanup ok. format, lint, typecheck pass, and
+mobile tests pass 155/155.

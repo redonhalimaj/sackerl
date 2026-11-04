@@ -1,6 +1,6 @@
 appId: host.exp.Exponent
 name: 51-resume-after-restart
-# Save a review -> Done for now -> restart Expo Go -> resume that review from Home's pending list
+# Save a review with a unique line-0 name -> Done for now -> restart Expo Go -> resume that review from Home's pending list
 # (newest first, so row 0) -> lines load and "Continue to placement" is enabled.
 env:
   METRO_URL: exp://127.0.0.1:8081
@@ -12,6 +12,52 @@ env:
       id: 'tabs\.home'
     timeout: 60000
 - runFlow: lib/review-and-save.yaml
+# Unique edit on line 0 so the resumed review is provably the same receipt (digits avoid QuickType).
+- evalScript: ${output.tag = 'Milk ' + MAESTRO_E2E_RUN_ID.slice(8, 14)}
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'receipt-review\.line\.0\.edit'
+      DIRECTION: UP
+- tapOn:
+    id: 'receipt-review\.line\.0\.edit'
+- tapOn:
+    id: 'receipt-review\.edit\.name'
+- eraseText: 30
+- inputText: ${output.tag + ' '}
+- pressKey: Enter
+- repeat:
+    times: 2
+    while:
+      notVisible:
+        id: 'receipt-review\.edit\.name'
+        text: '${output.tag}\s?'
+    commands:
+      - tapOn:
+          id: 'receipt-review\.edit\.name'
+      - eraseText: 30
+      - inputText: ${output.tag + ' '}
+      - pressKey: Enter
+- assertVisible:
+    id: 'receipt-review\.edit\.name'
+    text: '${output.tag}\s?'
+- scrollUntilVisible:
+    element:
+      id: 'receipt-review\.edit\.mark-reviewed'
+- tapOn:
+    id: 'receipt-review\.edit\.mark-reviewed'
+- assertVisible: '${output.tag}\s?'
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'receipt-review\.save'
+      DIRECTION: DOWN
+- tapOn:
+    id: 'receipt-review\.save'
+- extendedWaitUntil:
+    visible:
+      text: 'Review saved\. Items are not in stock yet\.'
+    timeout: 20000
 - runFlow:
     file: lib/scroll-to.yaml
     env:
@@ -59,3 +105,11 @@ env:
     id: 'receipt-review\.continue-placement'
     enabled: true
 - takeScreenshot: 51-resumed-review
+# Same receipt: line 0 carries this run's unique edited name.
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'receipt-review\.line\.0\.name'
+      DIRECTION: UP
+- assertVisible: '${output.tag}\s?'
+- takeScreenshot: 51-resumed-same-receipt
