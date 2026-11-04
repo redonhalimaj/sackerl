@@ -346,3 +346,18 @@ is now `optional: true`; the following waits still prove sign-out.
 
 **Default run 20261104132316-moao:** **10/10 PASS**, cleanup ok. format, lint, typecheck pass, and
 mobile tests pass 155/155.
+
+## Chair weigh-in and owner decision (2026-11-04)
+
+**Vote: AGREE.** Independent QA re-verified f5c708d: AGREE on merge readiness, with its own default run at 10/10 (`20261104124746-9k64`). The identity ask is closed by ba628f2: flow 51 asserts that the same receipt reopens after restart, with a default run of 10/10 (`20261104132316-moao`) and a fault run of 3/3 (`20261104124209-1z8h`).
+
+**Owner decision A (2026-11-04):** the remaining 304/312 items are accepted on unit and connected-test evidence, plus a one-time manual check ([stage1-manual-checklist](../qa/stage1-manual-checklist.md)). Those items are failed/conflicted saves, back with unsaved edits, VoiceOver, expiry choice, offline, and account isolation. **SCKRL-304, 312 and 305 → Done.**
+
+**Merged** into `feature/stage1-receipt-loop` as 68699b2.
+
+Known notes:
+
+- Flow 56's Try-again replay is covered by unit and web E2E tests only.
+- Flow 90's sign-out tap is now optional, because of a timing race.
+
+**Follow-up:** SCKRL-924, Scan shows "Household not found" for a fresh user (`apps/mobile/app/(tabs)/scan.tsx:186-190`, `:232-234`). This is a Stage 1 blocker.
