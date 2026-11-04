@@ -257,7 +257,7 @@ export default function RecipeDetailRoute(): JSX.Element {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={styles.screen} testID="recipe.screen">
       <ScrollView
         contentContainerStyle={[
           styles.content,
@@ -274,17 +274,18 @@ export default function RecipeDetailRoute(): JSX.Element {
             router.back();
           }}
           style={({ pressed }) => [styles.backButton, pressed ? styles.pressed : null]}
+          testID="recipe.back"
         >
           <ChevronLeftIcon />
         </Pressable>
 
         {detailState === 'loading' ? (
-          <View style={styles.centerState}>
+          <View style={styles.centerState} testID="recipe.loading">
             <ActivityIndicator color={colors.sageDeep} />
             <Text style={styles.stateText}>Checking your stock</Text>
           </View>
         ) : detailState === 'error' || !suggestion ? (
-          <View style={styles.centerState}>
+          <View style={styles.centerState} testID="recipe.error">
             <Text style={styles.eyebrow}>Recipe detail</Text>
             <Text style={styles.title}>Could not load recipe</Text>
             <Text style={styles.body}>{errorMessage ?? 'Try again from the Home card.'}</Text>
@@ -296,19 +297,22 @@ export default function RecipeDetailRoute(): JSX.Element {
                 <Text style={styles.recipeImageText}>Recipe</Text>
               </View>
               <Text style={styles.eyebrow}>From your stock</Text>
-              <Text style={styles.title}>{suggestion.recipe.name}</Text>
+              <Text style={styles.title} testID="recipe.title">
+                {suggestion.recipe.name}
+              </Text>
               <Text style={styles.body}>
                 {coveredCount} of {totalCount} ingredients are already at home. Serves{' '}
                 {suggestion.recipe.serves} · {suggestion.recipe.timeMinutes} min.
               </Text>
             </View>
 
-            <View style={styles.ingredientsCard}>
+            <View style={styles.ingredientsCard} testID="recipe.ingredients">
               <Text style={styles.sectionTitle}>Ingredients</Text>
               {suggestion.matchedIngredients.map((ingredient, index) => (
                 <View
                   key={ingredient.ingredient}
                   style={[styles.ingredientRow, index > 0 ? styles.ingredientRowDivider : null]}
+                  testID={`recipe.ingredient.${index}`}
                 >
                   <View
                     style={[
@@ -345,6 +349,7 @@ export default function RecipeDetailRoute(): JSX.Element {
                 pressed ? styles.pressed : null,
                 isAddingMissing ? styles.disabledButton : null,
               ]}
+              testID="recipe.add-missing"
             >
               {isAddingMissing ? (
                 <ActivityIndicator color={colors.bg} />
@@ -364,6 +369,7 @@ export default function RecipeDetailRoute(): JSX.Element {
                 pressed ? styles.primaryButtonPressed : null,
                 isCooking || stockItemIds.length < 1 ? styles.disabledButton : null,
               ]}
+              testID="recipe.cooked"
             >
               {isCooking ? (
                 <ActivityIndicator color={colors.ink} />
@@ -372,7 +378,11 @@ export default function RecipeDetailRoute(): JSX.Element {
               )}
             </Pressable>
 
-            {feedbackMessage ? <Text style={styles.feedbackText}>{feedbackMessage}</Text> : null}
+            {feedbackMessage ? (
+              <Text style={styles.feedbackText} testID="recipe.feedback">
+                {feedbackMessage}
+              </Text>
+            ) : null}
           </>
         )}
       </ScrollView>

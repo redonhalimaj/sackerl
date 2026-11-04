@@ -1,0 +1,32 @@
+appId: host.exp.Exponent
+name: 70-shopping-list
+# Add an item to the shopping list.
+env:
+  METRO_URL: exp://127.0.0.1:8081
+---
+# Start from the tab root so an earlier flow cannot cascade.
+- stopApp
+- openLink: ${METRO_URL}
+- extendedWaitUntil:
+    visible:
+      id: 'tabs\.home'
+    timeout: 60000
+- openLink: ${METRO_URL}/--/shopping-list
+- extendedWaitUntil:
+    visible:
+      id: 'shopping-list\.input'
+    timeout: 20000
+- tapOn:
+    id: 'shopping-list\.input'
+- inputText: 'E2E Oats '
+# The list's ScrollView lacks keyboardShouldPersistTaps, so the first tap with the keyboard up only
+# dismisses it (app/shopping-list.tsx:300). Dismiss via a neutral tap, then press Add once.
+- tapOn: 'What to buy'
+- tapOn:
+    id: 'shopping-list\.add'
+- extendedWaitUntil:
+    visible:
+      id: 'shopping-list\.row\..*'
+    timeout: 15000
+- assertVisible: 'E2E Oats'
+- takeScreenshot: 70-shopping-added

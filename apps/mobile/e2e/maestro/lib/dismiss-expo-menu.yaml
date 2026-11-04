@@ -1,0 +1,9 @@
+appId: host.exp.Exponent
+# Expo Go's floating tools button can open its dev menu under a gesture (L6). Close it if open.
+---
+- runFlow:
+    when:
+      visible: 'Toggle performance monitor'
+    commands:
+      - tapOn:
+          id: 'xmark'

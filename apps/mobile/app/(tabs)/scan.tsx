@@ -267,7 +267,7 @@ export default function ScanRoute(): JSX.Element {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={styles.screen} testID="scan.screen">
       {scanState === 'capturing' ? <View pointerEvents="none" style={styles.shutterFlash} /> : null}
 
       <View
@@ -287,6 +287,7 @@ export default function ScanRoute(): JSX.Element {
               router.replace('/');
             }}
             style={({ pressed }) => [styles.roundButton, pressed ? styles.pressed : null]}
+            testID="scan.cancel"
           >
             <CloseIcon />
           </Pressable>
@@ -298,6 +299,7 @@ export default function ScanRoute(): JSX.Element {
             accessibilityRole="button"
             onPress={handleHelp}
             style={({ pressed }) => [styles.roundButton, pressed ? styles.pressed : null]}
+            testID="scan.help"
           >
             <HelpIcon />
           </Pressable>
@@ -316,11 +318,13 @@ export default function ScanRoute(): JSX.Element {
           <View
             style={[styles.statusDot, scanState === 'misaligned' ? styles.statusDotOff : null]}
           />
-          <Text style={styles.statusText}>{statusText}</Text>
+          <Text style={styles.statusText} testID="scan.status">
+            {statusText}
+          </Text>
         </View>
         <Text style={styles.statusText}>Capture is simulated. No photo is uploaded yet.</Text>
         {sampleEnabled ? (
-          <View style={styles.samplePanel}>
+          <View style={styles.samplePanel} testID="scan.sample-panel">
             <Text style={styles.sampleHint}>
               Development sample · not a real purchase. Saves to your household; no stock is added.
             </Text>
@@ -333,6 +337,7 @@ export default function ScanRoute(): JSX.Element {
                 void handleLoadSample();
               }}
               style={({ pressed }) => [styles.sampleButton, pressed ? styles.pressed : null]}
+              testID="scan.load-sample"
             >
               <Text style={styles.sideActionText}>Load sample receipt</Text>
             </Pressable>
@@ -349,6 +354,7 @@ export default function ScanRoute(): JSX.Element {
               handleImport('gallery');
             }}
             style={({ pressed }) => [styles.sideAction, pressed ? styles.pressed : null]}
+            testID="scan.import-gallery"
           >
             <ImageIcon />
             <Text style={styles.sideActionText}>Gallery</Text>
@@ -365,6 +371,7 @@ export default function ScanRoute(): JSX.Element {
               captureDisabled ? styles.captureButtonDisabled : null,
               pressed ? styles.captureButtonPressed : null,
             ]}
+            testID="scan.capture"
           >
             <View style={styles.captureInner} />
           </Pressable>
@@ -378,6 +385,7 @@ export default function ScanRoute(): JSX.Element {
               handleImport('pdf');
             }}
             style={({ pressed }) => [styles.sideAction, pressed ? styles.pressed : null]}
+            testID="scan.import-pdf"
           >
             <PdfIcon />
             <Text style={styles.sideActionText}>PDF</Text>
@@ -390,6 +398,7 @@ export default function ScanRoute(): JSX.Element {
             router.push('/add-item');
           }}
           style={({ pressed }) => [styles.manualLink, pressed ? styles.pressed : null]}
+          testID="scan.manual"
         >
           <Text style={styles.manualLinkText}>Skip - type it instead</Text>
         </Pressable>

@@ -296,7 +296,7 @@ export default function ShoppingListRoute(): JSX.Element {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={styles.screen} testID="shopping-list.screen">
       <ScrollView
         contentContainerStyle={[
           styles.content,
@@ -313,6 +313,7 @@ export default function ShoppingListRoute(): JSX.Element {
             router.back();
           }}
           style={({ pressed }) => [styles.backButton, pressed ? styles.pressed : null]}
+          testID="shopping-list.back"
         >
           <ChevronLeftIcon />
         </Pressable>
@@ -320,19 +321,19 @@ export default function ShoppingListRoute(): JSX.Element {
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>Shopping list</Text>
           <Text style={styles.title}>What to buy</Text>
-          <Text style={styles.subtitle}>
+          <Text style={styles.subtitle} testID="shopping-list.counts">
             {formatCount(openCount, 'item', 'items')} open ·{' '}
             {formatCount(checkedCount, 'checked item', 'checked items')}
           </Text>
         </View>
 
         {loadState === 'loading' ? (
-          <View style={styles.centerState}>
+          <View style={styles.centerState} testID="shopping-list.loading">
             <ActivityIndicator color={colors.sageDeep} />
             <Text style={styles.stateText}>Loading list</Text>
           </View>
         ) : loadState === 'error' ? (
-          <View style={styles.centerState}>
+          <View style={styles.centerState} testID="shopping-list.error">
             <Text style={styles.errorTitle}>Could not load shopping list</Text>
             <Text style={styles.errorText}>{errorMessage ?? 'Try again in a moment.'}</Text>
             <Pressable
@@ -341,6 +342,7 @@ export default function ShoppingListRoute(): JSX.Element {
                 void loadShoppingList();
               }}
               style={styles.retryButton}
+              testID="shopping-list.retry"
             >
               <Text style={styles.retryButtonText}>Try again</Text>
             </Pressable>
@@ -359,6 +361,7 @@ export default function ShoppingListRoute(): JSX.Element {
                 placeholderTextColor={colors.muteSoft}
                 returnKeyType="done"
                 style={styles.input}
+                testID="shopping-list.input"
                 value={inputValue}
               />
               <Pressable
@@ -373,16 +376,17 @@ export default function ShoppingListRoute(): JSX.Element {
                   pressed ? styles.pressed : null,
                   isAdding || inputValue.trim().length < 1 ? styles.disabledButton : null,
                 ]}
+                testID="shopping-list.add"
               >
                 {isAdding ? <ActivityIndicator color={colors.bg} /> : <PlusIcon />}
               </Pressable>
             </View>
 
             {visibleSuggestionChips.length > 0 ? (
-              <View style={styles.suggestionWrap}>
+              <View style={styles.suggestionWrap} testID="shopping-list.suggestions">
                 <Text style={styles.sectionEyebrow}>From receipts</Text>
                 <View style={styles.suggestionChips}>
-                  {visibleSuggestionChips.map((suggestion) => (
+                  {visibleSuggestionChips.map((suggestion, suggestionIndex) => (
                     <Pressable
                       accessibilityRole="button"
                       key={`${suggestion.name}-${suggestion.lastSeenOn}`}
@@ -393,6 +397,7 @@ export default function ShoppingListRoute(): JSX.Element {
                         styles.suggestionChip,
                         pressed ? styles.pressed : null,
                       ]}
+                      testID={`shopping-list.suggestion.${suggestionIndex}`}
                     >
                       <Text style={styles.suggestionChipText}>{suggestion.name}</Text>
                     </Pressable>
@@ -401,9 +406,9 @@ export default function ShoppingListRoute(): JSX.Element {
               </View>
             ) : null}
 
-            <View style={styles.listCard}>
+            <View style={styles.listCard} testID="shopping-list.list">
               {items.length < 1 ? (
-                <View style={styles.emptyState}>
+                <View style={styles.emptyState} testID="shopping-list.empty">
                   <Text style={styles.emptyTitle}>No shopping items yet</Text>
                   <Text style={styles.emptyText}>Add one manually or from a recipe.</Text>
                 </View>
@@ -416,6 +421,7 @@ export default function ShoppingListRoute(): JSX.Element {
                     <View
                       key={item.id}
                       style={[styles.itemRow, index > 0 ? styles.itemRowDivider : null]}
+                      testID={`shopping-list.row.${item.id}`}
                     >
                       <Pressable
                         accessibilityLabel={`${isChecked ? 'Uncheck' : 'Check'} ${item.name}`}
@@ -430,6 +436,7 @@ export default function ShoppingListRoute(): JSX.Element {
                           pressed ? styles.pressed : null,
                           isUpdating ? styles.disabledButton : null,
                         ]}
+                        testID={`shopping-list.row.${item.id}.toggle`}
                       >
                         <View style={[styles.checkbox, isChecked ? styles.checkboxChecked : null]}>
                           {isChecked ? <CheckIcon /> : null}
@@ -437,6 +444,7 @@ export default function ShoppingListRoute(): JSX.Element {
                         <View style={styles.itemTextWrap}>
                           <Text
                             style={[styles.itemName, isChecked ? styles.itemNameChecked : null]}
+                            testID={`shopping-list.row.${item.id}.name`}
                           >
                             {item.name}
                           </Text>
@@ -457,6 +465,7 @@ export default function ShoppingListRoute(): JSX.Element {
                           pressed ? styles.pressed : null,
                           isUpdating ? styles.disabledButton : null,
                         ]}
+                        testID={`shopping-list.row.${item.id}.delete`}
                       >
                         <Text style={styles.removeButtonText}>Remove</Text>
                       </Pressable>
@@ -466,7 +475,11 @@ export default function ShoppingListRoute(): JSX.Element {
               )}
             </View>
 
-            {feedbackMessage ? <Text style={styles.feedbackText}>{feedbackMessage}</Text> : null}
+            {feedbackMessage ? (
+              <Text style={styles.feedbackText} testID="shopping-list.feedback">
+                {feedbackMessage}
+              </Text>
+            ) : null}
           </>
         )}
       </ScrollView>

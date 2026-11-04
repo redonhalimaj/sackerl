@@ -1,0 +1,83 @@
+appId: host.exp.Exponent
+name: 30-stock-add
+# Empty stock -> manual add item with an expiry tomorrow (TOMORROW, local date) -> row appears in Stock.
+env:
+  METRO_URL: exp://127.0.0.1:8081
+---
+# Start from the tab root so an earlier flow's pushed screen or failure doesn't cascade.
+- stopApp
+- openLink: ${METRO_URL}
+- extendedWaitUntil:
+    visible:
+      id: 'tabs\.home'
+    timeout: 60000
+- tapOn:
+    id: 'tabs\.stock'
+- assertVisible:
+    id: 'stock\.empty'
+- tapOn:
+    id: 'tabs\.scan'
+- tapOn:
+    id: 'scan\.manual'
+- assertVisible:
+    id: 'add-item\.name'
+- tapOn:
+    id: 'add-item\.zone\.fridge'
+# Expiry: the field is prefilled with the estimate; replace it with the user-entered date.
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'add-item\.expiry'
+      DIRECTION: DOWN
+- tapOn:
+    id: 'add-item\.expiry'
+- eraseText: 20
+- inputText: ${MAESTRO_E2E_TOMORROW}
+- pressKey: Enter
+# Name last, each field verified exactly after the keyboard closes. Maestro's iOS typing can leave a
+# stray key and QuickType can autocomplete ("Milkweed"); a trailing space commits the word.
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'add-item\.name'
+      DIRECTION: UP
+- tapOn:
+    id: 'add-item\.name'
+- inputText: 'E2E Milk '
+- pressKey: Enter
+- repeat:
+    times: 2
+    while:
+      notVisible:
+        id: 'add-item\.name'
+        text: 'E2E Milk\s?'
+    commands:
+      - tapOn:
+          id: 'add-item\.name'
+      - eraseText: 30
+      - inputText: 'E2E Milk '
+      - pressKey: Enter
+- assertVisible:
+    id: 'add-item\.name'
+    text: 'E2E Milk\s?'
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'add-item\.expiry'
+      DIRECTION: DOWN
+- assertVisible:
+    id: 'add-item\.expiry'
+    text: ${MAESTRO_E2E_TOMORROW}
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'add-item\.save'
+      DIRECTION: DOWN
+- tapOn:
+    id: 'add-item\.save'
+- extendedWaitUntil:
+    visible:
+      id: 'stock\.row\..*'
+    timeout: 20000
+- assertVisible: 'E2E Milk'
+- takeScreenshot: 30-stock-row

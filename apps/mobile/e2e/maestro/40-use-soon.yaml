@@ -1,0 +1,32 @@
+appId: host.exp.Exponent
+name: 40-use-soon
+# The item expiring tomorrow shows in Expiring; mark it used.
+env:
+  METRO_URL: exp://127.0.0.1:8081
+---
+# Start from the tab root so an earlier flow's pushed screen or failure doesn't cascade.
+- stopApp
+- openLink: ${METRO_URL}
+- extendedWaitUntil:
+    visible:
+      id: 'tabs\.home'
+    timeout: 60000
+- tapOn:
+    id: 'tabs\.expiring'
+- extendedWaitUntil:
+    visible:
+      id: 'expiring\.row\..*'
+    timeout: 20000
+- assertVisible: 'E2E Milk'
+- tapOn:
+    id: 'expiring\.row\..*\.used'
+    index: 0
+- runFlow:
+    when:
+      visible: 'Mark as used'
+    commands:
+      - tapOn: 'Mark as used'
+- extendedWaitUntil:
+    notVisible:
+      id: 'expiring\.row\..*'
+    timeout: 15000

@@ -121,6 +121,7 @@ export default function AuthRoute() {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.keyboard}
+      testID="auth.screen"
     >
       <ScrollView
         contentContainerStyle={[
@@ -149,6 +150,7 @@ export default function AuthRoute() {
             placeholder="Email"
             placeholderTextColor={colors.muteSoft}
             style={styles.input}
+            testID="auth.email"
             textContentType="emailAddress"
             value={email}
           />
@@ -163,6 +165,7 @@ export default function AuthRoute() {
               placeholderTextColor={colors.muteSoft}
               secureTextEntry
               style={styles.input}
+              testID="auth.password"
               textContentType={mode === 'signUp' ? 'newPassword' : 'password'}
               value={password}
             />
@@ -178,6 +181,7 @@ export default function AuthRoute() {
               styles.primaryButton,
               isSubmitting || status === 'loading' ? styles.disabled : null,
             ]}
+            testID="auth.submit"
           >
             {isSubmitting ? (
               <ActivityIndicator color={colors.ink} />
@@ -200,6 +204,7 @@ export default function AuthRoute() {
                 void handleAppleSignIn();
               }}
               style={styles.inkButton}
+              testID="auth.apple"
             >
               <Text style={styles.inkButtonText}>Sign in with Apple</Text>
             </Pressable>
@@ -207,8 +212,10 @@ export default function AuthRoute() {
         </View>
 
         {(message ?? sessionError) ? (
-          <View style={styles.message}>
-            <Text style={styles.messageText}>{message ?? sessionError}</Text>
+          <View style={styles.message} testID="auth.message">
+            <Text style={styles.messageText} testID="auth.message-text">
+              {message ?? sessionError}
+            </Text>
           </View>
         ) : null}
 
@@ -220,6 +227,7 @@ export default function AuthRoute() {
               setMessage(undefined);
             }}
             style={styles.linkButton}
+            testID="auth.toggle-mode"
           >
             <Text style={styles.linkText}>
               {mode === 'signIn' ? 'Create an account' : 'I already have an account'}
@@ -233,6 +241,7 @@ export default function AuthRoute() {
               setMessage(undefined);
             }}
             style={styles.linkButton}
+            testID="auth.toggle-reset"
           >
             <Text style={styles.linkText}>
               {mode === 'reset' ? 'Back to sign in' : 'Forgot password?'}

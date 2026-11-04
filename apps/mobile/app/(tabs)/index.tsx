@@ -661,7 +661,7 @@ export default function HomeRoute(): JSX.Element {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={styles.screen} testID="home.screen">
       <ScrollView
         onScroll={handleScroll}
         ref={scrollViewRef}
@@ -687,6 +687,7 @@ export default function HomeRoute(): JSX.Element {
               accessibilityLabel="Search stock"
               accessibilityRole="button"
               style={({ pressed }) => [styles.roundButton, pressed ? styles.pressed : null]}
+              testID="home.search"
             >
               <SearchIcon />
             </Pressable>
@@ -694,6 +695,7 @@ export default function HomeRoute(): JSX.Element {
               accessibilityLabel="Notifications"
               accessibilityRole="button"
               style={({ pressed }) => [styles.roundButton, pressed ? styles.pressed : null]}
+              testID="home.notifications"
             >
               <BellIcon />
               <View aria-hidden style={styles.notificationDot} />
@@ -713,6 +715,7 @@ export default function HomeRoute(): JSX.Element {
             loadState === 'error' ? styles.heroCardError : null,
             pressed ? styles.heroPressed : null,
           ]}
+          testID="home.hero"
         >
           <View aria-hidden style={styles.kraftFiberA} />
           <View aria-hidden style={styles.kraftFiberB} />
@@ -756,7 +759,11 @@ export default function HomeRoute(): JSX.Element {
         </Pressable>
 
         {pendingReviews.length || pendingReviewError || pendingReviewRefreshing ? (
-          <View accessibilityLiveRegion="polite" style={styles.pendingReviewCard}>
+          <View
+            accessibilityLiveRegion="polite"
+            style={styles.pendingReviewCard}
+            testID="home.pending-reviews"
+          >
             <Text style={styles.pendingReviewTitle}>Continue a saved review</Text>
             {pendingReviewError ? (
               <>
@@ -771,6 +778,7 @@ export default function HomeRoute(): JSX.Element {
                   disabled={pendingReviewRefreshing}
                   onPress={() => void retryPendingReviews()}
                   style={styles.pendingReviewMore}
+                  testID="home.pending-reviews.retry"
                 >
                   <Text style={styles.pendingReviewMoreText}>Retry saved reviews</Text>
                 </Pressable>
@@ -779,7 +787,7 @@ export default function HomeRoute(): JSX.Element {
             {pendingReviewRefreshing ? (
               <Text style={styles.pendingReviewBody}>Loading saved reviews…</Text>
             ) : null}
-            {pendingReviews.map((receipt) => (
+            {pendingReviews.map((receipt, index) => (
               <Pressable
                 accessibilityHint="Reopens this saved receipt review. Its items are not in stock yet."
                 accessibilityLabel={`Resume ${receipt.storeName ?? 'receipt'} review`}
@@ -794,6 +802,7 @@ export default function HomeRoute(): JSX.Element {
                   styles.pendingReviewAction,
                   pressed ? styles.pendingReviewPressed : null,
                 ]}
+                testID={`home.pending-reviews.row.${index}`}
               >
                 <View style={styles.pendingReviewCopy}>
                   <Text style={styles.pendingReviewItemTitle}>
@@ -818,6 +827,7 @@ export default function HomeRoute(): JSX.Element {
                 disabled={pendingReviewLoadingMore || pendingReviewRefreshing}
                 onPress={() => void loadMorePendingReviews()}
                 style={styles.pendingReviewMore}
+                testID="home.pending-reviews.more"
               >
                 {pendingReviewLoadingMore ? (
                   <ActivityIndicator color={colors.sageDeep} size="small" />
@@ -829,7 +839,11 @@ export default function HomeRoute(): JSX.Element {
           </View>
         ) : null}
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <Text style={styles.errorText} testID="home.error">
+            {errorMessage}
+          </Text>
+        ) : null}
 
         <View style={styles.expiringCard}>
           <View style={styles.expiringHeader}>
@@ -850,6 +864,7 @@ export default function HomeRoute(): JSX.Element {
                 styles.seeAllButton,
                 pressed ? styles.seeAllButtonPressed : null,
               ]}
+              testID="home.expiring.see-all"
             >
               <Text style={styles.seeAllText}>See all</Text>
               <ChevronRightIcon />
@@ -867,6 +882,7 @@ export default function HomeRoute(): JSX.Element {
                 accessibilityLabel={`${item.name}, in ${item.zoneLabel}, ${item.chipLabel}`}
                 key={item.id}
                 style={[styles.expiringRow, index > 0 ? styles.expiringRowDivider : null]}
+                testID={`home.expiring.row.${index}`}
               >
                 <CategoryTile category={item.category} />
 
@@ -885,7 +901,9 @@ export default function HomeRoute(): JSX.Element {
               </View>
             ))
           ) : (
-            <Text style={styles.expiringEmptyText}>Nothing expiring this week - well done.</Text>
+            <Text style={styles.expiringEmptyText} testID="home.expiring.empty">
+              Nothing expiring this week - well done.
+            </Text>
           )}
         </View>
 
@@ -915,6 +933,7 @@ export default function HomeRoute(): JSX.Element {
                   styles.storageCard,
                   pressed ? styles.storageCardPressed : null,
                 ]}
+                testID={`home.storage.${zone.key}`}
               >
                 <View style={styles.storageCardTop}>
                   <ZoneGlyph zone={zone} />
@@ -939,7 +958,7 @@ export default function HomeRoute(): JSX.Element {
         </View>
 
         {loadState === 'ready' && recipeSuggestion ? (
-          <View style={styles.suggestionCard}>
+          <View style={styles.suggestionCard} testID="home.suggestion">
             <View style={styles.suggestionHeader}>
               <View style={styles.suggestionEyebrowRow}>
                 <SuggestionSparkleIcon />
@@ -955,6 +974,7 @@ export default function HomeRoute(): JSX.Element {
                   styles.suggestionSeeAllButton,
                   pressed ? styles.seeAllButtonPressed : null,
                 ]}
+                testID="home.suggestion.see-all"
               >
                 <Text style={styles.suggestionSeeAllText}>See all</Text>
               </Pressable>
@@ -989,6 +1009,7 @@ export default function HomeRoute(): JSX.Element {
                 styles.suggestionButton,
                 pressed ? styles.suggestionButtonPressed : null,
               ]}
+              testID="home.suggestion.show-recipe"
             >
               <Text style={styles.suggestionButtonText}>Show recipe</Text>
               <SuggestionArrowIcon />

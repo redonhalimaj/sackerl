@@ -1,0 +1,30 @@
+appId: host.exp.Exponent
+# Scrolls with left-side swipes (away from Expo Go's floating tools button, L6) until ${TARGET} is
+# visible, closing Expo's dev menu whenever a gesture opens it. DIRECTION is DOWN (default) or UP.
+---
+- repeat:
+    times: 8
+    while:
+      notVisible:
+        id: ${TARGET}
+    commands:
+      - runFlow: dismiss-expo-menu.yaml
+      - runFlow:
+          when:
+            true: ${DIRECTION == 'UP'}
+          commands:
+            - swipe:
+                start: 20%, 35%
+                end: 20%, 70%
+                duration: 600
+      - runFlow:
+          when:
+            true: ${DIRECTION != 'UP'}
+          commands:
+            - swipe:
+                start: 20%, 70%
+                end: 20%, 35%
+                duration: 600
+- runFlow: dismiss-expo-menu.yaml
+- assertVisible:
+    id: ${TARGET}

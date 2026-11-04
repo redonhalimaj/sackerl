@@ -108,10 +108,15 @@ function RecipeCard({ suggestion }: { readonly suggestion: RecipeSuggestion }): 
   const router = useRouter();
 
   return (
-    <View style={styles.recipeCard}>
+    <View style={styles.recipeCard} testID={`suggestions.card.${suggestion.recipe.id}`}>
       <View style={styles.recipeHeader}>
         <View style={styles.recipeTitleWrap}>
-          <Text style={styles.recipeTitle}>{suggestion.recipe.name}</Text>
+          <Text
+            style={styles.recipeTitle}
+            testID={`suggestions.card.${suggestion.recipe.id}.title`}
+          >
+            {suggestion.recipe.name}
+          </Text>
           <Text style={styles.recipeMeta}>
             Serves {suggestion.recipe.serves} · {suggestion.recipe.timeMinutes} min
           </Text>
@@ -159,6 +164,7 @@ function RecipeCard({ suggestion }: { readonly suggestion: RecipeSuggestion }): 
             styles.showRecipeButton,
             pressed ? styles.showRecipeButtonPressed : null,
           ]}
+          testID={`suggestions.card.${suggestion.recipe.id}.show`}
         >
           <Text style={styles.showRecipeText}>Show recipe</Text>
           <ArrowIcon />
@@ -170,6 +176,7 @@ function RecipeCard({ suggestion }: { readonly suggestion: RecipeSuggestion }): 
           accessibilityState={{ disabled: true }}
           disabled
           style={styles.heartButton}
+          testID={`suggestions.card.${suggestion.recipe.id}.save`}
         >
           <HeartIcon />
         </Pressable>
@@ -246,7 +253,7 @@ export default function SuggestionsRoute(): JSX.Element {
   );
 
   return (
-    <View style={styles.screen}>
+    <View style={styles.screen} testID="suggestions.screen">
       <ScrollView
         contentContainerStyle={[
           styles.content,
@@ -264,6 +271,7 @@ export default function SuggestionsRoute(): JSX.Element {
               router.back();
             }}
             style={({ pressed }) => [styles.roundButton, pressed ? styles.pressed : null]}
+            testID="suggestions.back"
           >
             <ChevronLeftIcon />
           </Pressable>
@@ -306,6 +314,7 @@ export default function SuggestionsRoute(): JSX.Element {
                   isActive ? styles.filterChipActive : null,
                   pressed ? styles.pressed : null,
                 ]}
+                testID={`suggestions.filter.${filterId}`}
               >
                 <Text
                   style={[styles.filterChipText, isActive ? styles.filterChipTextActive : null]}
@@ -318,23 +327,23 @@ export default function SuggestionsRoute(): JSX.Element {
         </View>
 
         {loadState === 'loading' ? (
-          <View style={styles.centerState}>
+          <View style={styles.centerState} testID="suggestions.loading">
             <ActivityIndicator color={colors.sageDeep} />
             <Text style={styles.stateText}>Finding ideas</Text>
           </View>
         ) : loadState === 'error' ? (
-          <View style={styles.centerState}>
+          <View style={styles.centerState} testID="suggestions.error">
             <Text style={styles.errorTitle}>Could not load ideas</Text>
             <Text style={styles.errorText}>{errorMessage ?? 'Try again in a moment.'}</Text>
           </View>
         ) : filteredSuggestions.length > 0 ? (
-          <View style={styles.recipeList}>
+          <View style={styles.recipeList} testID="suggestions.list">
             {filteredSuggestions.map((suggestion) => (
               <RecipeCard key={suggestion.recipe.id} suggestion={suggestion} />
             ))}
           </View>
         ) : (
-          <View style={styles.emptyCard}>
+          <View style={styles.emptyCard} testID="suggestions.empty">
             <Text style={styles.emptyTitle}>Stock a few more things</Text>
             <Text style={styles.emptyText}>Then we'll suggest dinners from what is at home.</Text>
             <Pressable
@@ -346,6 +355,7 @@ export default function SuggestionsRoute(): JSX.Element {
                 styles.addItemButton,
                 pressed ? styles.showRecipeButtonPressed : null,
               ]}
+              testID="suggestions.empty-add"
             >
               <Text style={styles.addItemButtonText}>Add item</Text>
             </Pressable>
