@@ -5,7 +5,11 @@ both directions on 2026-09-13. [TEAM.md](../../TEAM.md) defines roles and provid
 [status.md](../../status.md) holds the current checkpoint and ticket states. Keep live progress in
 that one file so the assistants do not develop separate versions of the plan.
 
-**Current testing handover (2026-11-01):** the owner will perform the remaining testing using
+**Current QA handover (2026-11-04):** Codex/GPT performs independent QA of the Stage 1 receipt loop using
+[the Codex QA handover](codex-qa-handover-2026-11-04.md). Codex writes no product code. Afterwards Claude
+sessions continue from Codex's report (`docs/qa/codex-stage1-qa-2026-11.md`), following that file's resume prompt.
+
+**Previous testing handover (2026-11-01, superseded):** the owner will perform the remaining testing using
 Claude and explicitly asks Codex to update the handover and push the current changes. Use the
 [Claude testing package](claude-next-work-package.md). This supersedes the previous automatic
 return-to-Codex QA assignment for these remaining tests. Keep independent review for any later
