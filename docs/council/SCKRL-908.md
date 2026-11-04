@@ -169,3 +169,16 @@ The two app observations (auth email overflow, shopping-list Add needing two tap
 follow-ups by the coordinator and are not fixed here.
 
 **Status: awaiting seat re-vote** (Frontend, DevOps, QA) on the Maestro driver.
+
+## Chair weigh-in (2026-11-04)
+
+**Vote: AGREE.** Independent QA (Sonnet 5) voted AGREE on 239109e: its own live run was 8/8 (`20261104103759-llxu`), there were no secret leaks and no app-source changes. Its one condition was fixing the wording, which aca1ba7 does. aca1ba7 also hardens flows 35, 50 and 90 and the runner's cleanup. The re-run was 8/8 (`20261104105619-sjay`).
+
+The owner approved the Maestro driver on 2026-11-04 after Accessibility trust couldn't be granted, and installed Maestro themselves.
+
+**Decision:** ratified and merged into `feature/stage1-receipt-loop` (merge 5d12366).
+
+Follow-ups:
+
+- **SCKRL-922:** the email overflows the `auth.email` field (`apps/mobile/app/auth.tsx:153`).
+- **SCKRL-923:** the shopping-list ScrollView is missing `keyboardShouldPersistTaps` (`apps/mobile/app/shopping-list.tsx:300`).
