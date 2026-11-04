@@ -2,6 +2,8 @@
 
 ## Session Handoff
 
+- **SCKRL-921 (2026-11-05):** the spike is merged into stage1 with a conditional GO. It is blocked on the owner's real receipts. To resume, see [the SCKRL-921 resume note](docs/agents/sckrl-921-resume-2026-11-05.md).
+
 Last updated: 2026-11-02
 
 ### Current testing/publication checkpoint — 2026-11-02
