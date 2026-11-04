@@ -14,6 +14,7 @@ executionOrder:
     - 35-recipe-suggestions
     - 40-use-soon
     - 50-receipt-review
+    - 51-resume-after-restart
     - 55-receipt-placement-tap
     - 70-shopping-list
     - 90-sign-out

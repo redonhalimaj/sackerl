@@ -1,0 +1,61 @@
+appId: host.exp.Exponent
+name: 51-resume-after-restart
+# Save a review -> Done for now -> restart Expo Go -> resume that review from Home's pending list
+# (newest first, so row 0) -> lines load and "Continue to placement" is enabled.
+env:
+  METRO_URL: exp://127.0.0.1:8081
+---
+- stopApp
+- openLink: ${METRO_URL}
+- extendedWaitUntil:
+    visible:
+      id: 'tabs\.home'
+    timeout: 60000
+- runFlow: lib/review-and-save.yaml
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'receipt-review\.status'
+      DIRECTION: UP
+- assertVisible:
+    id: 'receipt-review\.status'
+    text: 'Review saved\. Items are not in stock yet\.'
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'receipt-review\.done-for-now'
+      DIRECTION: DOWN
+- tapOn:
+    id: 'receipt-review\.done-for-now'
+- extendedWaitUntil:
+    visible:
+      id: 'home\.screen'
+    timeout: 20000
+# Restart and resume.
+- stopApp
+- openLink: ${METRO_URL}
+- extendedWaitUntil:
+    visible:
+      id: 'tabs\.home'
+    timeout: 60000
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'home\.pending-reviews\.row\.0'
+      DIRECTION: DOWN
+- takeScreenshot: 51-home-pending
+- tapOn:
+    id: 'home\.pending-reviews\.row\.0'
+- extendedWaitUntil:
+    visible:
+      id: 'receipt-review\.lines'
+    timeout: 30000
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'receipt-review\.continue-placement'
+      DIRECTION: DOWN
+- assertVisible:
+    id: 'receipt-review\.continue-placement'
+    enabled: true
+- takeScreenshot: 51-resumed-review

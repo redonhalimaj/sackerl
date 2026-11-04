@@ -12,6 +12,9 @@ env:
     visible:
       id: 'tabs\.home'
     timeout: 60000
+# Pending saved reviews before this flow's receipt exists; placement must leave the count unchanged.
+- runFlow: lib/count-pending.yaml
+- evalScript: ${output.pendingBefore = output.pending}
 - runFlow: lib/review-and-save.yaml
 - assertVisible:
     id: 'receipt-review\.continue-placement'
@@ -48,17 +51,27 @@ env:
     env:
       ZONE: pantry
 - takeScreenshot: 55-placement-all-placed
+# The success toast lasts 4 s: don't let the tap wait for the screen to settle, and wait for the
+# toast before anything else (hard assertion).
 - tapOn:
     id: 'receipt-placement\.submit'
+    waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
-      id: 'home\.screen'
+      id: 'receipt-placement\.toast'
     timeout: 30000
 - assertVisible:
-    id: 'tabs\.home'
+    id: 'home\.screen'
 - assertVisible:
-    id: 'receipt-placement\.toast'
+    id: 'tabs\.home'
 - assertNotVisible: 'Still confirming'
 - assertNotVisible:
     id: 'receipt-placement\.dock'
 - takeScreenshot: 55-placement-home-toast
+# The placed receipt is no longer a pending review: same count as before this flow saved its review
+# (newest-first list, so a stale entry would add a row).
+- runFlow: lib/count-pending.yaml
+- assertTrue:
+    condition: ${output.pending == output.pendingBefore}
+    label: 'Pending reviews unchanged after placement (placed receipt not pending)'
+- takeScreenshot: 55-home-pending-after

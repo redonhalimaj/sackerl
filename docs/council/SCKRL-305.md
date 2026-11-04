@@ -289,3 +289,28 @@ lands straight on Home has no household row (only add-item / storage-zones / sto
 ticket.
 
 **Checks.** format:check, lint, typecheck, mobile tests 154/154 pass. Metro stopped by the runner.
+
+## Round: QA objections on 18e142c (w2, Claude Opus 5.5, 2026-11-04)
+
+**Changes.** 55: submit tap uses `waitToSettleTimeoutMs: 300`, then a hard `extendedWaitUntil` on
+`receipt-placement.toast` before Home / no "Still confirming" / no dock. 55 now counts Home's pending
+saved reviews before saving its receipt and after placement (`lib/count-pending.yaml`) and asserts the
+count is unchanged. All sample receipts share one store name, and rows expose only an index, so the
+count delta (newest-first list) is how this flow identifies its receipt. New `51-resume-after-restart`
+(after 50): save → status copy "Review saved. Items are not in stock yet." → Done for now →
+`stopApp` + relaunch → resume `home.pending-reviews.row.0` → `receipt-review.lines` and
+`continue-placement` enabled.
+
+**Runs.** Default 20261104121513-g4u1: **9/10**, 51 PASS, 55 FAIL at the pending-count assertion
+(before 2, after 3). Fault 20261104122545-sy5m: **3/3 PASS**. format, lint, typecheck and mobile tests
+154/154 pass.
+
+**Defect (real, 305/312, not masked).** The placed receipt is still listed on Home as "Continue a
+saved review" (screenshot `step-182-assertCondition.png` in g4u1: 3 pending rows, stock 3). Home still
+calls the legacy `listPendingReceiptReviews` at `apps/mobile/app/(tabs)/index.tsx:392` and `:629`.
+That query (`packages/api-client/src/receipts.ts:1073-1090`) filters only on parse generation and
+`review_revision > 0`, with no placed-state exclusion. Its doc comment says it stays "until SCKRL-305
+activates the authoritative method" `listUnplacedReceiptReviews` (`receipts.ts:1256`, RPC
+`list_unplaced_receipt_reviews`). 305 never switched Home over (see also status.md:727). Not fixed
+here: Home is outside the 305 placement file set. The fix needs a Chair decision on ownership.
+Flow 55 stays red until it lands.
