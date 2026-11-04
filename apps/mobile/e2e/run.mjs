@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /* global console, setTimeout, Buffer */
 // Sackerl mobile E2E runner (Maestro). Usage: node e2e/run.mjs [flow-name ...] [--no-fixture] [--keep-metro]
+//   Reap a leaked fixture user: node apps/mobile/e2e/run.mjs --cleanup <runId>
 // Flows live in e2e/maestro/*.yaml; order is set in e2e/maestro/config.yaml. See docs/qa/e2e-mobile.md.
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import {
   mkdirSync,
   writeFileSync,
@@ -28,6 +29,29 @@ const useFixture = !argv.includes('--no-fixture');
 const PORT = Number(process.env.E2E_METRO_PORT || 8081);
 const DEVICE = process.env.E2E_DEVICE; // optional simulator UDID; Maestro picks the booted one otherwise
 const MAESTRO = process.env.MAESTRO_BIN || 'maestro';
+// ---- reaper: --cleanup <runId> deletes exactly the user recorded in that run's fixture.json ------
+const cleanupIdx = argv.indexOf('--cleanup');
+if (cleanupIdx !== -1) {
+  const id = argv[cleanupIdx + 1];
+  if (!id || !/^[\w-]+$/.test(id)) {
+    console.error('[e2e] usage: run.mjs --cleanup <runId>');
+    process.exit(2);
+  }
+  const dir = join(repoRoot, '.env.e2e-mobile', id);
+  if (!existsSync(join(dir, 'fixture.json'))) {
+    console.error(`[e2e] no fixture.json for run ${id}`);
+    process.exit(2);
+  }
+  try {
+    const res = await cleanup(loadConfig(envRoot), dir);
+    console.log(`[e2e] cleanup ${id}: ${res.cleaned ? 'ok' : 'INCOMPLETE'}`);
+    process.exit(res.cleaned ? 0 : 4);
+  } catch (e) {
+    console.error(`[e2e] cleanup ${id} failed:`, e.message);
+    process.exit(4);
+  }
+}
+
 const runId =
   new Date()
     .toISOString()
@@ -101,7 +125,8 @@ function stopMetro() {
 const t = new Date(Date.now() + 86_400_000);
 const tomorrow = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; // local date
 
-/** Runs Maestro. Secrets go through MAESTRO_* process env (Maestro maps them to ${MAESTRO_*}), never argv. */
+let maestroChild = null;
+/** Runs Maestro asynchronously so signal handlers can run while it is active. Secrets go through MAESTRO_* process env (Maestro maps them to ${MAESTRO_*}), never argv. */
 function runMaestro(secrets) {
   const junit = join(runDir, 'junit.xml');
   const flowArgs = only.length
@@ -122,7 +147,7 @@ function runMaestro(secrets) {
     `METRO_URL=exp://127.0.0.1:${PORT}`,
     ...flowArgs,
   ];
-  const r = spawnSync(MAESTRO, args, {
+  maestroChild = spawn(MAESTRO, args, {
     cwd: join(runDir, 'shots'),
     stdio: 'inherit',
     env: {
@@ -133,8 +158,13 @@ function runMaestro(secrets) {
       ...secrets,
     },
   });
-  if (r.error) throw r.error;
-  return { status: r.status, junit };
+  return new Promise((res, rej) => {
+    maestroChild.on('error', rej);
+    maestroChild.on('exit', (code, signal) => {
+      maestroChild = null;
+      res({ status: signal ? 1 : code, junit });
+    });
+  });
 }
 
 /** Maestro logs typed text verbatim (maestro.log, commands.json, device logs). Redact the password everywhere. */
@@ -173,19 +203,30 @@ function parseJunit(file) {
 }
 
 let cfg = null;
+let cleanupOnce = null;
+/** Runs fixture cleanup at most once, whether reached from finally or a signal. */
+function cleanupFixture() {
+  if (!cleanupOnce)
+    cleanupOnce = cfg
+      ? cleanup(cfg, runDir).catch((e) => ({ cleaned: false, error: e.message }))
+      : Promise.resolve({ cleaned: true, note: 'no fixture' });
+  return cleanupOnce;
+}
 let shuttingDown = false;
 for (const sig of ['SIGINT', 'SIGTERM'])
   process.on(sig, async () => {
     if (shuttingDown) return;
     shuttingDown = true;
     console.error(`[e2e] ${sig}: cleaning up`);
-    if (cfg) {
+    if (maestroChild) {
       try {
-        await cleanup(cfg, runDir);
-      } catch (e) {
-        console.error('[e2e] cleanup failed:', e.message);
+        maestroChild.kill('SIGTERM');
+      } catch {
+        /* best effort */
       }
     }
+    const res = await cleanupFixture();
+    if (!res.cleaned) console.error('[e2e] cleanup failed:', res.error || 'incomplete');
     stopMetro();
     process.exit(130);
   });
@@ -203,7 +244,7 @@ try {
   }
   let r;
   try {
-    r = runMaestro(secrets);
+    r = await runMaestro(secrets);
   } finally {
     const n = scrubSecret(runDir, secrets.MAESTRO_E2E_PASSWORD);
     if (n) log(`redacted the fixture password from ${n} Maestro log file(s)`);
@@ -217,15 +258,8 @@ try {
   console.error('[e2e] aborted:', e.message);
   exitCode = 2;
 } finally {
-  let cleanupResult = { cleaned: true, note: 'no fixture' };
-  if (cfg) {
-    try {
-      cleanupResult = await cleanup(cfg, runDir);
-    } catch (e) {
-      cleanupResult = { cleaned: false, error: e.message };
-      exitCode = exitCode || 4;
-    }
-  }
+  const cleanupResult = await cleanupFixture();
+  if (!cleanupResult.cleaned) exitCode = exitCode || 4;
   try {
     rmSync(join(runDir, 'login.json'), { force: true });
   } catch {

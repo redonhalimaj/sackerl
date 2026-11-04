@@ -27,4 +27,8 @@ env:
     notVisible:
       id: 'tabs\.home'
     timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: '(onboarding\.get-started|auth\.email)'
+    timeout: 15000
 - takeScreenshot: 90-signed-out

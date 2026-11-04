@@ -35,17 +35,63 @@ env:
     env:
       TARGET: 'receipt-review\.lines'
       DIRECTION: UP
+# Mark every unreviewed line. The button toggles, so select only lines whose label still reads
+# "Mark <name> reviewed" (reviewed lines read "Mark <name> needs review"); swipe on when none is in view.
 - repeat:
-    times: 3
+    times: 12
+    while:
+      notVisible:
+        text: '0 needs review'
     commands:
+      - runFlow: lib/dismiss-expo-menu.yaml
       - runFlow:
           when:
             visible:
               id: 'receipt-review\.line\.\d+\.mark-reviewed'
+              text: 'Mark .+ reviewed'
           commands:
             - tapOn:
                 id: 'receipt-review\.line\.\d+\.mark-reviewed'
+                text: 'Mark .+ reviewed'
                 index: 0
+      - runFlow:
+          when:
+            notVisible:
+              id: 'receipt-review\.line\.\d+\.mark-reviewed'
+              text: 'Mark .+ reviewed'
+          commands:
+            - runFlow:
+                when:
+                  visible:
+                    id: 'receipt-review\.save'
+                commands:
+                  - runFlow:
+                      file: lib/scroll-to.yaml
+                      env:
+                        TARGET: 'receipt-review\.needs-review-count'
+                        DIRECTION: UP
+            - runFlow:
+                when:
+                  notVisible:
+                    id: 'receipt-review\.needs-review-count'
+                commands:
+                  - swipe:
+                      start: 20%, 70%
+                      end: 20%, 45%
+                      duration: 600
+# Fails the flow if any included line is left unreviewed.
+- runFlow:
+    file: lib/scroll-to.yaml
+    env:
+      TARGET: 'receipt-review\.needs-review-count'
+      DIRECTION: UP
+# The count text is a sibling node of the chip's testID in the iOS tree, so match the text itself.
+- assertVisible:
+    id: 'receipt-review\.needs-review-count'
+- assertVisible: '0 needs review'
+- assertNotVisible:
+    id: 'receipt-review\.line\.\d+\.mark-reviewed'
+    text: 'Mark .+ reviewed'
 - runFlow:
     file: lib/scroll-to.yaml
     env:
@@ -63,6 +109,8 @@ env:
     env:
       TARGET: 'receipt-review\.continue-placement'
       DIRECTION: DOWN
+# Still disabled after save because SCKRL-311 placement is not applied on remote dev.
+# SCKRL-305 flips this CTA to enabled once placement ships; update this assertion then.
 - assertVisible:
     id: 'receipt-review\.continue-placement'
     enabled: false

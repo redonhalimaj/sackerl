@@ -5,12 +5,12 @@ Process: board Council (owner direction 2026-11-02, see [README](README.md)). Wo
 
 ## Round 0 — Orchestrator (w1)
 
-**Question:** Without Maestro, what mechanism should run an extendable E2E suite for `apps/mobile`
+**Question:** Without Maestro (superseded 2026-11-04, see Round 4), what mechanism should run an extendable E2E suite for `apps/mobile`
 (Expo SDK 57, in Expo Go on the booted iPhone 17 / iOS 26.5 simulator)? Which testIDs does the suite need?
 
 **Owner decisions:**
 
-- No Maestro.
+- ~~No Maestro.~~ Superseded 2026-11-04: after Accessibility trust could not be granted, the owner asked for an alternative and installed Maestro themselves (see Round 4).
 - Use the existing booted iPhone 17.
 - Supabase: use the existing project (`raqq…`, keys in the ignored `.env`). Fixtures are synthetic users with exact cleanup.
 
@@ -61,13 +61,13 @@ Backend and Infrastructure are not seated, since no schema or hosting work is in
   5. Clean up the fixtures in a `finally`.
 - **Required owner action:** grant Accessibility to the terminal app (System Settings › Privacy & Security › Accessibility). Without it, only an OCR-only smoke of signed-out screens is possible.
 
-Alternatives rejected:
+Alternatives rejected _(superseded 2026-11-04 — the owner approved and installed Maestro; see Round 4)_:
 
-| Alternative       | Reason rejected                                                      |
-| ----------------- | -------------------------------------------------------------------- |
-| Detox / XCUITest  | Need a native prebuild or dev client and new dependencies.           |
-| idb / AXe         | Need installs, which the owner has declined for Maestro-class tools. |
-| Computer Use only | Not repeatable from a script.                                        |
+| Alternative       | Reason rejected                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| Detox / XCUITest  | Need a native prebuild or dev client and new dependencies.                                   |
+| idb / AXe         | Need installs, which the owner had declined for Maestro-class tools (superseded 2026-11-04). |
+| Computer Use only | Not repeatable from a script.                                                                |
 
 ## Round 1 (2026-11-02)
 
@@ -107,9 +107,10 @@ Pass/fail counts come from that first run.
 
 ## Round 4 — driver change to Maestro (2026-11-04)
 
-**Chair decision:** replace simdrive (Swift + macOS Accessibility) with **Maestro 2.12.1**, because the
-host cannot get Accessibility trust (`AXIsProcessTrusted=false`). This supersedes the round 0 "No Maestro"
-owner constraint by Chair direction. Worker w1 (Opus 5.5) implemented.
+**Owner decision (2026-11-04):** the host could not get Accessibility trust (`AXIsProcessTrusted=false`),
+so the owner asked for an alternative and installed **Maestro 2.12.1** themselves. This owner approval
+supersedes the round 0 "No Maestro" constraint and the "alternatives rejected" reasoning; it is not a
+Chair override. The Chair routed the switch, and worker w1 (Opus 5.5) implemented it.
 
 **Change:** `apps/mobile/e2e/maestro/*.yaml` (8 flows, same steps and assertions as the old JSON, `id:`
 selectors on the existing testIDs), `maestro/config.yaml` (fixed order), `maestro/lib/` helpers, and
@@ -145,5 +146,26 @@ on 2026-11-04:** 8/8 flows passed, cleanup verified (user 404, 0 households). Pr
 **Findings for seats:** iOS typing via Maestro occasionally adds a stray key and QuickType autocompletes
 ("E2E Milkweed"); flows type with a trailing space and verify fields exactly. Low UI observation: a long
 email wraps outside the `auth.email` field bounds (see `10-password-entered.png`).
+
+## Round 5 — QA conditions (2026-11-04)
+
+Independent QA voted AGREE on condition (live run `20261104103759-llxu`, 8/8). w1 addressed every condition:
+
+1. Wording: Round 0 constraints and "alternatives rejected" are marked superseded; Round 4 and
+   `docs/qa/e2e-mobile.md` record the owner's approval (owner asked for an alternative and installed Maestro).
+2. Flow 35 asserts `suggestions.list` and opens a recipe (`recipe.title`); no either/or.
+3. Flow 90 asserts the signed-out screen (`onboarding.get-started` or `auth.email`).
+4. `run.mjs` runs Maestro as an async child, so SIGTERM stops it and cleans up promptly (verified:
+   SIGTERM mid-run → fixture `cleaned`, no Maestro left). Cleanup runs once. New
+   `node apps/mobile/e2e/run.mjs --cleanup <runId>` reaps a leaked user from `fixture.json`.
+5. Flow 50 marks only unreviewed lines (the button toggles), asserts `0 needs review` and that no line
+   still offers "Mark … reviewed"; the post-save `enabled: false` assert notes SCKRL-305 will flip it.
+6. Flow 10 header names `MAESTRO_E2E_EMAIL` / `MAESTRO_E2E_PASSWORD`.
+
+Live run `20261104105619-sjay` (2026-11-04): **8/8 passed**, cleanup ok — 10 1m 2s, 20 16s, 30 49s,
+35 10s, 40 21s, 50 1m 15s, 70 13s, 90 27s.
+
+The two app observations (auth email overflow, shopping-list Add needing two taps) are filed as
+follow-ups by the coordinator and are not fixed here.
 
 **Status: awaiting seat re-vote** (Frontend, DevOps, QA) on the Maestro driver.

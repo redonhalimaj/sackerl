@@ -1,7 +1,8 @@
 appId: host.exp.Exponent
 name: 10-auth-onboarding
 # Signed-out onboarding -> keep default zones -> sign in with the synthetic user -> zones -> household -> Home.
-# E2E_EMAIL / E2E_PASSWORD arrive as MAESTRO_E2E_* process env (never argv). METRO_URL defaults below.
+# Credentials arrive as MAESTRO_E2E_EMAIL / MAESTRO_E2E_PASSWORD process env from run.mjs (never argv).
+# METRO_URL defaults below.
 env:
   METRO_URL: exp://127.0.0.1:8081
 ---

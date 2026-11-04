@@ -1,8 +1,9 @@
 # Mobile E2E (SCKRL-908) — Maestro
 
 End-to-end tests for `apps/mobile`, run in Expo Go on the iOS Simulator with [Maestro](https://maestro.mobile.dev).
-The Chair switched the driver from the in-repo "simdrive" (macOS Accessibility) to Maestro on 2026-11-04,
-because the host cannot grant Accessibility trust (`AXIsProcessTrusted=false`). Maestro drives the
+The owner approved the switch from the in-repo "simdrive" (macOS Accessibility) driver to Maestro on
+2026-11-04: Accessibility trust could not be granted (`AXIsProcessTrusted=false`), so the owner asked for
+an alternative and installed Maestro themselves. This supersedes the earlier "no Maestro" decision. Maestro drives the
 simulator through its own XCTest runner, so it needs no Accessibility permission.
 
 ## How it works
@@ -38,7 +39,13 @@ Run artifacts go to `.env.e2e-mobile/<runId>/` (git-ignored, mode 0700): `report
 
 ```bash
 pnpm --filter @sackerl/mobile e2e                 # all flows (provision -> maestro -> cleanup)
+node apps/mobile/e2e/run.mjs --cleanup <runId>    # reap a leaked user recorded in .env.e2e-mobile/<runId>/fixture.json
 ```
+
+Cleanup runs once per run, from `finally` or from a SIGINT/SIGTERM handler (Maestro runs as an async child,
+so a signal stops it and cleans up promptly). If a run is killed hard (e.g. SIGKILL) and `fixture.json`
+is not `cleaned`, use `--cleanup <runId>`; it deletes only the user whose id, email and run marker match
+that manifest.
 
 Flows share one signed-in user and depend on `10-auth-onboarding`, so run the whole suite. Optional env:
 `E2E_METRO_PORT`, `E2E_DEVICE` (simulator UDID), `MAESTRO_BIN`, `E2E_ENV_ROOT`.
@@ -47,16 +54,16 @@ Exit codes: 0 all passed · 1 a flow failed · 2 aborted · 4 cleanup incomplete
 
 ## Flows
 
-| Flow                    | Covers                                                                                                              |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `10-auth-onboarding`    | Signed-out onboarding, default zones, sign-in, dismiss iOS "Save Password?" (Not Now), household created, Home.     |
-| `20-storage-zones`      | Home shows fridge and pantry zones.                                                                                 |
-| `30-stock-add`          | Empty stock, manual add with a user-entered expiry of tomorrow, row in Stock.                                       |
-| `35-recipe-suggestions` | Suggestions screen; opens a recipe when ideas are listed, otherwise records the empty state.                        |
-| `40-use-soon`           | Item shows in Expiring; mark used; row disappears.                                                                  |
-| `50-receipt-review`     | Simulated capture, review, mark lines reviewed, save; "Continue to placement" stays disabled before and after save. |
-| `70-shopping-list`      | Add an item to the shopping list.                                                                                   |
-| `90-sign-out`           | Settings, sign out.                                                                                                 |
+| Flow                    | Covers                                                                                                                                                                                                   |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `10-auth-onboarding`    | Signed-out onboarding, default zones, sign-in, dismiss iOS "Save Password?" (Not Now), household created, Home.                                                                                          |
+| `20-storage-zones`      | Home shows fridge and pantry zones.                                                                                                                                                                      |
+| `30-stock-add`          | Empty stock, manual add with a user-entered expiry of tomorrow, row in Stock.                                                                                                                            |
+| `35-recipe-suggestions` | Suggestions list (from the exact "E2E Milk" stock item) and opening a recipe (`recipe.title`).                                                                                                           |
+| `40-use-soon`           | Item shows in Expiring; mark used; row disappears.                                                                                                                                                       |
+| `50-receipt-review`     | Simulated capture, review, mark every line reviewed (asserts `0 needs review`), save; "Continue to placement" stays disabled before and after save (SCKRL-305 will flip the post-save state to enabled). |
+| `70-shopping-list`      | Add an item to the shopping list.                                                                                                                                                                        |
+| `90-sign-out`           | Settings, sign out, signed-out screen (`onboarding.get-started` or `auth.email`) visible.                                                                                                                |
 
 Every flow after `10` restarts Expo Go on the Metro URL and waits for `tabs.home`, so an earlier failure
 or pushed screen does not cascade.

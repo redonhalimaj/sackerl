@@ -12,23 +12,17 @@ env:
       id: 'tabs\.home'
     timeout: 60000
 - openLink: ${METRO_URL}/--/suggestions
-# One synthetic stock item may not reach the recipe match threshold; the empty state is then the
-# expected outcome and is recorded as evidence (N2). A recipe is opened whenever ideas are listed.
+# Flow 30 guarantees a stock item named exactly "E2E Milk", which matches catalogue recipes (N2).
 - extendedWaitUntil:
     visible:
-      id: 'suggestions\.(list|empty)'
+      id: 'suggestions\.list'
     timeout: 20000
 - takeScreenshot: 35-suggestions
-- runFlow:
-    when:
-      visible:
-        id: 'suggestions\.list'
-    commands:
-      - tapOn:
-          id: 'suggestions\.card\..*\.show'
-          index: 0
-      - extendedWaitUntil:
-          visible:
-            id: 'recipe\.title'
-          timeout: 20000
-      - takeScreenshot: 35-recipe
+- tapOn:
+    id: 'suggestions\.card\..*\.show'
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: 'recipe\.title'
+    timeout: 20000
+- takeScreenshot: 35-recipe
