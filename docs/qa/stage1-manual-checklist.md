@@ -5,7 +5,7 @@ connected-test evidence plus this one-time manual check (decision A). Run it onc
 for the items marked (sim ok), against dev. Tick each box and write the date. If an item fails, open a ticket; it
 does not reopen 305.
 
-Device / build: **********\_\_********** Date: ****\_\_****
+Device / build: (fill in) · Date: (fill in)
 
 ## 1. Save failures and conflicts (304) (sim ok)
 
@@ -45,4 +45,4 @@ Settings → Accessibility → VoiceOver on.
 - [ ] Account A saves a review and taps Done for now. Sign out, then sign in as account B. A's pending review
       does **not** appear on B's Home.
 
-Result: \_\_\_ / 11 passed. Tickets opened: **********\_\_**********
+Result: (n) / 11 passed. Tickets opened: (list)
