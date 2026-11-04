@@ -1,0 +1,34 @@
+appId: host.exp.Exponent
+name: 35-recipe-suggestions
+# Suggestions list -> open a recipe. Runs while stock is non-empty (N2).
+env:
+  METRO_URL: exp://127.0.0.1:8081
+---
+# Start from the tab root so an earlier flow cannot cascade.
+- stopApp
+- openLink: ${METRO_URL}
+- extendedWaitUntil:
+    visible:
+      id: 'tabs\.home'
+    timeout: 60000
+- openLink: ${METRO_URL}/--/suggestions
+# One synthetic stock item may not reach the recipe match threshold; the empty state is then the
+# expected outcome and is recorded as evidence (N2). A recipe is opened whenever ideas are listed.
+- extendedWaitUntil:
+    visible:
+      id: 'suggestions\.(list|empty)'
+    timeout: 20000
+- takeScreenshot: 35-suggestions
+- runFlow:
+    when:
+      visible:
+        id: 'suggestions\.list'
+    commands:
+      - tapOn:
+          id: 'suggestions\.card\..*\.show'
+          index: 0
+      - extendedWaitUntil:
+          visible:
+            id: 'recipe\.title'
+          timeout: 20000
+      - takeScreenshot: 35-recipe

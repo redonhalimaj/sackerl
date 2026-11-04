@@ -1,0 +1,14 @@
+# Maestro workspace config: flows run sequentially in this order against one shared synthetic user.
+flows:
+  - '*.yaml'
+executionOrder:
+  continueOnFailure: true
+  flowsOrder:
+    - 10-auth-onboarding
+    - 20-storage-zones
+    - 30-stock-add
+    - 35-recipe-suggestions
+    - 40-use-soon
+    - 50-receipt-review
+    - 70-shopping-list
+    - 90-sign-out

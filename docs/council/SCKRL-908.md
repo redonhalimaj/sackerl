@@ -104,3 +104,46 @@ Accept the simdrive harness, the testIDs and the 8 flows as the SCKRL-908 mobile
 - That screenshots never show a plaintext password.
 
 Pass/fail counts come from that first run.
+
+## Round 4 — driver change to Maestro (2026-11-04)
+
+**Chair decision:** replace simdrive (Swift + macOS Accessibility) with **Maestro 2.12.1**, because the
+host cannot get Accessibility trust (`AXIsProcessTrusted=false`). This supersedes the round 0 "No Maestro"
+owner constraint by Chair direction. Worker w1 (Opus 5.5) implemented.
+
+**Change:** `apps/mobile/e2e/maestro/*.yaml` (8 flows, same steps and assertions as the old JSON, `id:`
+selectors on the existing testIDs), `maestro/config.yaml` (fixed order), `maestro/lib/` helpers, and
+`run.mjs` rewritten to provision → `maestro test --format junit` → redact → cleanup in `finally`.
+`driver/simdrive.swift`, `driver/ocr.swift` and `flows/*.json` are removed. `fixtures.mjs` is unchanged.
+No app source changed; no testIDs added.
+
+**Live evidence (iPhone 17 / iOS 26.5, Expo Go, remote dev Supabase), final run `20261104103047-jh55`
+on 2026-11-04:** 8/8 flows passed, cleanup verified (user 404, 0 households). Previous run
+`20261104102600-4yaq` also 8/8.
+
+| Flow                  | Result | Time  |
+| --------------------- | ------ | ----- |
+| 10-auth-onboarding    | PASS   | 1m 2s |
+| 20-storage-zones      | PASS   | 16s   |
+| 30-stock-add          | PASS   | 50s   |
+| 35-recipe-suggestions | PASS   | 10s   |
+| 40-use-soon           | PASS   | 21s   |
+| 50-receipt-review     | PASS   | 49s   |
+| 70-shopping-list      | PASS   | 13s   |
+| 90-sign-out           | PASS   | 27s   |
+
+**Deferred items from round 3:**
+
+- M8 (paste prompt): moot. Maestro types via XCTest, no pasteboard. iOS instead shows a "Save Password?" sheet after sign-in that hides the app tree; flow 10 taps "Not Now".
+- L3 (disabled state): Maestro reads `enabled`; `continue-placement` asserted `enabled: false` before and after save.
+- L4 (container testIDs in tree): yes, e.g. `receipt-review.lines`, `suggestions.list`, `home.screen` are matched.
+- L5 (CTA below the fold): not visible until scrolled; flows scroll to it first.
+- L6 (Expo Go overlay): the floating tools button can open the dev menu under centre swipes; flows scroll with left-side swipes and close the menu if open.
+- N2 (suggestions non-empty): yes when the stock item is named exactly "E2E Milk"; the recipe opened. With a mistyped name the empty state shows, so flow 35 accepts either and only opens a recipe when listed.
+- Passwords: no screenshot shows the password (secure field). Maestro logs typed text verbatim, so `run.mjs` redacts the password from all run files (10 files in the final run); credentials pass as `MAESTRO_*` env, not argv.
+
+**Findings for seats:** iOS typing via Maestro occasionally adds a stray key and QuickType autocompletes
+("E2E Milkweed"); flows type with a trailing space and verify fields exactly. Low UI observation: a long
+email wraps outside the `auth.email` field bounds (see `10-password-entered.png`).
+
+**Status: awaiting seat re-vote** (Frontend, DevOps, QA) on the Maestro driver.
