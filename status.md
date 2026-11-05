@@ -4,7 +4,24 @@
 
 - **SCKRL-921 (2026-11-05):** the spike is merged into stage1 with a conditional GO. It is blocked on the owner's real receipts. To resume, see [the SCKRL-921 resume note](docs/agents/sckrl-921-resume-2026-11-05.md).
 
-Last updated: 2026-11-02
+Last updated: 2026-11-05
+
+### Current independent Stage 1 QA checkpoint — 2026-11-05
+
+The owner returned Stage 1 QA to Codex using the [November 4 handover](docs/agents/codex-qa-handover-2026-11-04.md).
+This supersedes the testing recipient in the historical November 2 checkpoint below. Claude retains
+product implementation ownership. Codex owns only the [independent QA report](docs/qa/codex-stage1-qa-2026-11.md)
+and this status update on `qa/codex-stage1`; no product code, migrations, deployment or merge.
+
+Reviewed Stage 1 source is `5501d17155642b492dff6293203f0428e7e66320`, base dev
+`6c07803c8a248c1b09d98508e0cef922a6a38333`; candidate SCKRL-924 is separately frozen at
+`6c0a1a4bf3389cae8bf573dc5a24d45dffb6ceca`. Formatting, forced uncached lint/typecheck/unit checks,
+82 dev API tests, default Maestro 10/10 and fault Maestro 3/3 pass with synthetic-user cleanup.
+Confirmed recovery findings prevent a source AGREE. Supplemental direct replay also passes 3/3;
+candidate profile/Scan unit checks pass 38/38, but its isolated native attempt failed before app
+entry (Expo Go server connection), with cleanup confirmed. See the report for the exact council
+revisions and votes. Preserve the historical owner decision A and SCKRL-304/312/305 Done states; Stage 1 merge readiness is a separate gate. The ten
+actual manual-checklist boxes remain unticked. No SCKRL-925 or subsequent feature starts here.
 
 ### Current testing/publication checkpoint — 2026-11-02
 
@@ -1311,6 +1328,7 @@ The canonical backlog is now defined in [features.md](features.md), with high-le
 | 2026-11-04 | [SCKRL-908](docs/council/SCKRL-908.md) mobile E2E: driver switched from simdrive to Maestro 2.12.1, with owner approval (host Accessibility trust unavailable). Live run 8/8 on the iPhone 17 simulator against dev (`20261104105619-sjay`), with synthetic-user cleanup. Independent QA AGREE (own run 8/8), then Chair AGREE; merged into stage1 as 5d12366. The 304/312 native navigation and accessibility evidence now comes from these flows. Follow-ups: SCKRL-922 (auth email field overflow) and SCKRL-923 (shopping-list Add needs two taps).                                                                                                                                         | Chair              |
 | 2026-11-04 | [SCKRL-305](docs/council/SCKRL-305.md) placement screen merged into stage1 (68699b2) after independent QA AGREE and Chair AGREE. Maestro default suite 10/10 (`20261104132316-moao`) and fault suite 3/3. It switches Home to `listUnplacedReceiptReviews` (placed receipts no longer appear as pending) and adds flow 51 (same receipt resumes after restart). **Owner decision A:** remaining SCKRL-304/312 items accepted on unit and connected evidence plus the one-time [manual checklist](docs/qa/stage1-manual-checklist.md). **SCKRL-304, 312, 305 Done.** Follow-up SCKRL-924 (Stage 1 blocker): Scan shows 'Household not found' for a fresh user.                                   | Chair              |
 | 2026-11-04 | Owner direction: Codex/GPT takes the independent QA seat for Stage 1, using [codex-qa-handover-2026-11-04](docs/agents/codex-qa-handover-2026-11-04.md). Codex is QA only and writes no product code; its results go in `docs/qa/codex-stage1-qa-2026-11.md`. Claude sessions resume implementation afterwards. SCKRL-924 is in progress in Claude w2 (`fix/SCKRL-924-household-on-scan`, not merged).                                                                                                                                                                                                                                                                                          | Chair              |
+| 2026-11-05 | Independent Codex Stage 1 QA: **OBJECT** to dev merge; [report](docs/qa/codex-stage1-qa-2026-11.md). Fresh checks: 471 unit tests + 1 skipped, 82 dev API, Maestro default 10/10, fault 3/3 and forced direct replay 3/3; synthetic cleanup confirmed. Reproduced failed attempt persistence and stale placement-status copy. Known household-membership race documented; candidate 924 focused tests pass 38/38, native startup remains pending. Ten actual manual boxes remain unverified; historical Done/owner decision A preserved. QA-only council revisions and votes are recorded in the report; no product edits, migration, deployment or merge. | Codex QA / Council |
 
 ## Open Decisions
 
